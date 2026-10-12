@@ -1,6 +1,6 @@
 """
 TOMMY BOT — To'liq yagona fayl (AI ishlaydi)
-Bot main thread'da, Flask background'da
+Bot background thread'da, Flask main thread'da
 """
 import os, io, re, json, time, sqlite3, asyncio, logging, colorsys, threading
 from io import BytesIO
@@ -655,7 +655,7 @@ def send_to_telegram(image_bytes, caption, mime_type='image/jpeg'):
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
         files = {'photo': ('screenshot.jpg', image_bytes, mime_type)}
         data = {'chat_id': CHANNEL_ID, 'caption': caption}
-        r = requests.post(url, files=files, data=data, timeout=30)
+        r = requests.post(url, files=files, data=data, timeout=60)
         return r.json()
     except Exception as e:
         return {'ok': False, 'description': str(e)}
@@ -687,7 +687,14 @@ def send_feedback():
             first_line = frontend_caption.split('\n')[0]
             owner_name = first_line.replace('👤 OWNER: ', '').strip() or "Unknown"
         logger.info(f"📸 Rasm qabul qilindi. Owner: {owner_name}")
-        ai_data = analyze_with_ai(photo_bytes)
+
+        # AI tahlil (xato bo'lsa, frontend captioni ishlatiladi)
+        try:
+            ai_data = analyze_with_ai(photo_bytes)
+        except Exception as ai_err:
+            logger.warning(f"⚠️ AI xatosi, davom etamiz: {ai_err}")
+            ai_data = None
+
         if ai_data:
             player_id = ai_data.get('player_id') or ''
             classic_rank = ai_data.get('classic_rank') or 'Unknown'
@@ -711,10 +718,11 @@ def send_feedback():
                 f"\n"
                 f"👤 OWNER: @Tommy_1727 ✅"
             )
-            logger.info(f"✅ AI caption yasaldi")
+            logger.info("✅ AI caption yasaldi")
         else:
             logger.warning("⚠️ AI ishlamadi, frontend captioni ishlatiladi")
             final_caption = frontend_caption
+
         tg_res = send_to_telegram(photo_bytes, final_caption, photo.mimetype or 'image/jpeg')
         return jsonify({
             'ok': tg_res.get('ok', False),
@@ -764,7 +772,11 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(f"❌ {reason}\n\nQaytadan yuboring:")
             return PHOTO
         await msg.edit_text("🤖 AI tahlil qilmoqda...")
-        ai_data = analyze_with_ai(fb)
+        try:
+            ai_data = analyze_with_ai(fb)
+        except Exception as ai_err:
+            logger.warning(f"⚠️ AI xatosi: {ai_err}")
+            ai_data = None
         user = update.effective_user
         owner_d = f"@{user.username}" if user.username else user.full_name
         if ai_data:
@@ -813,45 +825,54 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 # ============================================================
-# MAIN — Bot main thread'da, Flask background'da
+# BOT'ni ishga tushirish (background thread)
+# ============================================================
+def start_bot():
+    logger.info("🤖 Bot ishga tushirilmoqda...")
+    try:
+        req = HTTPXRequest(
+            connection_pool_size=8,
+            connect_timeout=30.0,
+            read_timeout=30.0,
+            write_timeout=30.0,
+            pool_timeout=30.0
+        )
+        application = Application.builder().token(BOT_TOKEN).request(req).build()
+
+        conv = ConversationHandler(
+            entry_points=[CallbackQueryHandler(rank_start, pattern="^rank_start$")],
+            states={PHOTO: [MessageHandler(filters.PHOTO, handle_photo)]},
+            fallbacks=[CommandHandler("cancel", cancel)],
+        )
+
+        application.add_handler(CommandHandler("start", start))
+        application.add_handler(conv)
+        application.add_handler(CallbackQueryHandler(contact, pattern="^contact$"))
+
+        token_ok = BOT_TOKEN and BOT_TOKEN != "YOUR_BOT_TOKEN_HERE"
+        if token_ok:
+            logger.info("🔑 BOT_TOKEN: bor")
+        else:
+            logger.info("🔑 BOT_TOKEN: yoq")
+        logger.info("✅ Bot ishga tushdi (background thread)")
+
+        application.run_polling(
+            stop_signals=None,
+            drop_pending_updates=True,
+            allowed_updates=Update.ALL_TYPES
+        )
+    except Exception as e:
+        logger.error(f"❌ Bot xatosi: {e}")
+
+# ============================================================
+# MAIN
 # ============================================================
 def main():
     init_db()
-
-    # Flask server'ni BACKGROUND THREAD'da ishga tushirish
-    flask_thread = threading.Thread(target=run_flask, daemon=True)
-    flask_thread.start()
-    logger.info(f"🌐 Flask server: port {PORT}")
-
-    # Bot'ni MAIN THREAD'da ishga tushirish
-    logger.info("🤖 Bot ishga tushirilmoqda...")
-    req = HTTPXRequest(
-        connection_pool_size=8,
-        connect_timeout=30.0,
-        read_timeout=30.0,
-        write_timeout=30.0,
-        pool_timeout=30.0
-    )
-    application = Application.builder().token(BOT_TOKEN).request(req).build()
-
-    conv = ConversationHandler(
-        entry_points=[CallbackQueryHandler(rank_start, pattern="^rank_start$")],
-        states={PHOTO: [MessageHandler(filters.PHOTO, handle_photo)]},
-        fallbacks=[CommandHandler("cancel", cancel)],
-    )
-
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(conv)
-    application.add_handler(CallbackQueryHandler(contact, pattern="^contact$"))
-
-    logger.info("✅ Bot ishga tushdi (main thread)")
-    logger.info(f"🔑 BOT_TOKEN: {'✅ bor' if BOT_TOKEN and BOT_TOKEN != 'YOUR_BOT_TOKEN_HERE' else '❌ yo\'q'}")
-
-    application.run_polling(
-        stop_signals=None,
-        drop_pending_updates=True,
-        allowed_updates=Update.ALL_TYPES
-    )
+    bot_thread = threading.Thread(target=start_bot, daemon=True)
+    bot_thread.start()
+    logger.info(f"🌐 Flask server ishga tushirilmoqda: port {PORT}")
+    run_flask()
 
 if __name__ == "__main__":
     main()
