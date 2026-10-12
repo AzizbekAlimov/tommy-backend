@@ -1,11 +1,11 @@
 """
 TOMMY BOT — Single complete file
 Bot asks user step-by-step (like WebApp)
-Admin panel bilan statistika ko'rish
+Admin panel + Tashkent timezone
 """
 import os, io, re, json, time, sqlite3, asyncio, logging, colorsys, threading
 from io import BytesIO
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from PIL import Image
 from flask import Flask, request, jsonify, Response
@@ -34,6 +34,9 @@ OWNER_FIXED = "@Tommy_1727"
 ADMIN_ID = 7383782449
 PORT = int(os.getenv("PORT", 3000))
 
+# ✅ TASHKENT TIMEZONE (UTC+5)
+TZ_TASHKENT = timezone(timedelta(hours=5))
+
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -56,10 +59,10 @@ INDEX_HTML = r'''<!DOCTYPE html>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh;padding:16px;padding-bottom:30px;background:#0a0820;overflow-x:hidden;position:relative}
+body{color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh;padding:16px;background:#0a0820;overflow-x:hidden}
 .container{position:relative;z-index:1;max-width:500px;margin:0 auto}
 .header{text-align:center;padding:55px 0 30px}
-.header .logo{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#4CAF50,#2196F3);display:flex;align-items:center;justify-content:center;margin:0 auto 15px;font-size:40px;box-shadow:0 8px 24px rgba(76,175,80,0.4)}
+.header .logo{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#4CAF50,#2196F3);display:flex;align-items:center;justify-content:center;margin:0 auto 15px;font-size:40px}
 .header h1{color:#4CAF50;font-size:26px;font-weight:800}
 .header p{color:#aaa;font-size:13px}
 .card{background:rgba(255,255,255,0.06);border-radius:18px;padding:18px;margin-bottom:14px;border:1px solid rgba(255,255,255,0.08)}
@@ -69,24 +72,6 @@ body{color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,s
 .info-label{color:#999;font-size:13px}
 .info-value{color:#fff;font-weight:600;font-size:13px;text-align:right;max-width:60%}
 .info-value.green{color:#4CAF50}
-.input-group{margin-bottom:12px}
-.input-group input{width:100%;padding:14px 16px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.15);border-radius:12px;color:#fff;font-size:15px;outline:none}
-.input-group input::placeholder{color:#666}
-.photo-upload-box{width:100%;padding:30px 20px;background:rgba(255,255,255,0.06);border:2px dashed rgba(76,175,80,0.5);border-radius:14px;text-align:center;cursor:pointer;margin-bottom:12px}
-.photo-upload-box .icon{font-size:42px;display:block;margin-bottom:10px}
-.photo-upload-box .text{color:#4CAF50;font-size:14px;font-weight:600}
-.photo-upload-box .subtext{color:#888;font-size:11px;margin-top:6px}
-#photo-input{display:none}
-.photo-preview{display:none;width:100%;max-height:220px;object-fit:cover;border-radius:14px;margin-bottom:12px;border:2px solid #4CAF50}
-.photo-preview.show{display:block}
-.rank-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
-.rank-item{background:rgba(76,175,80,0.15);border:1px solid rgba(76,175,80,0.3);border-radius:10px;padding:12px;text-align:center;font-size:12px;color:#4CAF50;cursor:pointer}
-.rank-item.selected{background:#4CAF50;color:#fff}
-.btn{display:flex;align-items:center;justify-content:center;width:100%;padding:15px;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:12px}
-.btn-primary{background:linear-gradient(135deg,#4CAF50,#45a049);color:#fff}
-.btn-secondary{background:linear-gradient(135deg,#2196F3,#1976D2);color:#fff}
-.btn-warning{background:linear-gradient(135deg,#FF9800,#F57C00);color:#fff}
-.btn-outline{background:transparent;border:1.5px solid rgba(255,255,255,0.2);color:#ccc}
 </style>
 </head>
 <body>
@@ -122,12 +107,15 @@ def init_db():
 
 def save_user(uid, username, first_name):
     conn = sqlite3.connect("users.db"); c = conn.cursor()
-    c.execute("INSERT OR IGNORE INTO users VALUES (?,?,?,?)", (uid, username or "", first_name or "", datetime.now().strftime("%Y-%m-%d %H:%M")))
+    c.execute("INSERT OR IGNORE INTO users VALUES (?,?,?,?)", 
+        (uid, username or "", first_name or "", 
+         datetime.now(TZ_TASHKENT).strftime("%Y-%m-%d %H:%M")))
     conn.commit(); conn.close()
 
 def save_post(uid, pid, cr, ur, k):
     conn = sqlite3.connect("users.db"); c = conn.cursor()
-    c.execute("INSERT INTO posts (user_id,player_id,classic_rank,ultimate_rank,kills,created_at) VALUES (?,?,?,?,?,?)", (uid, pid, cr, ur, k, datetime.now().strftime("%Y-%m-%d %H:%M")))
+    c.execute("INSERT INTO posts (user_id,player_id,classic_rank,ultimate_rank,kills,created_at) VALUES (?,?,?,?,?,?)", 
+        (uid, pid, cr, ur, k, datetime.now(TZ_TASHKENT).strftime("%Y-%m-%d %H:%M")))
     conn.commit(); conn.close()
 
 def get_users_count():
@@ -139,7 +127,7 @@ def get_posts_count():
     c.execute("SELECT COUNT(*) FROM posts"); n = c.fetchone()[0]; conn.close(); return n
 
 def get_today_users_count():
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.now(TZ_TASHKENT).strftime("%Y-%m-%d")
     conn = sqlite3.connect("users.db"); c = conn.cursor()
     c.execute("SELECT COUNT(*) FROM users WHERE joined_at LIKE ?", (today + "%",))
     n = c.fetchone()[0]; conn.close(); return n
@@ -330,7 +318,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         user = update.effective_user
         owner_d = f"@{user.username}" if user.username else user.full_name
-        now = datetime.now()
+        now = datetime.now(TZ_TASHKENT)
         time_str = now.strftime('%H:%M  %d.%m.%Y')
 
         caption = (
@@ -397,7 +385,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 # ============================================================
-# ADMIN STATISTICS
+# ADMIN STATISTICS (Tashkent time)
 # ============================================================
 async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -415,7 +403,7 @@ async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"👥 Total users: <b>{total_users}</b>\n"
         f"🆕 Today joined: <b>{today_users}</b>\n"
         f"📸 Total posts: <b>{total_posts}</b>\n"
-        f"🕒 Time: {datetime.now().strftime('%H:%M %d.%m.%Y')}\n\n"
+        f"🕒 Time: {datetime.now(TZ_TASHKENT).strftime('%H:%M %d.%m.%Y')}\n\n"
     )
 
     users = get_all_users(limit=10)
