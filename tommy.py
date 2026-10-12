@@ -1,5 +1,6 @@
 """
 TOMMY BOT — To'liq yagona fayl (AI ishlaydi)
+Bot main thread'da, Flask background'da
 """
 import os, io, re, json, time, sqlite3, asyncio, logging, colorsys, threading
 from io import BytesIO
@@ -726,7 +727,7 @@ def send_feedback():
         return jsonify({'ok': False, 'description': str(e)}), 500
 
 def run_flask():
-    flask_app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False)
+    flask_app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False, threaded=True)
 
 # ============================================================
 # TELEGRAM BOT
@@ -811,32 +812,46 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Cancelled.")
     return ConversationHandler.END
 
-def run_bot():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    req = HTTPXRequest(connection_pool_size=8, connect_timeout=30.0,
-                       read_timeout=30.0, write_timeout=30.0, pool_timeout=30.0)
-    app = Application.builder().token(BOT_TOKEN).request(req).build()
+# ============================================================
+# MAIN — Bot main thread'da, Flask background'da
+# ============================================================
+def main():
+    init_db()
+
+    # Flask server'ni BACKGROUND THREAD'da ishga tushirish
+    flask_thread = threading.Thread(target=run_flask, daemon=True)
+    flask_thread.start()
+    logger.info(f"🌐 Flask server: port {PORT}")
+
+    # Bot'ni MAIN THREAD'da ishga tushirish
+    logger.info("🤖 Bot ishga tushirilmoqda...")
+    req = HTTPXRequest(
+        connection_pool_size=8,
+        connect_timeout=30.0,
+        read_timeout=30.0,
+        write_timeout=30.0,
+        pool_timeout=30.0
+    )
+    application = Application.builder().token(BOT_TOKEN).request(req).build()
+
     conv = ConversationHandler(
         entry_points=[CallbackQueryHandler(rank_start, pattern="^rank_start$")],
         states={PHOTO: [MessageHandler(filters.PHOTO, handle_photo)]},
         fallbacks=[CommandHandler("cancel", cancel)],
     )
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(conv)
-    app.add_handler(CallbackQueryHandler(contact, pattern="^contact$"))
-    logger.info("✅ Bot ishga tushdi (thread)")
-    app.run_polling(stop_signals=None)
 
-# ============================================================
-# MAIN
-# ============================================================
-def main():
-    init_db()
-    bot_thread = threading.Thread(target=run_bot, daemon=True)
-    bot_thread.start()
-    logger.info(f"🌐 Flask server: port {PORT}")
-    run_flask()
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(conv)
+    application.add_handler(CallbackQueryHandler(contact, pattern="^contact$"))
+
+    logger.info("✅ Bot ishga tushdi (main thread)")
+    logger.info(f"🔑 BOT_TOKEN: {'✅ bor' if BOT_TOKEN and BOT_TOKEN != 'YOUR_BOT_TOKEN_HERE' else '❌ yo\'q'}")
+
+    application.run_polling(
+        stop_signals=None,
+        drop_pending_updates=True,
+        allowed_updates=Update.ALL_TYPES
+    )
 
 if __name__ == "__main__":
     main()
