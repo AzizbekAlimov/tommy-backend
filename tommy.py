@@ -1,6 +1,7 @@
 """
 TOMMY BOT — Single complete file
 Bot asks user step-by-step (like WebApp)
+Admin panel bilan statistika ko'rish
 """
 import os, io, re, json, time, sqlite3, asyncio, logging, colorsys, threading
 from io import BytesIO
@@ -44,7 +45,7 @@ if GEMINI_AVAILABLE and GEMINI_API_KEY and GEMINI_API_KEY != "YOUR_GEMINI_API_KE
 PHOTO, PLAYER_ID, CLASSIC, ULTIMATE, KILLS = range(5)
 
 # ============================================================
-# HTML (WebApp) — unchanged
+# HTML (WebApp)
 # ============================================================
 INDEX_HTML = r'''<!DOCTYPE html>
 <html lang="en">
@@ -71,8 +72,6 @@ body{color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,s
 .input-group{margin-bottom:12px}
 .input-group input{width:100%;padding:14px 16px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.15);border-radius:12px;color:#fff;font-size:15px;outline:none}
 .input-group input::placeholder{color:#666}
-.input-group input.error{border-color:#f44336}
-.input-group input.success{border-color:#4CAF50}
 .photo-upload-box{width:100%;padding:30px 20px;background:rgba(255,255,255,0.06);border:2px dashed rgba(76,175,80,0.5);border-radius:14px;text-align:center;cursor:pointer;margin-bottom:12px}
 .photo-upload-box .icon{font-size:42px;display:block;margin-bottom:10px}
 .photo-upload-box .text{color:#4CAF50;font-size:14px;font-weight:600}
@@ -83,30 +82,11 @@ body{color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,s
 .rank-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
 .rank-item{background:rgba(76,175,80,0.15);border:1px solid rgba(76,175,80,0.3);border-radius:10px;padding:12px;text-align:center;font-size:12px;color:#4CAF50;cursor:pointer}
 .rank-item.selected{background:#4CAF50;color:#fff}
-.rank-item.gold{background:rgba(255,193,7,0.15);color:#FFC107}
-.rank-item.gold.selected{background:#FFC107;color:#000}
-.rank-item.blue{background:rgba(33,150,243,0.15);color:#2196F3}
-.rank-item.blue.selected{background:#2196F3;color:#fff}
-.rank-item.purple{background:rgba(156,39,176,0.15);color:#CE93D8}
-.rank-item.purple.selected{background:#9C27B0;color:#fff}
 .btn{display:flex;align-items:center;justify-content:center;width:100%;padding:15px;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:12px}
 .btn-primary{background:linear-gradient(135deg,#4CAF50,#45a049);color:#fff}
 .btn-secondary{background:linear-gradient(135deg,#2196F3,#1976D2);color:#fff}
 .btn-warning{background:linear-gradient(135deg,#FF9800,#F57C00);color:#fff}
 .btn-outline{background:transparent;border:1.5px solid rgba(255,255,255,0.2);color:#ccc}
-.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700}
-.badge-green{background:rgba(76,175,80,0.2);color:#4CAF50}
-.badge-blue{background:rgba(33,150,243,0.2);color:#2196F3}
-.status-overlay{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(5,3,18,0.75)}
-.status-overlay.show{display:flex}
-.status-box{width:100%;max-width:360px;background:linear-gradient(160deg,rgba(28,22,60,0.98),rgba(14,10,34,0.98));border-radius:22px;padding:32px;text-align:center;border:1.5px solid rgba(255,255,255,0.1)}
-.status-icon{font-size:56px;display:block;margin-bottom:18px}
-.status-title{font-size:18px;font-weight:800;margin-bottom:8px}
-.status-title.loading{color:#FFC107}
-.status-title.success{color:#4CAF50}
-.status-title.error{color:#f44336}
-.status-desc{font-size:13px;color:#aaa;margin-bottom:20px;white-space:pre-line}
-.status-btn{width:100%;padding:14px;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer}
 </style>
 </head>
 <body>
@@ -122,96 +102,11 @@ body{color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,s
     <div class="info-row"><span class="info-label">Username:</span><span class="info-value green" id="user-username">-</span></div>
     <div class="info-row"><span class="info-label">Telegram ID:</span><span class="info-value" id="user-id">-</span></div>
   </div>
-  <div class="card">
-    <div class="card-title">🆔 PUBG Mobile ID</div>
-    <div class="input-group"><input type="tel" id="player-id" placeholder="Enter 11-digit ID" maxlength="11" inputmode="numeric"></div>
-  </div>
-  <div class="card">
-    <div class="card-title">📸 Screenshot</div>
-    <div class="photo-upload-box" id="photo-box">
-      <span class="icon">📤</span>
-      <div class="text">Tap to upload</div>
-      <div class="subtext">JPG, PNG • Max 5MB</div>
-    </div>
-    <input type="file" id="photo-input" accept="image/*">
-    <img id="photo-preview" class="photo-preview" alt="Preview">
-  </div>
-  <div class="card">
-    <div class="card-title">👑 CLASSIC RANKS</div>
-    <div class="rank-grid" id="classic-ranks">
-      <div class="rank-item" data-rank="Bronze">Bronze</div><div class="rank-item" data-rank="Silver">Silver</div>
-      <div class="rank-item" data-rank="Gold">Gold</div><div class="rank-item" data-rank="Platinum">Platinum</div>
-      <div class="rank-item blue" data-rank="Diamond">Diamond</div><div class="rank-item blue" data-rank="Crown">Crown</div>
-      <div class="rank-item gold" data-rank="Ace">Ace</div><div class="rank-item gold" data-rank="Ace Master">Ace Master</div>
-      <div class="rank-item purple" data-rank="Ace Dominator">Ace Dominator</div><div class="rank-item purple" data-rank="Conqueror">Conqueror</div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-title">👑 ULTIMATE ROYALE</div>
-    <div class="rank-grid" id="ultimate-ranks">
-      <div class="rank-item" data-rank="Vanguard">Vanguard</div><div class="rank-item" data-rank="Exceed">Exceed</div>
-      <div class="rank-item blue" data-rank="Supreme">Supreme</div><div class="rank-item blue" data-rank="Peerless">Peerless</div>
-      <div class="rank-item purple" data-rank="Legend">Legend</div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-title">💀 KILLS</div>
-    <div class="input-group"><input type="tel" id="kills" placeholder="1-100" maxlength="3" inputmode="numeric"></div>
-  </div>
-  <button class="btn btn-primary" onclick="openStatistics()">📊 STATISTICS</button>
-  <button class="btn btn-secondary" onclick="startNew()">📤 START NEW</button>
-  <button class="btn btn-warning" onclick="openChannel()">📢 Go to Channel</button>
-  <button class="btn btn-outline" onclick="closeApp()">❌ Close</button>
-</div>
-<div class="status-overlay" id="status-overlay">
-  <div class="status-box">
-    <div class="status-icon" id="status-icon">⏳</div>
-    <div class="status-title" id="status-title">Sending...</div>
-    <div class="status-desc" id="status-desc">Please wait...</div>
-    <button class="status-btn" id="status-btn" onclick="closeStatus()">OK</button>
-  </div>
 </div>
 <script>
 const tg=window.Telegram.WebApp;tg.expand();tg.ready();tg.setHeaderColor('#0a0820');tg.setBackgroundColor('#0a0820');
-const API_URL="/send-feedback";const CHANNEL_USERNAME="@TommyXcheat2";
 const user=tg.initDataUnsafe.user;
 if(user){const fn=((user.first_name||'')+' '+(user.last_name||'')).trim();document.getElementById('user-name').innerText=fn||`User #${user.id}`;document.getElementById('user-username').innerText=user.username?'@'+user.username:'—';document.getElementById('user-id').innerText=user.id;}
-function buildOwnerInfo(){if(!user)return{plain:'Unknown'};if(user.username)return{plain:'@'+user.username};const fn=((user.first_name||'')+' '+(user.last_name||'')).trim();return{plain:fn?`${fn}`:`User #${user.id}`};}
-let selectedClassic=null,selectedUltimate=null;
-document.querySelectorAll('#classic-ranks .rank-item').forEach(item=>{item.addEventListener('click',()=>{document.querySelectorAll('#classic-ranks .rank-item').forEach(i=>i.classList.remove('selected'));item.classList.add('selected');selectedClassic=item.dataset.rank;});});
-document.querySelectorAll('#ultimate-ranks .rank-item').forEach(item=>{item.addEventListener('click',()=>{document.querySelectorAll('#ultimate-ranks .rank-item').forEach(i=>i.classList.remove('selected'));item.classList.add('selected');selectedUltimate=item.dataset.rank;});});
-const photoBox=document.getElementById('photo-box');const photoInput=document.getElementById('photo-input');const photoPreview=document.getElementById('photo-preview');
-let photoValid=false;
-photoBox.addEventListener('click',()=>photoInput.click());
-photoInput.addEventListener('change',function(e){const file=e.target.files[0];if(!file)return;if(file.size>5*1024*1024){tg.showAlert("❌ File too large! Max 5MB.");return;}const reader=new FileReader();reader.onload=(ev)=>{photoPreview.src=ev.target.result;photoPreview.classList.add('show');photoBox.style.display='none';photoValid=true;};reader.readAsDataURL(file);});
-function validatePlayerId(id){if(!/^\d{11}$/.test(id))return false;if(id[0]!=='5'&&id[0]!=='6')return false;if(/^(\d)\1{10}$/.test(id))return false;return true;}
-function validateKills(k){const v=parseInt(k);if(isNaN(v))return false;if(v<1||v>100)return false;return true;}
-function openStatistics(){tg.openTelegramLink("https://t.me/TommyXcheat2");}
-function openChannel(){tg.openTelegramLink("https://t.me/TommyXcheat2");}
-function closeApp(){tg.close();}
-function showStatus(type,msg){const o=document.getElementById('status-overlay');const i=document.getElementById('status-icon');const t=document.getElementById('status-title');const d=document.getElementById('status-desc');const b=document.getElementById('status-btn');o.classList.add('show');if(type==='loading'){i.textContent='⏳';t.className='status-title loading';t.textContent='Sending...';d.textContent=msg||'Please wait...';b.disabled=true;b.textContent='Please wait...';}else if(type==='success'){i.textContent='✅';t.className='status-title success';t.textContent='Successfully completed.';d.textContent=msg||'Sent!';b.disabled=false;b.textContent='✅ OK';}else{i.textContent='❌';t.className='status-title error';t.textContent='Unsuccessful.';d.textContent=msg||'Try again.';b.disabled=false;b.textContent='❌ Try Again';}}
-function closeStatus(){document.getElementById('status-overlay').classList.remove('show');}
-async function startNew(){
-  const playerId=document.getElementById('player-id').value.trim();
-  const kills=document.getElementById('kills').value.trim();
-  if(!validatePlayerId(playerId)){tg.showAlert("❌ Invalid Player ID!");return;}
-  if(!selectedClassic){tg.showAlert("❌ Select Classic Rank!");return;}
-  if(!selectedUltimate){tg.showAlert("❌ Select Ultimate Rank!");return;}
-  if(!validateKills(kills)){tg.showAlert("❌ Invalid Kills!");return;}
-  const file=photoInput.files[0];if(!file){tg.showAlert("❌ Upload a screenshot!");return;}
-  if(!photoValid){tg.showAlert("❌ Invalid screenshot!");return;}
-  showStatus('loading','Please wait, sending...');
-  const hiddenId=playerId.substring(0,3)+"***"+playerId.substring(9);
-  const now=new Date();
-  const timeStr=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+'  '+String(now.getDate()).padStart(2,'0')+'.'+String(now.getMonth()+1).padStart(2,'0')+'.'+now.getFullYear();
-  const ownerInfo=buildOwnerInfo();
-  const caption=`👤 OWNER: ${ownerInfo.plain}\n🎮 Player ID: ${hiddenId}\n🏆 CLASSIC RANK: ${selectedClassic}\n🏆 ULTIMATE ROYALE RANK: ${selectedUltimate}\n🕒 TIME: ${timeStr}\n💀 KILL: ${kills}\n\n👤 OWNER: @Tommy_1727 ✅`;
-  const fd=new FormData();fd.append('photo',file);fd.append('caption',caption);fd.append('send_to_channel','1');
-  try{const res=await fetch(API_URL,{method:'POST',body:fd});const result=await res.json();
-    if(result.ok){showStatus('success','Sent to channel!\n\n📢 '+CHANNEL_USERNAME);setTimeout(()=>{closeStatus();setTimeout(()=>tg.close(),300);},3000);}
-    else{showStatus('error','Error: '+(result.description||'Unknown'));}
-  }catch(err){showStatus('error','Network error!');}
-}
 </script>
 </body>
 </html>'''
@@ -235,6 +130,30 @@ def save_post(uid, pid, cr, ur, k):
     c.execute("INSERT INTO posts (user_id,player_id,classic_rank,ultimate_rank,kills,created_at) VALUES (?,?,?,?,?,?)", (uid, pid, cr, ur, k, datetime.now().strftime("%Y-%m-%d %H:%M")))
     conn.commit(); conn.close()
 
+def get_users_count():
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM users"); n = c.fetchone()[0]; conn.close(); return n
+
+def get_posts_count():
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM posts"); n = c.fetchone()[0]; conn.close(); return n
+
+def get_today_users_count():
+    today = datetime.now().strftime("%Y-%m-%d")
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM users WHERE joined_at LIKE ?", (today + "%",))
+    n = c.fetchone()[0]; conn.close(); return n
+
+def get_all_users(limit=30):
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("SELECT user_id, username, first_name, joined_at FROM users ORDER BY joined_at DESC LIMIT ?", (limit,))
+    r = c.fetchall(); conn.close(); return r
+
+def get_recent_posts(limit=10):
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("SELECT user_id, player_id, classic_rank, ultimate_rank, kills, created_at FROM posts ORDER BY id DESC LIMIT ?", (limit,))
+    r = c.fetchall(); conn.close(); return r
+
 # ============================================================
 # HELPERS
 # ============================================================
@@ -249,10 +168,6 @@ def is_valid_player_id(p):
     if p[0] not in ("5","6"): return False
     if len(set(p)) == 1: return False
     return True
-
-def _rgb_to_hsv(r,g,b):
-    h,s,v = colorsys.rgb_to_hsv(r/255.0, g/255.0, b/255.0)
-    return h*360.0, s, v
 
 def validate_pubg_screenshot(image_bytes):
     try:
@@ -315,7 +230,7 @@ def run_flask():
     flask_app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False, threaded=True)
 
 # ============================================================
-# TELEGRAM BOT — STEP-BY-STEP PROMPTS
+# TELEGRAM BOT
 # ============================================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     u = update.effective_user
@@ -347,7 +262,6 @@ async def handle_player_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Invalid ID!\n\nMust be 11 digits, start with 5/6.\n\nTry again:")
         return PLAYER_ID
     context.user_data['player_id'] = pid
-    # Classic rank buttons
     ranks = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Crown", "Ace", "Ace Master", "Ace Dominator", "Conqueror"]
     kb = []
     for r in ranks:
@@ -408,7 +322,6 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(f"❌ {reason}\n\nPlease send again:")
             return PHOTO
 
-        # Build caption
         player_id = context.user_data.get('player_id', '')
         classic_rank = context.user_data.get('classic_rank', 'Unknown')
         ultimate_rank = context.user_data.get('ultimate_rank', 'Unknown')
@@ -430,7 +343,6 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"👤 OWNER: {OWNER_FIXED} ✅"
         )
 
-        # Show preview
         kb = [
             [InlineKeyboardButton("✅ Send to channel", callback_data="confirm_send")],
             [InlineKeyboardButton("❌ Cancel", callback_data="cancel_post")]
@@ -485,6 +397,79 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 # ============================================================
+# ADMIN STATISTICS
+# ============================================================
+async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+
+    if user_id != ADMIN_ID:
+        await update.message.reply_text("❌ You are not an admin!")
+        return
+
+    total_users = get_users_count()
+    total_posts = get_posts_count()
+    today_users = get_today_users_count()
+
+    text = (
+        f"📊 <b>BOT STATISTICS</b>\n\n"
+        f"👥 Total users: <b>{total_users}</b>\n"
+        f"🆕 Today joined: <b>{today_users}</b>\n"
+        f"📸 Total posts: <b>{total_posts}</b>\n"
+        f"🕒 Time: {datetime.now().strftime('%H:%M %d.%m.%Y')}\n\n"
+    )
+
+    users = get_all_users(limit=10)
+    if users:
+        text += f"<b>👤 Last 10 users:</b>\n"
+        for uid, un, fn, ja in users:
+            if un:
+                name = f"@{un}"
+            elif fn:
+                name = fn
+            else:
+                name = f"User #{uid}"
+            text += f"• {name} — {ja}\n"
+    else:
+        text += "No users yet.\n"
+
+    posts = get_recent_posts(limit=5)
+    if posts:
+        text += f"\n<b>📸 Last 5 posts:</b>\n"
+        for uid, pid, cr, ur, k, ca in posts:
+            text += f"• {hide_id(pid)} — {cr} / {ur} — {k} kills — {ca}\n"
+
+    await update.message.reply_text(text, parse_mode='HTML')
+
+async def users_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+
+    if user_id != ADMIN_ID:
+        await update.message.reply_text("❌ You are not an admin!")
+        return
+
+    users = get_all_users(limit=100)
+    if not users:
+        await update.message.reply_text("No users yet.")
+        return
+
+    text = f"👥 <b>USERS LIST ({len(users)})</b>\n\n"
+    for i, (uid, un, fn, ja) in enumerate(users, 1):
+        if un:
+            name = f"@{un}"
+        elif fn:
+            name = fn
+        else:
+            name = f"User #{uid}"
+        text += f"{i}. {name} — {ja}\n"
+
+    if len(text) > 4000:
+        chunks = [text[i:i+4000] for i in range(0, len(text), 4000)]
+        for chunk in chunks:
+            await update.message.reply_text(chunk, parse_mode='HTML')
+    else:
+        await update.message.reply_text(text, parse_mode='HTML')
+
+# ============================================================
 # START BOT
 # ============================================================
 def start_bot():
@@ -511,6 +496,9 @@ def start_bot():
         application.add_handler(CallbackQueryHandler(confirm_send, pattern="^confirm_send$"))
         application.add_handler(CallbackQueryHandler(cancel_post, pattern="^cancel_post$"))
         application.add_handler(CallbackQueryHandler(contact, pattern="^contact$"))
+        application.add_handler(CommandHandler("admin", admin_stats))
+        application.add_handler(CommandHandler("stats", admin_stats))
+        application.add_handler(CommandHandler("users", users_list))
 
         logger.info("🔑 BOT_TOKEN: present")
         logger.info("✅ Bot started (background thread)")
