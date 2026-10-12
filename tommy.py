@@ -1,6 +1,6 @@
 """
-TOMMY BOT — To'liq yagona fayl
-Bot foydalanuvchidan qadam-baqadam so'raydi (WebApp kabi)
+TOMMY BOT — Single complete file
+Bot asks user step-by-step (like WebApp)
 """
 import os, io, re, json, time, sqlite3, asyncio, logging, colorsys, threading
 from io import BytesIO
@@ -24,7 +24,7 @@ except ImportError:
     GEMINI_AVAILABLE = False
 
 # ============================================================
-# SOZLAMALAR
+# SETTINGS
 # ============================================================
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY")
@@ -38,13 +38,13 @@ logger = logging.getLogger(__name__)
 
 if GEMINI_AVAILABLE and GEMINI_API_KEY and GEMINI_API_KEY != "YOUR_GEMINI_API_KEY":
     genai.configure(api_key=GEMINI_API_KEY)
-    logger.info("✅ Gemini AI ulandi")
+    logger.info("✅ Gemini AI connected")
 
 # Conversation states
 PHOTO, PLAYER_ID, CLASSIC, ULTIMATE, KILLS = range(5)
 
 # ============================================================
-# HTML (WebApp) — o'zgarishsiz
+# HTML (WebApp) — unchanged
 # ============================================================
 INDEX_HTML = r'''<!DOCTYPE html>
 <html lang="en">
@@ -236,7 +236,7 @@ def save_post(uid, pid, cr, ur, k):
     conn.commit(); conn.close()
 
 # ============================================================
-# YORDAMCHI
+# HELPERS
 # ============================================================
 def hide_id(pid):
     p = str(pid).strip()
@@ -271,7 +271,7 @@ def validate_pubg_screenshot(image_bytes):
     return True, ""
 
 # ============================================================
-# TELEGRAMGA YUBORISH
+# SEND TO TELEGRAM
 # ============================================================
 def send_to_telegram(image_bytes, caption, mime_type='image/jpeg'):
     try:
@@ -298,24 +298,24 @@ def index():
 def send_feedback():
     try:
         if 'photo' not in request.files:
-            return jsonify({'ok': False, 'description': 'Photo kerak!'}), 400
+            return jsonify({'ok': False, 'description': 'Photo required!'}), 400
         photo = request.files['photo']
         if photo.filename == '': return jsonify({'ok': False, 'description': 'No file'}), 400
         photo_bytes = photo.read()
         if len(photo_bytes) > 5*1024*1024: return jsonify({'ok': False, 'description': 'Too large'}), 400
         caption = request.form.get('caption', '')
-        if not caption: return jsonify({'ok': False, 'description': 'Caption kerak!'}), 400
+        if not caption: return jsonify({'ok': False, 'description': 'Caption required!'}), 400
         tg_res = send_to_telegram(photo_bytes, caption, photo.mimetype or 'image/jpeg')
         return jsonify({'ok': tg_res.get('ok', False), 'description': tg_res.get('description')}), 200 if tg_res.get('ok') else 500
     except Exception as e:
-        logger.error(f"❌ Web xatosi: {e}")
+        logger.error(f"❌ Web error: {e}")
         return jsonify({'ok': False, 'description': str(e)}), 500
 
 def run_flask():
     flask_app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False, threaded=True)
 
 # ============================================================
-# TELEGRAM BOT — QADAM-BAQADAM SO'RASH
+# TELEGRAM BOT — STEP-BY-STEP PROMPTS
 # ============================================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     u = update.effective_user
@@ -326,7 +326,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("📞 Contact", callback_data="contact")],
     ]
     await update.message.reply_text(
-        "🤖 TOMMY BOT\n\nPUBG Mobile statistikangizni yuboring.\nQadam-baqadam so'raymiz:",
+        "🤖 TOMMY BOT\n\nSend your PUBG Mobile statistics.\nWe'll ask you step by step:",
         reply_markup=InlineKeyboardMarkup(kb)
     )
 
@@ -335,25 +335,25 @@ async def rank_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await q.answer()
     context.user_data.clear()
     await q.message.reply_text(
-        "🆔 1-qadam\n\nPUBG Mobile ID ni yuboring:\n\n"
-        "• 11 xonali\n• 5 yoki 6 bilan boshlanadi\n• Bir xil raqamlar bo'lmasin\n\n"
-        "Misol: 52254689580"
+        "🆔 Step 1\n\nSend your PUBG Mobile ID:\n\n"
+        "• 11 digits\n• Starts with 5 or 6\n• No identical digits\n\n"
+        "Example: 52254689580"
     )
     return PLAYER_ID
 
 async def handle_player_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     pid = update.message.text.strip()
     if not is_valid_player_id(pid):
-        await update.message.reply_text("❌ Noto'g'ri ID!\n\n11 xonali, 5/6 bilan boshlanishi kerak.\n\nQaytadan yuboring:")
+        await update.message.reply_text("❌ Invalid ID!\n\nMust be 11 digits, start with 5/6.\n\nTry again:")
         return PLAYER_ID
     context.user_data['player_id'] = pid
-    # Classic rank tugmalari
+    # Classic rank buttons
     ranks = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Crown", "Ace", "Ace Master", "Ace Dominator", "Conqueror"]
     kb = []
     for r in ranks:
         kb.append([InlineKeyboardButton(f"🏆 {r}", callback_data=f"classic_{r}")])
     await update.message.reply_text(
-        f"✅ ID: {pid}\n\n👑 2-qadam\n\nCLASSIC RANK ni tanlang:",
+        f"✅ ID: {pid}\n\n👑 Step 2\n\nSelect your CLASSIC RANK:",
         reply_markup=InlineKeyboardMarkup(kb)
     )
     return CLASSIC
@@ -369,7 +369,7 @@ async def handle_classic(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for r in ranks:
         kb.append([InlineKeyboardButton(f"🏆 {r}", callback_data=f"ultimate_{r}")])
     await q.message.reply_text(
-        f"✅ Classic: {rank}\n\n👑 3-qadam\n\nULTIMATE ROYALE RANK ni tanlang:",
+        f"✅ Classic: {rank}\n\n👑 Step 3\n\nSelect your ULTIMATE ROYALE RANK:",
         reply_markup=InlineKeyboardMarkup(kb)
     )
     return ULTIMATE
@@ -381,34 +381,34 @@ async def handle_ultimate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['ultimate_rank'] = rank
     await q.message.delete()
     await q.message.reply_text(
-        f"✅ Ultimate: {rank}\n\n💀 4-qadam\n\nKILLS kiriting (1-100):"
+        f"✅ Ultimate: {rank}\n\n💀 Step 4\n\nEnter KILLS (1-100):"
     )
     return KILLS
 
 async def handle_kills(update: Update, context: ContextTypes.DEFAULT_TYPE):
     kills = update.message.text.strip()
     if not kills.isdigit() or not (1 <= int(kills) <= 100):
-        await update.message.reply_text("❌ 1-100 orasida kiriting:")
+        await update.message.reply_text("❌ Enter a number between 1 and 100:")
         return KILLS
     context.user_data['kills'] = kills
     await update.message.reply_text(
-        f"✅ Kills: {kills}\n\n📸 5-qadam\n\nEndi PUBG Mobile skrinshotini yuboring:"
+        f"✅ Kills: {kills}\n\n📸 Step 5\n\nNow send your PUBG Mobile screenshot:"
     )
     return PHOTO
 
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     photo = update.message.photo[-1]
-    msg = await update.message.reply_text("⏳ Tekshirilmoqda...")
+    msg = await update.message.reply_text("⏳ Verifying...")
     try:
         f = await context.bot.get_file(photo.file_id)
         fb = bytes(await f.download_as_bytearray())
         ok, reason = validate_pubg_screenshot(fb)
         if not ok:
             await msg.delete()
-            await update.message.reply_text(f"❌ {reason}\n\nQaytadan yuboring:")
+            await update.message.reply_text(f"❌ {reason}\n\nPlease send again:")
             return PHOTO
 
-        # Caption yasash
+        # Build caption
         player_id = context.user_data.get('player_id', '')
         classic_rank = context.user_data.get('classic_rank', 'Unknown')
         ultimate_rank = context.user_data.get('ultimate_rank', 'Unknown')
@@ -430,10 +430,10 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"👤 OWNER: {OWNER_FIXED} ✅"
         )
 
-        # Preview ko'rsatish
+        # Show preview
         kb = [
-            [InlineKeyboardButton("✅ Kanalga yuborish", callback_data="confirm_send")],
-            [InlineKeyboardButton("❌ Bekor qilish", callback_data="cancel_post")]
+            [InlineKeyboardButton("✅ Send to channel", callback_data="confirm_send")],
+            [InlineKeyboardButton("❌ Cancel", callback_data="cancel_post")]
         ]
         await msg.delete()
         context.user_data['photo_id'] = photo.file_id
@@ -455,16 +455,16 @@ async def confirm_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
     photo_id = context.user_data.get('photo_id')
     caption = context.user_data.get('caption', '')
     if not photo_id:
-        await q.message.reply_text("❌ Xato: rasm topilmadi.")
+        await q.message.reply_text("❌ Error: photo not found.")
         return
     try:
         await context.bot.send_photo(chat_id=CHANNEL_ID, photo=photo_id, caption=caption)
         user = update.effective_user
         save_post(user.id, context.user_data.get('player_id',''), context.user_data.get('classic_rank',''), context.user_data.get('ultimate_rank',''), context.user_data.get('kills',''))
         await q.message.delete()
-        await q.message.reply_text("✅ Kanalga yuborildi!")
+        await q.message.reply_text("✅ Sent to channel!")
     except Exception as e:
-        await q.message.reply_text(f"❌ Xato: {e}\n\nBot kanalda admin ekanligini tekshiring.")
+        await q.message.reply_text(f"❌ Error: {e}\n\nMake sure the bot is admin in the channel.")
     context.user_data.clear()
 
 async def cancel_post(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -472,7 +472,7 @@ async def cancel_post(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await q.answer()
     context.user_data.clear()
     await q.message.delete()
-    await q.message.reply_text("❌ Bekor qilindi. /start bilan qaytadan boshlang.")
+    await q.message.reply_text("❌ Cancelled. Restart with /start.")
 
 async def contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
@@ -481,14 +481,14 @@ async def contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
-    await update.message.reply_text("Bekor qilindi.")
+    await update.message.reply_text("Cancelled.")
     return ConversationHandler.END
 
 # ============================================================
-# BOT ISHGA TUSHIRISH
+# START BOT
 # ============================================================
 def start_bot():
-    logger.info("🤖 Bot ishga tushirilmoqda...")
+    logger.info("🤖 Bot starting...")
     try:
         req = HTTPXRequest(connection_pool_size=8, connect_timeout=30.0, read_timeout=30.0, write_timeout=30.0, pool_timeout=30.0)
         application = Application.builder().token(BOT_TOKEN).request(req).build()
@@ -512,12 +512,12 @@ def start_bot():
         application.add_handler(CallbackQueryHandler(cancel_post, pattern="^cancel_post$"))
         application.add_handler(CallbackQueryHandler(contact, pattern="^contact$"))
 
-        logger.info("🔑 BOT_TOKEN: bor")
-        logger.info("✅ Bot ishga tushdi (background thread)")
+        logger.info("🔑 BOT_TOKEN: present")
+        logger.info("✅ Bot started (background thread)")
 
         application.run_polling(stop_signals=None, drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
     except Exception as e:
-        logger.error(f"❌ Bot xatosi: {e}")
+        logger.error(f"❌ Bot error: {e}")
 
 def main():
     init_db()
