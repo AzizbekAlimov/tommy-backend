@@ -1,5 +1,5 @@
 """
-TOMMY BOT — Fixed: explicit asyncio loop for bot thread
+TOMMY BOT — Fixed: unmute_cmd PTB 21.6 compatible + explicit asyncio loop
 """
 import os, sqlite3, asyncio, logging, threading, base64, json
 from io import BytesIO
@@ -575,25 +575,55 @@ async def setup_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def mute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
-    if not update.message.reply_to_message: await update.message.reply_text("Reply to user"); return
+    if not update.message.reply_to_message:
+        await update.message.reply_text("Reply to a user's message with /mute")
+        return
     target = update.message.reply_to_message.from_user
-    if target.id == update.effective_user.id: await update.message.reply_text("Can't mute self"); return
+    if target.id == update.effective_user.id:
+        await update.message.reply_text("Can't mute self"); return
     dur = parse_duration(context.args[0]) if context.args else timedelta(hours=1)
     if not dur: dur = timedelta(hours=1)
     if dur > timedelta(days=366): dur = timedelta(days=366)
     try:
-        await context.bot.restrict_chat_member(update.effective_chat.id, target.id, ChatPermissions(can_send_messages=False), until_date=datetime.now(timezone.utc)+dur)
-        await update.message.reply_text(f"🔇 Muted for {human_duration(dur)}")
-    except Exception as e: await update.message.reply_text(f"❌ {e}")
+        await context.bot.restrict_chat_member(
+            chat_id=update.effective_chat.id,
+            user_id=target.id,
+            permissions=ChatPermissions(can_send_messages=False),
+            until_date=datetime.now(timezone.utc) + dur
+        )
+        name = f"@{target.username}" if target.username else target.full_name
+        await update.message.reply_text(f"🔇 <b>{name}</b> muted for {human_duration(dur)}", parse_mode='HTML')
+    except Exception as e:
+        await update.message.reply_text(f"❌ {e}")
 
 async def unmute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
-    if not update.message.reply_to_message: return
+    if not update.message.reply_to_message:
+        await update.message.reply_text("🔊 Reply to a user's message with /unmute")
+        return
     target = update.message.reply_to_message.from_user
     try:
-        await context.bot.restrict_chat_member(update.effective_chat.id, target.id, ChatPermissions(can_send_messages=True, can_send_media_messages=True, can_send_other_messages=True, can_add_web_page_previews=True, can_send_polls=True, can_invite_users=True))
-        await update.message.reply_text("🔊 Unmuted")
-    except Exception as e: await update.message.reply_text(f"❌ {e}")
+        await context.bot.restrict_chat_member(
+            chat_id=update.effective_chat.id,
+            user_id=target.id,
+            permissions=ChatPermissions(
+                can_send_messages=True,
+                can_send_audios=True,
+                can_send_documents=True,
+                can_send_photos=True,
+                can_send_videos=True,
+                can_send_video_notes=True,
+                can_send_voice_notes=True,
+                can_send_polls=True,
+                can_send_other_messages=True,
+                can_add_web_page_previews=True,
+                can_invite_users=True
+            )
+        )
+        name = f"@{target.username}" if target.username else target.full_name
+        await update.message.reply_text(f"🔊 <b>{name}</b> unmuted.", parse_mode='HTML')
+    except Exception as e:
+        await update.message.reply_text(f"❌ Error: <code>{e}</code>", parse_mode='HTML')
 
 async def clear_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
@@ -622,14 +652,18 @@ async def on_bot_added_to_group(update: Update, context: ContextTypes.DEFAULT_TY
 # MENU SETUP
 # ============================================================
 async def setup_private_commands(app):
-    try: await app.bot.set_my_commands(PRIVATE_COMMANDS, scope=BotCommandScopeAllPrivateChats()); logger.info("✅ Private cmds")
-    except Exception as e: logger.error(f"Private cmd err: {e}")
+    try:
+        await app.bot.set_my_commands(PRIVATE_COMMANDS, scope=BotCommandScopeAllPrivateChats())
+        logger.info("✅ Private cmds")
+    except Exception as e:
+        logger.error(f"Private cmd err: {e}")
 
 async def setup_group_commands(app, cid):
     try:
         await app.bot.set_my_commands(GROUP_ADMIN_COMMANDS, scope=BotCommandScopeChatAdministrators(chat_id=cid))
         await app.bot.set_my_commands(GROUP_PUBLIC_COMMANDS, scope=BotCommandScopeChat(chat_id=cid))
-    except Exception as e: logger.error(f"Group cmd err: {e}")
+    except Exception as e:
+        logger.error(f"Group cmd err: {e}")
 
 async def post_init(app):
     await setup_private_commands(app)
@@ -681,7 +715,6 @@ def run_bot_in_thread():
         await app.updater.start_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
         logger.info("✅ Bot polling started")
 
-        # Block forever
         try:
             await asyncio.Event().wait()
         except asyncio.CancelledError:
