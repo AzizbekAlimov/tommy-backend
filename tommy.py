@@ -1,5 +1,6 @@
 """
-TOMMY BOT — Admin-only commands in groups
+TOMMY BOT — Complete
+Admin-only group commands + Private chat commands
 """
 import os, io, re, json, time, sqlite3, asyncio, logging, colorsys, threading
 from io import BytesIO
@@ -10,13 +11,16 @@ from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 
 from telegram import (
-    Update, InlineKeyboardButton, InlineKeyboardMarkup, 
-    ChatPermissions, BotCommand, BotCommandScopeChatAdministrators,
-    BotCommandScopeAllPrivateChats, BotCommandScopeDefault
+    Update, InlineKeyboardButton, InlineKeyboardMarkup,
+    ChatPermissions, BotCommand,
+    BotCommandScopeChatAdministrators,
+    BotCommandScopeAllPrivateChats,
+    BotCommandScopeChat
 )
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler,
-    MessageHandler, filters, ContextTypes, ConversationHandler
+    MessageHandler, filters, ContextTypes, ConversationHandler,
+    ChatMemberHandler
 )
 from telegram.request import HTTPXRequest
 
@@ -48,7 +52,34 @@ if GEMINI_AVAILABLE and GEMINI_API_KEY and GEMINI_API_KEY != "YOUR_GEMINI_API_KE
 PHOTO, PLAYER_ID, CLASSIC, ULTIMATE, KILLS = range(5)
 
 # ============================================================
-# HTML (WebApp) — minimal
+# COMMAND LISTS
+# ============================================================
+PRIVATE_COMMANDS = [
+    BotCommand("start", "Start the bot"),
+    BotCommand("cancel", "Cancel operation"),
+    BotCommand("admin", "Bot statistics"),
+    BotCommand("stats", "Bot statistics"),
+    BotCommand("users", "Users list"),
+    BotCommand("broadcast", "Broadcast message"),
+    BotCommand("ban", "Ban user"),
+    BotCommand("unban", "Unban user"),
+    BotCommand("banned", "Banned users list"),
+]
+
+GROUP_ADMIN_COMMANDS = [
+    BotCommand("start", "Start the bot"),
+    BotCommand("setup", "Setup command menu"),
+    BotCommand("mute", "Mute user (reply)"),
+    BotCommand("unmute", "Unmute user (reply)"),
+    BotCommand("clear", "Clear recent messages"),
+]
+
+GROUP_PUBLIC_COMMANDS = [
+    BotCommand("start", "Start the bot"),
+]
+
+# ============================================================
+# HTML (WebApp)
 # ============================================================
 INDEX_HTML = r'''<!DOCTYPE html>
 <html lang="en">
@@ -108,13 +139,13 @@ def init_db():
 
 def save_user(uid, username, first_name):
     conn = sqlite3.connect("users.db"); c = conn.cursor()
-    c.execute("INSERT OR IGNORE INTO users VALUES (?,?,?,?)", 
+    c.execute("INSERT OR IGNORE INTO users VALUES (?,?,?,?)",
         (uid, username or "", first_name or "", datetime.now(TZ_TASHKENT).strftime("%Y-%m-%d %H:%M")))
     conn.commit(); conn.close()
 
 def save_post(uid, pid, cr, ur, k):
     conn = sqlite3.connect("users.db"); c = conn.cursor()
-    c.execute("INSERT INTO posts (user_id,player_id,classic_rank,ultimate_rank,kills,created_at) VALUES (?,?,?,?,?,?)", 
+    c.execute("INSERT INTO posts (user_id,player_id,classic_rank,ultimate_rank,kills,created_at) VALUES (?,?,?,?,?,?)",
         (uid, pid, cr, ur, k, datetime.now(TZ_TASHKENT).strftime("%Y-%m-%d %H:%M")))
     conn.commit(); conn.close()
 
@@ -144,7 +175,7 @@ def get_recent_posts(limit=10):
 
 def ban_user(uid):
     conn = sqlite3.connect("users.db"); c = conn.cursor()
-    c.execute("INSERT OR IGNORE INTO banned_users VALUES (?, ?)", 
+    c.execute("INSERT OR IGNORE INTO banned_users VALUES (?, ?)",
         (uid, datetime.now(TZ_TASHKENT).strftime("%Y-%m-%d %H:%M")))
     conn.commit(); conn.close()
 
@@ -175,7 +206,7 @@ def hide_id(pid):
 def is_valid_player_id(p):
     p = str(p).strip()
     if not p.isdigit() or len(p) != 11: return False
-    if p[0] not in ("5","6"): return False
+    if p[0] not in ("5", "6"): return False
     if len(set(p)) == 1: return False
     return True
 
@@ -184,14 +215,14 @@ def validate_pubg_screenshot(image_bytes):
         img = Image.open(BytesIO(image_bytes)); img.load()
     except Exception:
         return False, "Could not read image."
-    if img.format and img.format.upper() not in ("JPEG","PNG","WEBP","JPG"):
+    if img.format and img.format.upper() not in ("JPEG", "PNG", "WEBP", "JPG"):
         return False, "Unsupported format."
     w, h = img.size
     if w < 640 or h < 360: return False, "Resolution too low."
     if w <= h: return False, "Landscape only."
-    ratio = w/h
-    allowed = [1.333,1.5,1.6,1.667,1.778,2.0,2.056,2.111,2.167,2.222,2.333,2.444]
-    if not any(abs(ratio-r) <= 0.06 for r in allowed):
+    ratio = w / h
+    allowed = [1.333, 1.5, 1.6, 1.667, 1.778, 2.0, 2.056, 2.111, 2.167, 2.222, 2.333, 2.444]
+    if not any(abs(ratio - r) <= 0.06 for r in allowed):
         return False, "Wrong screen ratio."
     return True, ""
 
@@ -221,11 +252,7 @@ def human_duration(td):
     if total < 604800: return f"{total // 86400} days"
     return f"{total // 604800} weeks"
 
-# ============================================================
-# ✅ ADMIN CHECK HELPER
-# ============================================================
 async def is_group_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
-    """Return True if the user is admin/creator of the group."""
     chat = update.effective_chat
     user = update.effective_user
     if chat.type not in ('group', 'supergroup'):
@@ -237,7 +264,6 @@ async def is_group_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         return False
 
 async def check_group_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
-    """Check if user is admin. If not, send error message and return False."""
     if not await is_group_admin(update, context):
         await update.message.reply_text(
             "🚫 <b>This command is only for group admins.</b>\n\n"
@@ -246,6 +272,37 @@ async def check_group_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         )
         return False
     return True
+
+# ============================================================
+# COMMAND MENU SETUP
+# ============================================================
+async def setup_private_commands(application):
+    try:
+        await application.bot.set_my_commands(
+            PRIVATE_COMMANDS,
+            scope=BotCommandScopeAllPrivateChats()
+        )
+        logger.info("✅ Private commands set")
+    except Exception as e:
+        logger.error(f"❌ Private commands error: {e}")
+
+async def setup_group_commands(application, chat_id):
+    try:
+        await application.bot.set_my_commands(
+            GROUP_ADMIN_COMMANDS,
+            scope=BotCommandScopeChatAdministrators(chat_id=chat_id)
+        )
+        await application.bot.set_my_commands(
+            GROUP_PUBLIC_COMMANDS,
+            scope=BotCommandScopeChat(chat_id=chat_id)
+        )
+        logger.info(f"✅ Group commands set for chat {chat_id}")
+    except Exception as e:
+        logger.error(f"❌ Group commands error for {chat_id}: {e}")
+
+async def post_init(application):
+    await setup_private_commands(application)
+    logger.info("✅ post_init done")
 
 # ============================================================
 # SEND TO TELEGRAM
@@ -433,7 +490,7 @@ async def confirm_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         await context.bot.send_photo(chat_id=CHANNEL_ID, photo=photo_id, caption=caption)
         user = update.effective_user
-        save_post(user.id, context.user_data.get('player_id',''), context.user_data.get('classic_rank',''), context.user_data.get('ultimate_rank',''), context.user_data.get('kills',''))
+        save_post(user.id, context.user_data.get('player_id', ''), context.user_data.get('classic_rank', ''), context.user_data.get('ultimate_rank', ''), context.user_data.get('kills', ''))
         await q.message.delete()
         await q.message.reply_text("✅ Sent to channel!")
     except Exception as e:
@@ -482,14 +539,14 @@ async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     users = get_all_users(limit=10)
     if users:
-        text += f"<b>👤 Last 10 users:</b>\n"
+        text += "<b>👤 Last 10 users:</b>\n"
         for uid, un, fn, ja in users:
             name = f"@{un}" if un else (fn if fn else "User")
             text += f"• {name} — {ja}\n"
 
     posts = get_recent_posts(limit=5)
     if posts:
-        text += f"\n<b>📸 Last 5 posts:</b>\n"
+        text += "\n<b>📸 Last 5 posts:</b>\n"
         for uid, pid, cr, ur, k, ca in posts:
             text += f"• {hide_id(pid)} — {cr} / {ur} — {k} kills — {ca}\n"
 
@@ -539,8 +596,10 @@ async def handle_broadcast_message(update: Update, context: ContextTypes.DEFAULT
         except Exception:
             failed += 1
         if idx % 10 == 0 or idx == total:
-            try: await progress.edit_text(f"📤 Sending... {idx}/{total}")
-            except Exception: pass
+            try:
+                await progress.edit_text(f"📤 Sending... {idx}/{total}")
+            except Exception:
+                pass
     await progress.edit_text(
         f"✅ <b>Broadcast complete!</b>\n\n✔️ Sent: <b>{sent}</b>\n❌ Failed: <b>{failed}</b>",
         parse_mode='HTML'
@@ -554,7 +613,8 @@ async def ban_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not args:
         await update.message.reply_text("Usage: <code>/ban USER_ID</code>", parse_mode='HTML')
         return
-    try: uid = int(args[0])
+    try:
+        uid = int(args[0])
     except ValueError:
         await update.message.reply_text("❌ Invalid user ID")
         return
@@ -572,7 +632,8 @@ async def unban_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not args:
         await update.message.reply_text("Usage: <code>/unban USER_ID</code>", parse_mode='HTML')
         return
-    try: uid = int(args[0])
+    try:
+        uid = int(args[0])
     except ValueError:
         await update.message.reply_text("❌ Invalid user ID")
         return
@@ -593,10 +654,25 @@ async def banned_list_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, parse_mode='HTML')
 
 # ============================================================
-# ✅ GROUP ADMIN-ONLY COMMANDS
+# GROUP ADMIN-ONLY COMMANDS
 # ============================================================
+async def setup_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Setup command menu for this group"""
+    chat = update.effective_chat
+    if chat.type not in ('group', 'supergroup'):
+        await update.message.reply_text("❌ This command works only in groups.")
+        return
+    if not await check_group_admin(update, context):
+        return
+    await setup_group_commands(context.application, chat.id)
+    await update.message.reply_text(
+        "✅ <b>Command menu set for this group!</b>\n\n"
+        "• Group admins will see: /mute, /unmute, /clear\n"
+        "• Regular members will see: /start",
+        parse_mode='HTML'
+    )
+
 async def mute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Check admin
     if not await check_group_admin(update, context):
         return
 
@@ -713,8 +789,9 @@ async def clear_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         start_id = max(1, end_id - 50)
 
-    status = await update.message.reply_text(f"🗑️ Clearing messages...")
-    deleted = 0; failed = 0
+    status = await update.message.reply_text("🗑️ Clearing messages...")
+    deleted = 0
+    failed = 0
     for msg_id in range(start_id, end_id + 1):
         try:
             await context.bot.delete_message(chat_id=chat.id, message_id=msg_id)
@@ -722,8 +799,10 @@ async def clear_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             failed += 1
 
-    try: await status.delete()
-    except Exception: pass
+    try:
+        await status.delete()
+    except Exception:
+        pass
 
     report = await context.bot.send_message(
         chat_id=chat.id,
@@ -736,47 +815,38 @@ async def clear_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode='HTML'
     )
     await asyncio.sleep(5)
-    try: await report.delete()
-    except Exception: pass
-
-# ============================================================
-# ✅ COMMAND MENU SETUP — admin-only in groups
-# ============================================================
-async def post_init(application):
-    """Bot ishga tushgach, buyruqlar menyusini o'rnatish"""
     try:
-        # 1) Private chat — hamma uchun
-        await application.bot.set_my_commands(
-            [
-                BotCommand("start", "Start the bot"),
-                BotCommand("cancel", "Cancel operation"),
-                BotCommand("admin", "Bot statistics (admin)"),
-                BotCommand("stats", "Bot statistics (admin)"),
-                BotCommand("users", "Users list (admin)"),
-                BotCommand("broadcast", "Broadcast (admin)"),
-                BotCommand("ban", "Ban user (admin)"),
-                BotCommand("unban", "Unban user (admin)"),
-                BotCommand("banned", "Banned list (admin)"),
-            ],
-            scope=BotCommandScopeAllPrivateChats()
-        )
+        await report.delete()
+    except Exception:
+        pass
 
-        # 2) Groups — faqat adminlar uchun
-        # Eslatma: setMyCommands turli chat_id uchun alohida chaqirilishi kerak,
-        # lekin biz BotCommandScopeChatAdministrators ni ishlata olmaymiz har bir chat uchun.
-        # Shuning uchun default group commands ni o'rnatmaymiz yoki faqat /start qo'yamiz.
+# ============================================================
+# BOT ADDED TO GROUP HANDLER
+# ============================================================
+async def on_bot_added_to_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Bot guruhga qo'shilganda — buyruqlar menyusini sozlash"""
+    my_chat_member = update.my_chat_member
+    if not my_chat_member:
+        return
 
-        # Guruhda hamma uchun faqat /start ko'rinadi
-        await application.bot.set_my_commands(
-            [
-                BotCommand("start", "Start the bot"),
-            ],
-            scope=BotCommandScopeDefault()
-        )
+    chat = my_chat_member.chat
+    new_status = my_chat_member.new_chat_member.status
 
-        logger.info("✅ Command menus set")
-    except Exception as e:
-        logger.error(f"❌ setMyCommands error: {e}")
+    if chat.type in ('group', 'supergroup'):
+        if new_status in ('member', 'administrator'):
+            logger.info(f"Bot added/updated in group: {chat.title} ({chat.id})")
+            await setup_group_commands(context.application, chat.id)
+        elif new_status in ('left', 'kicked'):
+            logger.info(f"Bot removed from group: {chat.title} ({chat.id})")
+            try:
+                await context.bot.delete_my_commands(
+                    scope=BotCommandScopeChatAdministrators(chat_id=chat.id)
+                )
+                await context.bot.delete_my_commands(
+                    scope=BotCommandScopeChat(chat_id=chat.id)
+                )
+            except Exception:
+                pass
 
 # ============================================================
 # START BOT
@@ -784,12 +854,21 @@ async def post_init(application):
 def start_bot():
     logger.info("🤖 Bot starting...")
     try:
-        req = HTTPXRequest(connection_pool_size=8, connect_timeout=30.0, read_timeout=30.0, write_timeout=30.0, pool_timeout=30.0)
-        application = Application.builder()\
-            .token(BOT_TOKEN)\
-            .request(req)\
-            .post_init(post_init)\
+        req = HTTPXRequest(
+            connection_pool_size=8,
+            connect_timeout=30.0,
+            read_timeout=30.0,
+            write_timeout=30.0,
+            pool_timeout=30.0
+        )
+
+        application = (
+            Application.builder()
+            .token(BOT_TOKEN)
+            .request(req)
+            .post_init(post_init)
             .build()
+        )
 
         conv = ConversationHandler(
             entry_points=[CallbackQueryHandler(rank_start, pattern="^rank_start$")],
@@ -810,7 +889,7 @@ def start_bot():
         application.add_handler(CallbackQueryHandler(cancel_post, pattern="^cancel_post$"))
         application.add_handler(CallbackQueryHandler(contact, pattern="^contact$"))
 
-        # Owner-only commands
+        # Owner-only
         application.add_handler(CommandHandler("admin", admin_stats))
         application.add_handler(CommandHandler("stats", admin_stats))
         application.add_handler(CommandHandler("users", users_list))
@@ -819,7 +898,8 @@ def start_bot():
         application.add_handler(CommandHandler("unban", unban_cmd))
         application.add_handler(CommandHandler("banned", banned_list_cmd))
 
-        # Group admin-only commands (check inside each handler)
+        # Group admin-only
+        application.add_handler(CommandHandler("setup", setup_cmd))
         application.add_handler(CommandHandler("mute", mute_cmd))
         application.add_handler(CommandHandler("unmute", unmute_cmd))
         application.add_handler(CommandHandler("clear", clear_cmd))
@@ -830,8 +910,18 @@ def start_bot():
             handle_broadcast_message
         ))
 
-        logger.info("✅ Bot started")
-        application.run_polling(stop_signals=None, drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
+        # Bot added/removed from group
+        application.add_handler(ChatMemberHandler(
+            on_bot_added_to_group,
+            ChatMemberHandler.MY_CHAT_MEMBER
+        ))
+
+        logger.info("✅ Bot started (background thread)")
+        application.run_polling(
+            stop_signals=None,
+            drop_pending_updates=True,
+            allowed_updates=Update.ALL_TYPES
+        )
     except Exception as e:
         logger.error(f"❌ Bot error: {e}")
 
