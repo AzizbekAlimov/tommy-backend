@@ -1,5 +1,6 @@
 """
 TOMMY BOT — Complete with Command Menu + AI Analysis
+FIXED: Bot runs on MAIN thread, Flask on BACKGROUND thread
 """
 import os, sqlite3, asyncio, logging, threading, base64, json
 from io import BytesIO
@@ -33,7 +34,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 CHANNEL_ID = os.getenv("CHANNEL_ID", "@TommyXcheat2")
 OWNER_FIXED = "@Tommy_1727"
 ADMIN_ID = int(os.getenv("ADMIN_ID", "7383782449"))
-PORT = int(os.getenv("PORT", 3000))
+PORT = int(os.getenv("PORT", 10000))
 
 TZ_TASHKENT = timezone(timedelta(hours=5))
 
@@ -370,7 +371,13 @@ def send_feedback():
         return jsonify({'ok': False, 'description': str(e)}), 500
 
 def run_flask():
-    flask_app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False, threaded=True)
+    flask_app.run(
+        host='0.0.0.0',
+        port=PORT,
+        debug=False,
+        use_reloader=False,
+        threaded=True
+    )
 
 # ============================================================
 # TELEGRAM BOT
@@ -841,10 +848,10 @@ async def post_init(application):
     logger.info("✅ post_init done")
 
 # ============================================================
-# START BOT
+# START BOT (MAIN THREAD — run_polling signal handler)
 # ============================================================
 def start_bot():
-    logger.info("🤖 Bot starting...")
+    logger.info("🤖 Bot starting on MAIN thread...")
     try:
         req = HTTPXRequest(
             connection_pool_size=8,
@@ -894,21 +901,34 @@ def start_bot():
             on_bot_added_to_group,
             ChatMemberHandler.MY_CHAT_MEMBER
         ))
-        logger.info("✅ Bot started")
+        logger.info("✅ All handlers registered")
+        logger.info("✅ Bot starting polling...")
+
+        # 🔥 MAIN THREAD da ishga tushirish (signal handler uchun)
         application.run_polling(
-            stop_signals=None,
             drop_pending_updates=True,
             allowed_updates=Update.ALL_TYPES
         )
     except Exception as e:
         logger.error(f"❌ Bot error: {e}")
 
+# ============================================================
+# MAIN
+# ============================================================
 def main():
     init_db()
-    bot_thread = threading.Thread(target=start_bot, daemon=True)
-    bot_thread.start()
-    logger.info(f"🌐 Flask server: port {PORT}")
-    run_flask()
+    logger.info("=" * 50)
+    logger.info("🚀 TOMMY BOT STARTING...")
+    logger.info("=" * 50)
+
+    # 1️⃣ Flask ni BACKGROUND THREAD da ishga tushiramiz
+    flask_thread = threading.Thread(target=run_flask, daemon=True)
+    flask_thread.start()
+    logger.info(f"🌐 Flask server running on port {PORT} (background thread)")
+
+    # 2️⃣ Bot ni MAIN THREAD da ishga tushiramiz (signal handler uchun MUHIM!)
+    logger.info("🤖 Starting Telegram bot on MAIN thread...")
+    start_bot()
 
 if __name__ == "__main__":
     main()
