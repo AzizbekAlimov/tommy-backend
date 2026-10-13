@@ -17,6 +17,11 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const CHANNEL_ID = process.env.CHANNEL_ID;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
+if (!BOT_TOKEN || !CHANNEL_ID) {
+    console.error('❌ BOT_TOKEN yoki CHANNEL_ID yo\'q! .env faylni tekshiring');
+    process.exit(1);
+}
+
 /* ============================================================
    🤖 GEMINI AI — rasmni tahlil qilish
    ============================================================ */
@@ -32,23 +37,20 @@ async function analyzeWithAI(imageBuffer, mimeType) {
         const prompt = `You are a PUBG Mobile screenshot analyzer. Carefully analyze this screenshot and extract information. Return ONLY a valid JSON object with no markdown, no extra text.
 
 {
-  "player_id": "11-digit UID (look in top-left corner or profile section) or null",
+  "player_id": "11-digit UID or null",
   "classic_rank": "Bronze/Silver/Gold/Platinum/Diamond/Crown/Ace/Ace Master/Ace Dominator/Conqueror or null",
   "ultimate_rank": "Vanguard/Exceed/Supreme/Peerless/Legend or null",
-  "kills": "number of kills shown in match result or null",
+  "kills": "number of kills or null",
   "map": "map name or null"
 }
 
 RULES:
 - player_id: exactly 11 digits, starts with 5 or 6
-- classic_rank: look for rank badge and text (e.g. "Conqueror", "Ace Master")
-- ultimate_rank: look for Ultimate Royale section (e.g. "Legend", "Supreme")
-- kills: number next to skull icon in match stats
 - If not visible, set to null
 - Return ONLY the JSON, no other text`;
 
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -106,7 +108,7 @@ app.get('/', (req, res) => {
 });
 
 /* ============================================================
-   📤 /send-feedback — rasmni AI bilan tahlil qilib yuborish
+   📤 /send-feedback
    ============================================================ */
 app.post('/send-feedback', upload.single('photo'), async (req, res) => {
     try {
@@ -115,22 +117,18 @@ app.post('/send-feedback', upload.single('photo'), async (req, res) => {
         }
 
         const frontendCaption = req.body.caption || '';
-
         console.log('📸 Rasm qabul qilindi, AI tahlil boshlanmoqda...');
 
-        // 🤖 AI ORQALI RASMNI TAHLIL QILISH
         const aiData = await analyzeWithAI(req.file.buffer, req.file.mimetype);
 
         let finalCaption;
 
         if (aiData) {
-            // AI natijalarini olish
             let playerId = aiData.player_id || '';
             const classicRank = aiData.classic_rank || 'Unknown';
             const ultimateRank = aiData.ultimate_rank || 'Unknown';
             const kills = aiData.kills || '0';
 
-            // ID masking: 52412345619 -> 524***19
             let hiddenId = 'Unknown';
             if (playerId && String(playerId).length === 11) {
                 playerId = String(playerId);
@@ -139,11 +137,9 @@ app.post('/send-feedback', upload.single('photo'), async (req, res) => {
                 hiddenId = String(playerId);
             }
 
-            // Owner — frontend'dan olish
             const ownerLine = frontendCaption.split('\n')[0] || '👤 OWNER: Unknown';
             const ownerName = ownerLine.replace('👤 OWNER: ', '').trim();
 
-            // Vaqt
             const now = new Date();
             const hh = String(now.getHours()).padStart(2, '0');
             const mm = String(now.getMinutes()).padStart(2, '0');
@@ -158,19 +154,15 @@ app.post('/send-feedback', upload.single('photo'), async (req, res) => {
                 `🏆 CLASSIC RANK: ${classicRank}\n` +
                 `🏆 ULTIMATE ROYALE RANK: ${ultimateRank}\n` +
                 `🕒 TIME: ${timeStr}\n` +
-                `💀 KILL: ${kills}\n` +
-                `\n` +
+                `💀 KILL: ${kills}\n\n` +
                 `👤 OWNER: @Tommy_1727 ✅`;
 
             console.log('✅ AI caption yasaldi');
-
         } else {
-            // AI ishlamadi — frontend'dan kelgan caption ishlatiladi
             console.log('⚠️ AI ishlamadi, frontend captioni ishlatiladi');
             finalCaption = frontendCaption;
         }
 
-        // Telegramga yuborish
         const form = new FormData();
         form.append('chat_id', CHANNEL_ID);
         form.append('caption', finalCaption);
