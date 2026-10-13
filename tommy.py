@@ -71,6 +71,8 @@ GROUP_ADMIN_COMMANDS = [
     BotCommand("setup", "Setup command menu"),
     BotCommand("mute", "Mute user (reply)"),
     BotCommand("unmute", "Unmute user (reply)"),
+    BotCommand("ban", "Ban user (reply)"),
+    BotCommand("unban", "Unban user (reply)"),
     BotCommand("clear", "Clear recent messages"),
 ]
 
@@ -606,39 +608,108 @@ async def handle_broadcast_message(update: Update, context: ContextTypes.DEFAULT
     )
 
 async def ban_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
-        await update.message.reply_text("❌ You are not an admin!")
+    chat = update.effective_chat
+    user = update.effective_user
+    
+    # 1. Avval adminlikni tekshiramiz
+    if chat.type == 'private':
+        if user.id != ADMIN_ID:
+            await update.message.reply_text("❌ You are not an admin!")
+            return
+    else:
+        if not await check_group_admin(update, context):
+            return
+
+    target_user = None
+
+    # 2. Agar biror xabarga javob qilingan bo'lsa, o'sha odamni olamiz
+    if update.message.reply_to_message:
+        target_user = update.message.reply_to_message.from_user
+    # 3. Agar javob bo'lmasa, ID raqam kiritilganini tekshiramiz
+    elif context.args:
+        try:
+            uid = int(context.args[0])
+            target_user = await context.bot.get_chat(uid)
+        except (ValueError, Exception):
+            await update.message.reply_text("❌ Invalid user ID or user not found.")
+            return
+    else:
+        await update.message.reply_text(
+            "⚠️ <b>Qanday ishlatiladi:</b>\n\n"
+            "1. Shaxsiy chatda: <code>/ban 123456789</code>\n"
+            "2. Guruhda: Birovning xabariga javob qilib <code>/ban</code> deb yozing.",
+            parse_mode='HTML'
+        )
         return
-    args = context.args
-    if not args:
-        await update.message.reply_text("Usage: <code>/ban USER_ID</code>", parse_mode='HTML')
-        return
-    try:
-        uid = int(args[0])
-    except ValueError:
-        await update.message.reply_text("❌ Invalid user ID")
-        return
-    if uid == ADMIN_ID:
+
+    if target_user.id == user.id:
         await update.message.reply_text("❌ You cannot ban yourself!")
         return
-    ban_user(uid)
-    await update.message.reply_text(f"✅ User <code>{uid}</code> banned.", parse_mode='HTML')
+
+    # 4. Guruhda adminni ban qilishni oldini olish
+    if chat.type in ('group', 'supergroup'):
+        try:
+            target_member = await chat.get_member(target_user.id)
+            if target_member.status in ('administrator', 'creator'):
+                await update.message.reply_text("❌ Cannot ban admins.")
+                return
+        except Exception:
+            pass
+
+    # 5. Ban qilish jarayoni
+    name = f"@{target_user.username}" if target_user.username else target_user.full_name
+    try:
+        if chat.type == 'private':
+            ban_user(target_user.id)
+            await update.message.reply_text(f"✅ User <code>{target_user.id}</code> ({name}) banned from the bot.", parse_mode='HTML')
+        else:
+            await context.bot.ban_chat_member(chat_id=chat.id, user_id=target_user.id)
+            await update.message.reply_text(f"🔨 <b>{name}</b> banned from the group.\n\n👮 By: {user.mention_html()}", parse_mode='HTML')
+    except Exception as e:
+        await update.message.reply_text(f"❌ Error: <code>{e}</code>\n\nMake sure I have 'Ban users' permission.", parse_mode='HTML')
 
 async def unban_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
-        await update.message.reply_text("❌ You are not an admin!")
+    chat = update.effective_chat
+    user = update.effective_user
+
+    if chat.type == 'private':
+        if user.id != ADMIN_ID:
+            await update.message.reply_text("❌ You are not an admin!")
+            return
+    else:
+        if not await check_group_admin(update, context):
+            return
+
+    target_user = None
+
+    if update.message.reply_to_message:
+        target_user = update.message.reply_to_message.from_user
+    elif context.args:
+        try:
+            uid = int(context.args[0])
+            target_user = await context.bot.get_chat(uid)
+        except (ValueError, Exception):
+            await update.message.reply_text("❌ Invalid user ID or user not found.")
+            return
+    else:
+        await update.message.reply_text(
+            "⚠️ <b>Qanday ishlatiladi:</b>\n\n"
+            "1. Shaxsiy chatda: <code>/unban 123456789</code>\n"
+            "2. Guruhda: Birovning xabariga javob qilib <code>/unban</code> deb yozing.",
+            parse_mode='HTML'
+        )
         return
-    args = context.args
-    if not args:
-        await update.message.reply_text("Usage: <code>/unban USER_ID</code>", parse_mode='HTML')
-        return
+
+    name = f"@{target_user.username}" if target_user.username else target_user.full_name
     try:
-        uid = int(args[0])
-    except ValueError:
-        await update.message.reply_text("❌ Invalid user ID")
-        return
-    unban_user(uid)
-    await update.message.reply_text(f"✅ User <code>{uid}</code> unbanned.", parse_mode='HTML')
+        if chat.type == 'private':
+            unban_user(target_user.id)
+            await update.message.reply_text(f"✅ User <code>{target_user.id}</code> ({name}) unbanned from the bot.", parse_mode='HTML')
+        else:
+            await context.bot.unban_chat_member(chat_id=chat.id, user_id=target_user.id)
+            await update.message.reply_text(f"🔊 <b>{name}</b> unbanned from the group.\n\n👮 By: {user.mention_html()}", parse_mode='HTML')
+    except Exception as e:
+        await update.message.reply_text(f"❌ Error: <code>{e}</code>", parse_mode='HTML')
 
 async def banned_list_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
@@ -667,7 +738,7 @@ async def setup_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await setup_group_commands(context.application, chat.id)
     await update.message.reply_text(
         "✅ <b>Command menu set for this group!</b>\n\n"
-        "• Group admins will see: /mute, /unmute, /clear\n"
+        "• Group admins will see: /mute, /unmute, /ban, /unban, /clear\n"
         "• Regular members will see: /start",
         parse_mode='HTML'
     )
