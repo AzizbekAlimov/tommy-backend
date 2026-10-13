@@ -1,5 +1,5 @@
 """
-TOMMY BOT — Fixed: unmute_cmd PTB 21.6 compatible + explicit asyncio loop
+TOMMY BOT — Full version with Warn + Bad words + Bad stickers/GIFs filter
 """
 import os, sqlite3, asyncio, logging, threading, base64, json
 from io import BytesIO
@@ -37,6 +37,23 @@ PORT = int(os.getenv("PORT", "10000"))
 
 TZ_TASHKENT = timezone(timedelta(hours=5))
 
+# ============================================================
+# ⚠️ SO'KINISH SO'ZLARI (o'zingiz qo'shishingiz mumkin)
+# ============================================================
+BAD_WORDS = [
+    # Inglizcha
+    "fuck", "fucking", "fucker", "shit", "bitch", "asshole", "bastard",
+    "dick", "pussy", "cunt", "slut", "whore", "motherfucker", "nigger",
+    # O'zbekcha
+    "jalab", "qotoq", "siktir", "haromi", "qanjiq", "itvachcha",
+    "sik", "am", "sk", "tfu", "eshak", "donkey",
+    # Ruscha
+    "blyad", "huy", "pizdec", "suka", "nahuy", "mudak", "govno", "ebat",
+]
+
+MAX_WARNINGS = 3
+WARN_MUTE_DURATION = timedelta(hours=1)
+
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
@@ -70,6 +87,13 @@ GROUP_ADMIN_COMMANDS = [
     BotCommand("setup", "Setup command menu"),
     BotCommand("mute", "Mute user (reply)"),
     BotCommand("unmute", "Unmute user (reply)"),
+    BotCommand("mutesticker", "Mute stickers/GIFs"),
+    BotCommand("warn", "Warn user (reply)"),
+    BotCommand("unwarn", "Clear user warnings"),
+    BotCommand("warns", "Show user warnings"),
+    BotCommand("addbadsticker", "Mark sticker/GIF as bad"),
+    BotCommand("delbadsticker", "Unmark sticker/GIF"),
+    BotCommand("listbadstickers", "List bad stickers"),
     BotCommand("clear", "Clear recent messages"),
 ]
 GROUP_PUBLIC_COMMANDS = [BotCommand("start", "Start the bot")]
@@ -154,7 +178,7 @@ body{color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,s
 <div class="info-row"><span class="info-label">Bot:</span><span class="info-value">TOMMY BOT</span></div>
 <div class="info-row"><span class="info-label">Channel:</span><span class="info-value green">@TommyXcheat2</span></div>
 <div class="info-row"><span class="info-label">Owner:</span><span class="info-value" style="color:#FFC107">@Tommy_1727</span></div>
-<div class="info-row"><span class="info-label">Version:</span><span class="info-value">v3.5</span></div>
+<div class="info-row"><span class="info-label">Version:</span><span class="info-value">v3.6</span></div>
 </div>
 <button class="btn btn-primary" onclick="openChannel()">📊 STATISTICS</button>
 <button class="btn btn-secondary" onclick="startNew()">📤 START NEW</button>
@@ -205,6 +229,12 @@ def init_db():
     c.execute("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, username TEXT, first_name TEXT, joined_at TEXT)")
     c.execute("CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, player_id TEXT, classic_rank TEXT, ultimate_rank TEXT, kills TEXT, created_at TEXT)")
     c.execute("CREATE TABLE IF NOT EXISTS banned_users (user_id INTEGER PRIMARY KEY, banned_at TEXT)")
+    # ✅ YANGI: Warnings + Bad stickers
+    c.execute("""CREATE TABLE IF NOT EXISTS warnings
+                 (chat_id INTEGER, user_id INTEGER, count INTEGER DEFAULT 0,
+                  PRIMARY KEY (chat_id, user_id))""")
+    c.execute("""CREATE TABLE IF NOT EXISTS bad_stickers
+                 (file_id TEXT PRIMARY KEY, added_at TEXT)""")
     conn.commit(); conn.close()
 
 def save_user(uid, un, fn):
@@ -259,6 +289,41 @@ def get_banned_users():
     conn = sqlite3.connect("users.db"); c = conn.cursor()
     c.execute("SELECT user_id, banned_at FROM banned_users ORDER BY banned_at DESC")
     r = c.fetchall(); conn.close(); return r
+
+# ============================================================
+# ✅ YANGI: WARN + BAD STICKER DB
+# ============================================================
+def get_warn_count(chat_id, user_id):
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("SELECT count FROM warnings WHERE chat_id=? AND user_id=?", (chat_id, user_id))
+    r = c.fetchone(); conn.close()
+    return r[0] if r else 0
+
+def set_warn_count(chat_id, user_id, count):
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("INSERT OR REPLACE INTO warnings VALUES (?,?,?)", (chat_id, user_id, count))
+    conn.commit(); conn.close()
+
+def clear_warn(chat_id, user_id):
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("DELETE FROM warnings WHERE chat_id=? AND user_id=?", (chat_id, user_id))
+    conn.commit(); conn.close()
+
+def get_bad_stickers():
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("SELECT file_id FROM bad_stickers")
+    r = [x[0] for x in c.fetchall()]; conn.close(); return r
+
+def add_bad_sticker(file_id):
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("INSERT OR IGNORE INTO bad_stickers VALUES (?,?)",
+              (file_id, datetime.now(TZ_TASHKENT).strftime("%Y-%m-%d %H:%M")))
+    conn.commit(); conn.close()
+
+def remove_bad_sticker(file_id):
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("DELETE FROM bad_stickers WHERE file_id=?", (file_id,))
+    conn.commit(); conn.close()
 
 # ============================================================
 # HELPERS
@@ -348,6 +413,10 @@ CORS(flask_app, resources={r"/*": {"origins": "*"}})
 @flask_app.route('/', methods=['GET'])
 def index():
     return Response(INDEX_HTML, mimetype='text/html')
+
+@flask_app.route('/ping', methods=['GET', 'HEAD'])
+def ping():
+    return "OK", 200
 
 @flask_app.route('/send-feedback', methods=['POST'])
 def send_feedback():
@@ -498,7 +567,8 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID: await update.message.reply_text("❌ Not admin"); return
     text = (f"📊 <b>STATS</b>\n\n👥 Users: <b>{get_users_count()}</b>\n🆕 Today: <b>{get_today_users_count()}</b>\n"
-            f"📸 Posts: <b>{get_posts_count()}</b>\n🚫 Banned: <b>{len(get_banned_users())}</b>")
+            f"📸 Posts: <b>{get_posts_count()}</b>\n🚫 Banned: <b>{len(get_banned_users())}</b>\n"
+            f"⚠️ Bad stickers: <b>{len(get_bad_stickers())}</b>")
     await update.message.reply_text(text, parse_mode='HTML')
 
 async def users_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -625,6 +695,147 @@ async def unmute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"❌ Error: <code>{e}</code>", parse_mode='HTML')
 
+# ✅ STICKER/GIF MUTE (direct)
+async def mute_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await check_group_admin(update, context): return
+    if not update.message.reply_to_message:
+        await update.message.reply_text("🎭 Reply to a user's message with /mutesticker")
+        return
+    target = update.message.reply_to_message.from_user
+    if target.id == update.effective_user.id:
+        await update.message.reply_text("Can't mute yourself"); return
+    try:
+        await context.bot.restrict_chat_member(
+            chat_id=update.effective_chat.id,
+            user_id=target.id,
+            permissions=ChatPermissions(
+                can_send_messages=True,
+                can_send_audios=True,
+                can_send_documents=True,
+                can_send_photos=True,
+                can_send_videos=True,
+                can_send_video_notes=True,
+                can_send_voice_notes=True,
+                can_send_polls=True,
+                can_send_other_messages=False,
+                can_add_web_page_previews=True
+            )
+        )
+        name = f"@{target.username}" if target.username else target.full_name
+        await update.message.reply_text(
+            f"🎭 <b>{name}</b> — sticker va GIF yuborishi taqiqlandi.",
+            parse_mode='HTML'
+        )
+    except Exception as e:
+        await update.message.reply_text(f"❌ {e}")
+
+# ✅ WARN TIZIMI
+async def warn_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await check_group_admin(update, context): return
+    if not update.message.reply_to_message:
+        await update.message.reply_text("⚠️ Reply to a user's message with /warn")
+        return
+    target = update.message.reply_to_message.from_user
+    if target.id == update.effective_user.id:
+        await update.message.reply_text("Can't warn yourself"); return
+    try:
+        m = await update.effective_chat.get_member(target.id)
+        if m.status in ('administrator', 'creator'):
+            await update.message.reply_text("❌ Can't warn admins"); return
+    except: pass
+    chat_id = update.effective_chat.id
+    count = get_warn_count(chat_id, target.id) + 1
+    set_warn_count(chat_id, target.id, count)
+    name = f"@{target.username}" if target.username else target.full_name
+    if count >= MAX_WARNINGS:
+        try:
+            await context.bot.restrict_chat_member(
+                chat_id=chat_id, user_id=target.id,
+                permissions=ChatPermissions(can_send_messages=False),
+                until_date=datetime.now(timezone.utc) + WARN_MUTE_DURATION
+            )
+            await update.message.reply_text(
+                f"🔇 <b>{name}</b> — {MAX_WARNINGS} ta ogohlantirish!\n"
+                f"Jazo: <b>1 soat mute</b>",
+                parse_mode='HTML'
+            )
+            clear_warn(chat_id, target.id)
+        except Exception as e:
+            await update.message.reply_text(f"❌ {e}")
+    else:
+        await update.message.reply_text(
+            f"⚠️ <b>{name}</b> ogohlantirildi!\n"
+            f"Ogohlantirish: <b>{count}/{MAX_WARNINGS}</b>",
+            parse_mode='HTML'
+        )
+
+async def unwarn_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await check_group_admin(update, context): return
+    if not update.message.reply_to_message:
+        await update.message.reply_text("Reply to a user's message with /unwarn")
+        return
+    target = update.message.reply_to_message.from_user
+    clear_warn(update.effective_chat.id, target.id)
+    name = f"@{target.username}" if target.username else target.full_name
+    await update.message.reply_text(f"✅ <b>{name}</b> — ogohlantirishlar tozalandi.", parse_mode='HTML')
+
+async def warns_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await check_group_admin(update, context): return
+    if not update.message.reply_to_message:
+        await update.message.reply_text("Reply to a user's message with /warns")
+        return
+    target = update.message.reply_to_message.from_user
+    count = get_warn_count(update.effective_chat.id, target.id)
+    name = f"@{target.username}" if target.username else target.full_name
+    await update.message.reply_text(
+        f"⚠️ <b>{name}</b> — ogohlantirishlar: <b>{count}/{MAX_WARNINGS}</b>",
+        parse_mode='HTML'
+    )
+
+# ✅ BAD STICKER MANAGEMENT
+async def add_bad_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await check_group_admin(update, context): return
+    if not update.message.reply_to_message:
+        await update.message.reply_text("🎭 Reply to a sticker or GIF with /addbadsticker")
+        return
+    rm = update.message.reply_to_message
+    if not (rm.sticker or rm.animation):
+        await update.message.reply_text("❌ Reply to a sticker or GIF only!")
+        return
+    file_id = rm.sticker.file_unique_id if rm.sticker else rm.animation.file_unique_id
+    add_bad_sticker(file_id)
+    await update.message.reply_text(
+        f"✅ Sticker/GIF belgilandi!\n\n"
+        f"Endi uni kim yuborsa — <b>ogohlantirish</b> oladi.\n"
+        f"3 ta ogohlantirishdan keyin <b>1 soat mute</b>.",
+        parse_mode='HTML'
+    )
+
+async def del_bad_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await check_group_admin(update, context): return
+    if not update.message.reply_to_message:
+        await update.message.reply_text("🎭 Reply to a sticker or GIF with /delbadsticker")
+        return
+    rm = update.message.reply_to_message
+    if not (rm.sticker or rm.animation):
+        await update.message.reply_text("❌ Reply to a sticker or GIF only!")
+        return
+    file_id = rm.sticker.file_unique_id if rm.sticker else rm.animation.file_unique_id
+    remove_bad_sticker(file_id)
+    await update.message.reply_text("✅ Sticker/GIF ro'yxatdan olib tashlandi.")
+
+async def list_bad_stickers_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await check_group_admin(update, context): return
+    stickers = get_bad_stickers()
+    if not stickers:
+        await update.message.reply_text("📭 Taqiqlangan sticker/GIF yo'q.")
+        return
+    await update.message.reply_text(
+        f"🎭 <b>Taqiqlangan sticker/GIF: {len(stickers)} ta</b>\n\n"
+        f"<i>Yangi sticker qo'shish uchun unga reply qilib /addbadsticker yozing.</i>",
+        parse_mode='HTML'
+    )
+
 async def clear_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
     end = update.message.message_id
@@ -649,6 +860,79 @@ async def on_bot_added_to_group(update: Update, context: ContextTypes.DEFAULT_TY
         except: pass
 
 # ============================================================
+# ✅ YANGI: AUTO-MODERATION (so'kinish + yomon sticker)
+# ============================================================
+async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Har bir xabarni tekshiradi: so'kinish va yomon sticker/GIF"""
+    msg = update.effective_message
+    if not msg: return
+    if update.effective_chat.type not in ('group', 'supergroup'): return
+    if update.effective_user is None: return
+    if await is_group_admin(update, context): return  # Adminlar tekshirilmaydi
+
+    user = update.effective_user
+    chat_id = update.effective_chat.id
+    violation_reason = None
+
+    # 1. So'kinishni tekshirish
+    if msg.text:
+        text_lower = msg.text.lower()
+        for word in BAD_WORDS:
+            if word in text_lower:
+                violation_reason = f"so'kinish: <code>{word}</code>"
+                break
+
+    # 2. Yomon sticker/GIF ni tekshirish
+    if not violation_reason and (msg.sticker or msg.animation):
+        file_id = None
+        if msg.sticker: file_id = msg.sticker.file_unique_id
+        elif msg.animation: file_id = msg.animation.file_unique_id
+        if file_id and file_id in get_bad_stickers():
+            violation_reason = "taqiqlangan sticker/GIF"
+
+    if not violation_reason: return
+
+    # Xabarni o'chirish
+    try: await msg.delete()
+    except: pass
+
+    # Warn qo'shish
+    count = get_warn_count(chat_id, user.id) + 1
+    set_warn_count(chat_id, user.id, count)
+    name = f"@{user.username}" if user.username else user.full_name
+
+    if count >= MAX_WARNINGS:
+        try:
+            await context.bot.restrict_chat_member(
+                chat_id=chat_id, user_id=user.id,
+                permissions=ChatPermissions(can_send_messages=False),
+                until_date=datetime.now(timezone.utc) + WARN_MUTE_DURATION
+            )
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=(f"🔇 <b>{name}</b> — {MAX_WARNINGS} ta ogohlantirish!\n\n"
+                      f"Sabab: {violation_reason}\n"
+                      f"Jazo: <b>1 soat mute</b>\n\n"
+                      f"<i>Ogohlantirishlar tozalandi.</i>"),
+                parse_mode='HTML'
+            )
+            clear_warn(chat_id, user.id)
+        except Exception as e:
+            logger.error(f"Auto-mute error: {e}")
+    else:
+        try:
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=(f"⚠️ <b>{name}</b> ogohlantirildi!\n\n"
+                      f"Sabab: {violation_reason}\n"
+                      f"Ogohlantirish: <b>{count}/{MAX_WARNINGS}</b>\n\n"
+                      f"<i>{MAX_WARNINGS - count} marta qoldi — keyin 1 soat mute.</i>"),
+                parse_mode='HTML'
+            )
+        except Exception as e:
+            logger.error(f"Warn msg error: {e}")
+
+# ============================================================
 # MENU SETUP
 # ============================================================
 async def setup_private_commands(app):
@@ -670,7 +954,7 @@ async def post_init(app):
     logger.info("✅ post_init done")
 
 # ============================================================
-# 🤖 BOT — BACKGROUND THREAD with explicit asyncio loop
+# 🤖 BOT — BACKGROUND THREAD
 # ============================================================
 def run_bot_in_thread():
     loop = asyncio.new_event_loop()
@@ -706,9 +990,26 @@ def run_bot_in_thread():
         app.add_handler(CommandHandler("setup", setup_cmd))
         app.add_handler(CommandHandler("mute", mute_cmd))
         app.add_handler(CommandHandler("unmute", unmute_cmd))
+        app.add_handler(CommandHandler("mutesticker", mute_sticker_cmd))
+        app.add_handler(CommandHandler("warn", warn_cmd))
+        app.add_handler(CommandHandler("unwarn", unwarn_cmd))
+        app.add_handler(CommandHandler("warns", warns_cmd))
+        app.add_handler(CommandHandler("addbadsticker", add_bad_sticker_cmd))
+        app.add_handler(CommandHandler("delbadsticker", del_bad_sticker_cmd))
+        app.add_handler(CommandHandler("listbadstickers", list_bad_stickers_cmd))
         app.add_handler(CommandHandler("clear", clear_cmd))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & filters.User(ADMIN_ID) & filters.ChatType.PRIVATE, handle_broadcast_message))
         app.add_handler(ChatMemberHandler(on_bot_added_to_group, ChatMemberHandler.MY_CHAT_MEMBER))
+
+        # ✅ AUTO-MODERATION — group=1 (har bir guruh xabarini tekshiradi)
+        app.add_handler(
+            MessageHandler(
+                (filters.TEXT | filters.Sticker.ALL | filters.ANIMATION) &
+                (filters.ChatType.GROUP | filters.ChatType.SUPERGROUP),
+                auto_moderate
+            ),
+            group=1
+        )
 
         await app.initialize()
         await app.start()
@@ -738,6 +1039,8 @@ def main():
     logger.info("=" * 50)
     logger.info(f"🌐 Flask: port {PORT}")
     logger.info(f"📢 Channel: {CHANNEL_ID}")
+    logger.info(f"⚠️ Bad words: {len(BAD_WORDS)} ta")
+    logger.info(f"⚠️ Max warnings: {MAX_WARNINGS} → 1 soat mute")
 
     bot_thread = threading.Thread(target=run_bot_in_thread, daemon=True)
     bot_thread.start()
