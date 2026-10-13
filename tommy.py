@@ -1,7 +1,7 @@
 """
-TOMMY BOT — Full version with Warn + Bad words + Bad stickers/GIFs filter
+TOMMY BOT — Full: real bad words (UZ + RU + EN) + warn system + sticker/GIF mute
 """
-import os, sqlite3, asyncio, logging, threading, base64, json
+import os, sqlite3, asyncio, logging, threading, base64, json, re
 from io import BytesIO
 from datetime import datetime, timezone, timedelta
 
@@ -38,17 +38,102 @@ PORT = int(os.getenv("PORT", "10000"))
 TZ_TASHKENT = timezone(timedelta(hours=5))
 
 # ============================================================
-# ⚠️ SO'KINISH SO'ZLARI (o'zingiz qo'shishingiz mumkin)
+# ⚠️ TO'LIQ SO'KINISH SO'ZLARI
 # ============================================================
 BAD_WORDS = [
-    # Inglizcha
-    "fuck", "fucking", "fucker", "shit", "bitch", "asshole", "bastard",
-    "dick", "pussy", "cunt", "slut", "whore", "motherfucker", "nigger",
-    # O'zbekcha
-    "jalab", "qotoq", "siktir", "haromi", "qanjiq", "itvachcha",
-    "sik", "am", "sk", "tfu", "eshak", "donkey",
-    # Ruscha
-    "blyad", "huy", "pizdec", "suka", "nahuy", "mudak", "govno", "ebat",
+    # ==================================================
+    # 🇺🇿 O'ZBEKCHA
+    # ==================================================
+    "jalab", "jalap", "jallob", "jalloblar",
+    "qotoq", "qotoqlar",
+    "siktir", "sikish", "sikaman", "sikasan", "sikadi",
+    "haromi", "haromzoda", "haromilar",
+    "qanjiq", "qanjiqlar",
+    "itvachcha", "itvachchalar",
+    "onangni", "otangni", "onang", "otang",
+    "ko'tingni", "ko'ting", "ko'tim",
+    "sikiltir", "sikingni",
+
+    # ==================================================
+    # 🇷🇺 РУССКИЙ МАТ (40 слов)
+    # ==================================================
+    # --- Производные от "блядь" ---
+    "blyad",          # Блядь — грубое ругательство
+    "blyadina",       # Блядина — усилительная форма
+    "blyadskiy",      # Блядский — прилагательное
+    "blyadstvo",      # Блядство — разврат
+
+    # --- Производные от "хуй" ---
+    "huy",            # Хуй — мужской половой орган
+    "huynya",         # Хуйня — ерунда, чепуха
+    "huyni",          # Хуйни — родительный падеж
+    "huyak",          # Хуяк — грубое выражение при ударе
+    "huyok",          # Хуёк — уменьшительное
+
+    # --- Производные от "пизда" ---
+    "pizdec",         # Пиздец — конец, катастрофа
+    "pizda",          # Пизда — женский половой орган
+    "pizdets",        # Пиздец — вариант написания
+
+    # --- Производные от "сука" ---
+    "suka",           # Сука — оскорбительное обращение
+    "suchka",         # Сучка — уменьшительное
+    "sukin",          # Сукин — притяжательное
+
+    # --- Производные от "нахуй" ---
+    "nahuy",          # Нахуй — грубое "зачем, куда"
+    "nahui",          # Нахуй — вариант написания
+    "nahuya",         # Нахуя — грубое "зачем?"
+
+    # --- Производные от "мудак" ---
+    "mudak",          # Мудак — глупый человек
+    "mudila",         # Мудила — усилительная форма
+    "mudozvon",       # Мудозвон — болтун
+    "mudaki",         # Мудаки — множественное число
+
+    # --- Производные от "говно" ---
+    "govno",          # Говно — дерьмо
+    "govnyuk",        # Говнюк — неприятный человек
+    "govnyak",        # Говняк — плохое качество
+
+    # --- Производные от "ебать" ---
+    "ebat",           # Ебать — грубый глагол
+    "yebat",          # Ебать — вариант написания
+    "yobanyy",        # Ёбаный — проклятый
+    "yebal",          # Ебал — прошедшая форма
+    "yebanashka",     # Ебанашка — сумасшедший
+    "dolboyob",       # Долбоёб — очень глупый человек
+
+    # --- Производные от "пидор" ---
+    "pidar",          # Пидар — оскорбление мужчины
+    "pidoras",        # Пидорас — усилительная форма
+    "pidaraz",        # Пидораз — вариант написания
+    "pidor",          # Пидор — сокращённая форма
+
+    # --- Прочие грубые ---
+    "zalupa",         # Залупа — грубое ругательство
+    "zhopa",          # Жопа — задница
+    "zhopu",          # Жопу — винительный падеж
+    "gandon",         # Гандон — презерватив, оскорбление
+    "gandoni",        # Гандоны — множественное число
+
+    # ==================================================
+    # 🇬🇧 ENGLISH
+    # ==================================================
+    "fuck", "fucking", "fucker", "fucked", "fuckers",
+    "motherfucker", "motherfucking", "clusterfuck",
+    "fuckface", "fuckhead", "fucktard",
+    "shit", "shitty", "bullshit", "shitshow", "shithead",
+    "bitch", "bitches", "bitchy",
+    "asshole", "assholes",
+    "bastard", "bastards",
+    "dick", "dickhead", "dickheads", "dickface",
+    "pussy", "pussies",
+    "cunt", "cunts",
+    "slut", "sluts", "slutty",
+    "whore", "whores",
+    "cocksucker", "cocksuckers",
+    "dumbass", "dumbasses",
 ]
 
 MAX_WARNINGS = 3
@@ -229,7 +314,6 @@ def init_db():
     c.execute("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, username TEXT, first_name TEXT, joined_at TEXT)")
     c.execute("CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, player_id TEXT, classic_rank TEXT, ultimate_rank TEXT, kills TEXT, created_at TEXT)")
     c.execute("CREATE TABLE IF NOT EXISTS banned_users (user_id INTEGER PRIMARY KEY, banned_at TEXT)")
-    # ✅ YANGI: Warnings + Bad stickers
     c.execute("""CREATE TABLE IF NOT EXISTS warnings
                  (chat_id INTEGER, user_id INTEGER, count INTEGER DEFAULT 0,
                   PRIMARY KEY (chat_id, user_id))""")
@@ -291,7 +375,7 @@ def get_banned_users():
     r = c.fetchall(); conn.close(); return r
 
 # ============================================================
-# ✅ YANGI: WARN + BAD STICKER DB
+# WARN + BAD STICKER DB
 # ============================================================
 def get_warn_count(chat_id, user_id):
     conn = sqlite3.connect("users.db"); c = conn.cursor()
@@ -371,6 +455,19 @@ def human_duration(td):
     if t < 86400: return f"{t // 3600} hours"
     if t < 604800: return f"{t // 86400} days"
     return f"{t // 604800} weeks"
+
+# ============================================================
+# ✅ SO'KINISH TEKSHIRUVI (so'z chegaralari bilan)
+# ============================================================
+def contains_bad_word(text):
+    """Matnda so'kinish so'zini topadi (faqat ALOHIDA so'z sifatida)"""
+    if not text:
+        return None
+    words = re.findall(r"[a-zA-Zа-яА-ЯёЁ\u0400-\u04FF']+", text.lower())
+    for word in words:
+        if word in BAD_WORDS:
+            return word
+    return None
 
 # ============================================================
 # GEMINI AI
@@ -695,7 +792,6 @@ async def unmute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"❌ Error: <code>{e}</code>", parse_mode='HTML')
 
-# ✅ STICKER/GIF MUTE (direct)
 async def mute_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
     if not update.message.reply_to_message:
@@ -729,7 +825,6 @@ async def mute_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"❌ {e}")
 
-# ✅ WARN TIZIMI
 async def warn_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
     if not update.message.reply_to_message:
@@ -792,7 +887,6 @@ async def warns_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode='HTML'
     )
 
-# ✅ BAD STICKER MANAGEMENT
 async def add_bad_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
     if not update.message.reply_to_message:
@@ -860,29 +954,24 @@ async def on_bot_added_to_group(update: Update, context: ContextTypes.DEFAULT_TY
         except: pass
 
 # ============================================================
-# ✅ YANGI: AUTO-MODERATION (so'kinish + yomon sticker)
+# AUTO-MODERATION
 # ============================================================
 async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Har bir xabarni tekshiradi: so'kinish va yomon sticker/GIF"""
     msg = update.effective_message
     if not msg: return
     if update.effective_chat.type not in ('group', 'supergroup'): return
     if update.effective_user is None: return
-    if await is_group_admin(update, context): return  # Adminlar tekshirilmaydi
+    if await is_group_admin(update, context): return
 
     user = update.effective_user
     chat_id = update.effective_chat.id
     violation_reason = None
 
-    # 1. So'kinishni tekshirish
     if msg.text:
-        text_lower = msg.text.lower()
-        for word in BAD_WORDS:
-            if word in text_lower:
-                violation_reason = f"so'kinish: <code>{word}</code>"
-                break
+        bad_word = contains_bad_word(msg.text)
+        if bad_word:
+            violation_reason = f"so'kinish: <code>{bad_word}</code>"
 
-    # 2. Yomon sticker/GIF ni tekshirish
     if not violation_reason and (msg.sticker or msg.animation):
         file_id = None
         if msg.sticker: file_id = msg.sticker.file_unique_id
@@ -892,11 +981,9 @@ async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not violation_reason: return
 
-    # Xabarni o'chirish
     try: await msg.delete()
     except: pass
 
-    # Warn qo'shish
     count = get_warn_count(chat_id, user.id) + 1
     set_warn_count(chat_id, user.id, count)
     name = f"@{user.username}" if user.username else user.full_name
@@ -912,8 +999,7 @@ async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 chat_id=chat_id,
                 text=(f"🔇 <b>{name}</b> — {MAX_WARNINGS} ta ogohlantirish!\n\n"
                       f"Sabab: {violation_reason}\n"
-                      f"Jazo: <b>1 soat mute</b>\n\n"
-                      f"<i>Ogohlantirishlar tozalandi.</i>"),
+                      f"Jazo: <b>1 soat mute</b>"),
                 parse_mode='HTML'
             )
             clear_warn(chat_id, user.id)
@@ -1001,7 +1087,7 @@ def run_bot_in_thread():
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & filters.User(ADMIN_ID) & filters.ChatType.PRIVATE, handle_broadcast_message))
         app.add_handler(ChatMemberHandler(on_bot_added_to_group, ChatMemberHandler.MY_CHAT_MEMBER))
 
-        # ✅ AUTO-MODERATION — group=1 (har bir guruh xabarini tekshiradi)
+        # AUTO-MODERATION (group=1)
         app.add_handler(
             MessageHandler(
                 (filters.TEXT | filters.Sticker.ALL | filters.ANIMATION) &
@@ -1039,7 +1125,7 @@ def main():
     logger.info("=" * 50)
     logger.info(f"🌐 Flask: port {PORT}")
     logger.info(f"📢 Channel: {CHANNEL_ID}")
-    logger.info(f"⚠️ Bad words: {len(BAD_WORDS)} ta")
+    logger.info(f"⚠️ Bad words: {len(BAD_WORDS)} ta (UZ + RU + EN)")
     logger.info(f"⚠️ Max warnings: {MAX_WARNINGS} → 1 soat mute")
 
     bot_thread = threading.Thread(target=run_bot_in_thread, daemon=True)
