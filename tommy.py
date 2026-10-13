@@ -1,5 +1,5 @@
 """
-TOMMY BOT — Full: real bad words (UZ + RU + EN) + warn system + sticker/GIF mute
+TOMMY BOT — Full: bad words + bad emojis + bad stickers/GIFs + warn system
 """
 import os, sqlite3, asyncio, logging, threading, base64, json, re
 from io import BytesIO
@@ -38,7 +38,7 @@ PORT = int(os.getenv("PORT", "10000"))
 TZ_TASHKENT = timezone(timedelta(hours=5))
 
 # ============================================================
-# ⚠️ TO'LIQ SO'KINISH SO'ZLARI
+# ⚠️ SO'KINISH SO'ZLARI (faqat ALOHIDA yozilganda tekshiriladi)
 # ============================================================
 BAD_WORDS = [
     # ==================================================
@@ -51,71 +51,23 @@ BAD_WORDS = [
     "qanjiq", "qanjiqlar",
     "itvachcha", "itvachchalar",
     "onangni", "otangni", "onang", "otang",
-    "ko'tingni", "ko'ting", "ko'tim",
     "sikiltir", "sikingni",
 
     # ==================================================
-    # 🇷🇺 РУССКИЙ МАТ (40 слов)
+    # 🇷🇺 РУССКИЙ МАТ
     # ==================================================
-    # --- Производные от "блядь" ---
-    "blyad",          # Блядь — грубое ругательство
-    "blyadina",       # Блядина — усилительная форма
-    "blyadskiy",      # Блядский — прилагательное
-    "blyadstvo",      # Блядство — разврат
-
-    # --- Производные от "хуй" ---
-    "huy",            # Хуй — мужской половой орган
-    "huynya",         # Хуйня — ерунда, чепуха
-    "huyni",          # Хуйни — родительный падеж
-    "huyak",          # Хуяк — грубое выражение при ударе
-    "huyok",          # Хуёк — уменьшительное
-
-    # --- Производные от "пизда" ---
-    "pizdec",         # Пиздец — конец, катастрофа
-    "pizda",          # Пизда — женский половой орган
-    "pizdets",        # Пиздец — вариант написания
-
-    # --- Производные от "сука" ---
-    "suka",           # Сука — оскорбительное обращение
-    "suchka",         # Сучка — уменьшительное
-    "sukin",          # Сукин — притяжательное
-
-    # --- Производные от "нахуй" ---
-    "nahuy",          # Нахуй — грубое "зачем, куда"
-    "nahui",          # Нахуй — вариант написания
-    "nahuya",         # Нахуя — грубое "зачем?"
-
-    # --- Производные от "мудак" ---
-    "mudak",          # Мудак — глупый человек
-    "mudila",         # Мудила — усилительная форма
-    "mudozvon",       # Мудозвон — болтун
-    "mudaki",         # Мудаки — множественное число
-
-    # --- Производные от "говно" ---
-    "govno",          # Говно — дерьмо
-    "govnyuk",        # Говнюк — неприятный человек
-    "govnyak",        # Говняк — плохое качество
-
-    # --- Производные от "ебать" ---
-    "ebat",           # Ебать — грубый глагол
-    "yebat",          # Ебать — вариант написания
-    "yobanyy",        # Ёбаный — проклятый
-    "yebal",          # Ебал — прошедшая форма
-    "yebanashka",     # Ебанашка — сумасшедший
-    "dolboyob",       # Долбоёб — очень глупый человек
-
-    # --- Производные от "пидор" ---
-    "pidar",          # Пидар — оскорбление мужчины
-    "pidoras",        # Пидорас — усилительная форма
-    "pidaraz",        # Пидораз — вариант написания
-    "pidor",          # Пидор — сокращённая форма
-
-    # --- Прочие грубые ---
-    "zalupa",         # Залупа — грубое ругательство
-    "zhopa",          # Жопа — задница
-    "zhopu",          # Жопу — винительный падеж
-    "gandon",         # Гандон — презерватив, оскорбление
-    "gandoni",        # Гандоны — множественное число
+    "blyad", "blyadina", "blyadskiy", "blyadstvo",
+    "huy", "huynya", "huyni", "huyak", "huyok",
+    "pizdec", "pizda", "pizdets",
+    "suka", "suchka", "sukin",
+    "nahuy", "nahui", "nahuya",
+    "mudak", "mudila", "mudozvon", "mudaki",
+    "govno", "govnyuk", "govnyak",
+    "ebat", "yebat", "yobanyy", "yebal", "yebanashka",
+    "dolboyob",
+    "pidar", "pidoras", "pidaraz", "pidor",
+    "zalupa", "zhopa", "zhopu",
+    "gandon", "gandoni",
 
     # ==================================================
     # 🇬🇧 ENGLISH
@@ -134,6 +86,17 @@ BAD_WORDS = [
     "whore", "whores",
     "cocksucker", "cocksuckers",
     "dumbass", "dumbasses",
+]
+
+# ============================================================
+# ⚠️ YOMON EMOJILAR (faqat shu emojilar uchun warn)
+# ============================================================
+BAD_EMOJIS = [
+    "🖕", "🖕🏻", "🖕🏼", "🖕🏽", "🖕🏾", "🖕🏿",  # o'rta barmoq
+    "🤬",  # qarg'ish
+    "🤮",  # qusish
+    "💩",  # najas
+    "🤡",  # clown (haqorat uchun ishlatiladi)
 ]
 
 MAX_WARNINGS = 3
@@ -263,7 +226,7 @@ body{color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,s
 <div class="info-row"><span class="info-label">Bot:</span><span class="info-value">TOMMY BOT</span></div>
 <div class="info-row"><span class="info-label">Channel:</span><span class="info-value green">@TommyXcheat2</span></div>
 <div class="info-row"><span class="info-label">Owner:</span><span class="info-value" style="color:#FFC107">@Tommy_1727</span></div>
-<div class="info-row"><span class="info-label">Version:</span><span class="info-value">v3.6</span></div>
+<div class="info-row"><span class="info-label">Version:</span><span class="info-value">v3.7</span></div>
 </div>
 <button class="btn btn-primary" onclick="openChannel()">📊 STATISTICS</button>
 <button class="btn btn-secondary" onclick="startNew()">📤 START NEW</button>
@@ -457,16 +420,25 @@ def human_duration(td):
     return f"{t // 604800} weeks"
 
 # ============================================================
-# ✅ SO'KINISH TEKSHIRUVI (so'z chegaralari bilan)
+# ✅ SO'KINISH VA EMOJI TEKSHIRUVI
 # ============================================================
 def contains_bad_word(text):
-    """Matnda so'kinish so'zini topadi (faqat ALOHIDA so'z sifatida)"""
+    """Faqat ALOHIDA yozilgan so'kinishlarni topadi"""
     if not text:
         return None
     words = re.findall(r"[a-zA-Zа-яА-ЯёЁ\u0400-\u04FF']+", text.lower())
     for word in words:
         if word in BAD_WORDS:
             return word
+    return None
+
+def contains_bad_emoji(text):
+    """Yomon emojilarni topadi"""
+    if not text:
+        return None
+    for emoji in BAD_EMOJIS:
+        if emoji in text:
+            return emoji
     return None
 
 # ============================================================
@@ -954,9 +926,10 @@ async def on_bot_added_to_group(update: Update, context: ContextTypes.DEFAULT_TY
         except: pass
 
 # ============================================================
-# AUTO-MODERATION
+# AUTO-MODERATION (so'kinish + emoji + sticker/GIF)
 # ============================================================
 async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Har bir xabarni tekshiradi: so'kinish + emoji + sticker/GIF"""
     msg = update.effective_message
     if not msg: return
     if update.effective_chat.type not in ('group', 'supergroup'): return
@@ -967,11 +940,18 @@ async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     violation_reason = None
 
+    # 1. So'kinish (faqat ALOHIDA so'zlar)
     if msg.text:
         bad_word = contains_bad_word(msg.text)
         if bad_word:
             violation_reason = f"so'kinish: <code>{bad_word}</code>"
+        else:
+            # 2. Yomon emoji
+            bad_emoji = contains_bad_emoji(msg.text)
+            if bad_emoji:
+                violation_reason = f"yomon emoji: {bad_emoji}"
 
+    # 3. Yomon sticker/GIF
     if not violation_reason and (msg.sticker or msg.animation):
         file_id = None
         if msg.sticker: file_id = msg.sticker.file_unique_id
@@ -981,9 +961,11 @@ async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not violation_reason: return
 
+    # Xabarni o'chirish
     try: await msg.delete()
     except: pass
 
+    # Warn qo'shish
     count = get_warn_count(chat_id, user.id) + 1
     set_warn_count(chat_id, user.id, count)
     name = f"@{user.username}" if user.username else user.full_name
@@ -1125,7 +1107,8 @@ def main():
     logger.info("=" * 50)
     logger.info(f"🌐 Flask: port {PORT}")
     logger.info(f"📢 Channel: {CHANNEL_ID}")
-    logger.info(f"⚠️ Bad words: {len(BAD_WORDS)} ta (UZ + RU + EN)")
+    logger.info(f"⚠️ Bad words: {len(BAD_WORDS)} ta")
+    logger.info(f"⚠️ Bad emojis: {len(BAD_EMOJIS)} ta")
     logger.info(f"⚠️ Max warnings: {MAX_WARNINGS} → 1 soat mute")
 
     bot_thread = threading.Thread(target=run_bot_in_thread, daemon=True)
