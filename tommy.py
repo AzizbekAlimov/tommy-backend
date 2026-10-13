@@ -1,6 +1,7 @@
 """
 TOMMY BOT — Complete
 Admin-only group commands + Private chat commands
+Auto-Moderation: Swear, Ads, Links, Forward, Stickers, GIFs -> 5 Warnings -> 1h Mute
 """
 import os, io, re, json, time, sqlite3, asyncio, logging, colorsys, threading
 from io import BytesIO
@@ -52,6 +53,29 @@ if GEMINI_AVAILABLE and GEMINI_API_KEY and GEMINI_API_KEY != "YOUR_GEMINI_API_KE
 PHOTO, PLAYER_ID, CLASSIC, ULTIMATE, KILLS = range(5)
 
 # ============================================================
+# SO'KINISHLAR RO'YXATI (BAD WORDS)
+# ============================================================
+BAD_WORDS = [
+    "ahmoq", "tentak", "qo'tir", "harom", "jinni", "esingni yedingmi", 
+    "onang", "otang", "jalab", "qang'ir", "sikin", "am", "kot", "jalap", 
+    "qotoq", "sik", "yaramas", "pastkash", "razil", "fohisha", "qanjiq",
+    "it", "eshak", "cho'chqa", "domla", "sassiq", "badbaxt", "bevafo",
+    "qo'toq", "siktir", "gandon", "pidar", "blat", "xuy", "mudak", "blya",
+    "fuck", "shit", "bitch", "asshole", "dick", "pussy", "cunt", 
+    "motherfucker", "bastard", "slut", "whore", "idiot", "stupid"
+]
+
+# ============================================================
+# TAQIQLANGAN STIKER PAKETLARI (agar bilsangiz, nomini yozing)
+# Bu ro'yxatga yomon stikerlar paketi nomini qo'shsangiz, faqat o'shalar o'chiriladi.
+# Bo'sh bo'lsa — barcha stikerlar o'chiriladi.
+# ============================================================
+BAD_STICKER_PACKS = [
+    # "pack_name_1",
+    # "pack_name_2",
+]
+
+# ============================================================
 # COMMAND LISTS
 # ============================================================
 PRIVATE_COMMANDS = [
@@ -74,6 +98,8 @@ GROUP_ADMIN_COMMANDS = [
     BotCommand("ban", "Ban user (reply)"),
     BotCommand("unban", "Unban user (reply)"),
     BotCommand("clear", "Clear recent messages"),
+    BotCommand("warns", "Check user warnings (reply)"),
+    BotCommand("resetwarns", "Reset user warnings (reply)"),
 ]
 
 GROUP_PUBLIC_COMMANDS = [
@@ -137,6 +163,7 @@ def init_db():
     c.execute("""CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, username TEXT, first_name TEXT, joined_at TEXT)""")
     c.execute("""CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, player_id TEXT, classic_rank TEXT, ultimate_rank TEXT, kills TEXT, created_at TEXT)""")
     c.execute("""CREATE TABLE IF NOT EXISTS banned_users (user_id INTEGER PRIMARY KEY, banned_at TEXT)""")
+    c.execute("""CREATE TABLE IF NOT EXISTS warnings (user_id INTEGER, chat_id INTEGER, count INTEGER DEFAULT 0, last_warned TEXT, PRIMARY KEY (user_id, chat_id))""")
     conn.commit(); conn.close()
 
 def save_user(uid, username, first_name):
@@ -196,6 +223,32 @@ def get_banned_users():
     conn = sqlite3.connect("users.db"); c = conn.cursor()
     c.execute("SELECT user_id, banned_at FROM banned_users ORDER BY banned_at DESC")
     r = c.fetchall(); conn.close(); return r
+
+# --- Warnings Functions ---
+def add_warning(uid, chat_id):
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("SELECT count FROM warnings WHERE user_id=? AND chat_id=?", (uid, chat_id))
+    row = c.fetchone()
+    if row:
+        new_count = row[0] + 1
+        c.execute("UPDATE warnings SET count=?, last_warned=? WHERE user_id=? AND chat_id=?",
+            (new_count, datetime.now(TZ_TASHKENT).strftime("%Y-%m-%d %H:%M"), uid, chat_id))
+    else:
+        new_count = 1
+        c.execute("INSERT INTO warnings VALUES (?,?,?,?)", (uid, chat_id, new_count, datetime.now(TZ_TASHKENT).strftime("%Y-%m-%d %H:%M")))
+    conn.commit(); conn.close()
+    return new_count
+
+def get_warnings(uid, chat_id):
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("SELECT count FROM warnings WHERE user_id=? AND chat_id=?", (uid, chat_id))
+    row = c.fetchone(); conn.close()
+    return row[0] if row else 0
+
+def reset_warnings(uid, chat_id):
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("DELETE FROM warnings WHERE user_id=? AND chat_id=?", (uid, chat_id))
+    conn.commit(); conn.close()
 
 # ============================================================
 # HELPERS
@@ -611,7 +664,6 @@ async def ban_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat = update.effective_chat
     user = update.effective_user
     
-    # 1. Avval adminlikni tekshiramiz
     if chat.type == 'private':
         if user.id != ADMIN_ID:
             await update.message.reply_text("❌ You are not an admin!")
@@ -622,10 +674,8 @@ async def ban_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     target_user = None
 
-    # 2. Agar biror xabarga javob qilingan bo'lsa, o'sha odamni olamiz
     if update.message.reply_to_message:
         target_user = update.message.reply_to_message.from_user
-    # 3. Agar javob bo'lmasa, ID raqam kiritilganini tekshiramiz
     elif context.args:
         try:
             uid = int(context.args[0])
@@ -646,7 +696,6 @@ async def ban_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ You cannot ban yourself!")
         return
 
-    # 4. Guruhda adminni ban qilishni oldini olish
     if chat.type in ('group', 'supergroup'):
         try:
             target_member = await chat.get_member(target_user.id)
@@ -656,7 +705,6 @@ async def ban_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             pass
 
-    # 5. Ban qilish jarayoni
     name = f"@{target_user.username}" if target_user.username else target_user.full_name
     try:
         if chat.type == 'private':
@@ -728,7 +776,6 @@ async def banned_list_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # GROUP ADMIN-ONLY COMMANDS
 # ============================================================
 async def setup_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Setup command menu for this group"""
     chat = update.effective_chat
     if chat.type not in ('group', 'supergroup'):
         await update.message.reply_text("❌ This command works only in groups.")
@@ -738,7 +785,7 @@ async def setup_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await setup_group_commands(context.application, chat.id)
     await update.message.reply_text(
         "✅ <b>Command menu set for this group!</b>\n\n"
-        "• Group admins will see: /mute, /unmute, /ban, /unban, /clear\n"
+        "• Group admins will see: /mute, /unmute, /ban, /unban, /clear, /warns, /resetwarns\n"
         "• Regular members will see: /start",
         parse_mode='HTML'
     )
@@ -829,7 +876,6 @@ async def unmute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     target = update.message.reply_to_message.from_user
 
     try:
-        # ====== TUZATILGAN QISM ======
         await context.bot.restrict_chat_member(
             chat_id=chat.id,
             user_id=target.id,
@@ -897,11 +943,183 @@ async def clear_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception:
         pass
 
+async def warns_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await check_group_admin(update, context):
+        return
+    chat = update.effective_chat
+    if not update.message.reply_to_message:
+        await update.message.reply_text("⚠️ Reply to a user's message with <code>/warns</code>", parse_mode='HTML')
+        return
+    target = update.message.reply_to_message.from_user
+    count = get_warnings(target.id, chat.id)
+    name = f"@{target.username}" if target.username else target.full_name
+    await update.message.reply_text(
+        f"⚠️ <b>{name}</b> has <b>{count}/5</b> warnings in this group.\n"
+        f"<i>(5 tadan ko'p bo'lsa avtomatik 1 soatga mute qilinadi)</i>",
+        parse_mode='HTML'
+    )
+
+async def resetwarns_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await check_group_admin(update, context):
+        return
+    chat = update.effective_chat
+    if not update.message.reply_to_message:
+        await update.message.reply_text("⚠️ Reply to a user's message with <code>/resetwarns</code>", parse_mode='HTML')
+        return
+    target = update.message.reply_to_message.from_user
+    reset_warnings(target.id, chat.id)
+    name = f"@{target.username}" if target.username else target.full_name
+    await update.message.reply_text(f"✅ Warnings for <b>{name}</b> have been reset.", parse_mode='HTML')
+
+# ============================================================
+# AVTOMODERATSIYA — YORDAMCHI FUNKSIYA
+# ============================================================
+async def process_violation(update: Update, context: ContextTypes.DEFAULT_TYPE, reason: str, msg_to_delete=None):
+    """Qoidabuzarlikni qayta ishlash: o'chirish, ogohlantirish, mute"""
+    chat = update.effective_chat
+    user = update.effective_user
+    name = f"@{user.username}" if user.username else user.full_name
+    
+    # 1. Xabarni o'chirish
+    try:
+        if msg_to_delete:
+            await msg_to_delete.delete()
+        elif update.message:
+            await update.message.delete()
+    except Exception as e:
+        logger.error(f"Xabarni o'chirishda xatolik: {e}")
+
+    # 2. Ogohlantirish qo'shish
+    count = add_warning(user.id, chat.id)
+
+    if count >= 5:
+        # 5 tadan ko'p bo'lsa -> 1 soatga mute
+        try:
+            await context.bot.restrict_chat_member(
+                chat_id=chat.id,
+                user_id=user.id,
+                permissions=ChatPermissions(can_send_messages=False),
+                until_date=datetime.now(timezone.utc) + timedelta(hours=1)
+            )
+            reset_warnings(user.id, chat.id)
+            warning_msg = await context.bot.send_message(
+                chat_id=chat.id,
+                text=(
+                    f"🚫 <b>{name}</b> 5 marta qoidabuzarlik qildi va "
+                    f"<b>1 soatga mute</b> qilindi!\n"
+                    f"Sabab: <b>{reason}</b>"
+                ),
+                parse_mode='HTML'
+            )
+        except Exception as e:
+            logger.error(f"Mute qilishda xatolik: {e}")
+            return
+    else:
+        # Ogohlantirish berish
+        warning_msg = await context.bot.send_message(
+            chat_id=chat.id,
+            text=(
+                f"⚠️ <b>Diqqat, {name}!</b>\n\n"
+                f"Sabab: <b>{reason}</b>\n"
+                f"Sizga ogohlantirish berildi. Jami: <b>{count}/5</b>\n"
+                f"<i>5 tadan ko'p ogohlantirish olsangiz, 1 soatga mute qilinasiz!</i>"
+            ),
+            parse_mode='HTML'
+        )
+    
+    # Ogohlantirishni 10 soniyadan keyin o'chirish
+    await asyncio.sleep(10)
+    try:
+        await warning_msg.delete()
+    except Exception:
+        pass
+
+# ============================================================
+# MATNLI XABARLAR FILTRI (SO'KINISH, REKLAMA, LINK, FORWARD)
+# ============================================================
+async def text_filter(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Guruhdagi matnli xabarlarni tekshiradi"""
+    if not update.message or not update.message.text:
+        return
+
+    chat = update.effective_chat
+    
+    # Adminlarni tekshirmaymiz
+    if await is_group_admin(update, context):
+        return
+
+    message_text = update.message.text.lower()
+    
+    # 1. So'kinishlarni tekshirish
+    words = re.findall(r'\b\w+\b', message_text)
+    found_bad_words = [w for w in words if w in BAD_WORDS]
+    
+    # 2. Havolalar (linklar)
+    link_pattern = r'(https?://\S+|t\.me/\S+|@[a-zA-Z0-9_]+)'
+    found_links = re.findall(link_pattern, message_text)
+    
+    # 3. Kanaldan forward qilingan xabarlar
+    is_forwarded = update.message.forward_from_chat is not None or update.message.forward_from is not None
+
+    # Sababni aniqlash
+    reason = None
+    if found_bad_words:
+        reason = "so'kinish"
+    elif found_links:
+        reason = "reklama yoki havola"
+    elif is_forwarded:
+        reason = "kanaldan ko'chirilgan xabar"
+
+    if reason:
+        await process_violation(update, context, reason)
+
+# ============================================================
+# STIKERLAR FILTRI
+# ============================================================
+async def sticker_filter(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Guruhdagi stikerlarni tekshiradi va o'chiradi"""
+    if not update.message or not update.message.sticker:
+        return
+
+    # Adminlarni tekshirmaymiz
+    if await is_group_admin(update, context):
+        return
+
+    sticker = update.message.sticker
+    
+    # Agar BAD_STICKER_PACKS ro'yxati bo'sh bo'lsa — barcha stikerlar o'chiriladi.
+    # Aks holda — faqat ro'yxatdagi paketlar o'chiriladi.
+    should_delete = False
+    if not BAD_STICKER_PACKS:
+        should_delete = True
+    else:
+        if sticker.set_name and sticker.set_name in BAD_STICKER_PACKS:
+            should_delete = True
+
+    if should_delete:
+        # Stikerning emojisiga qarab sababni aniqlash (qo'shimcha ma'lumot uchun)
+        emoji = sticker.emoji or ""
+        await process_violation(update, context, f"taqiqlangan stiker {emoji}")
+
+# ============================================================
+# GIF / ANIMATSIYALAR FILTRI
+# ============================================================
+async def gif_filter(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Guruhdagi GIF va animatsiyalarni tekshiradi va o'chiradi"""
+    if not update.message or not update.message.animation:
+        return
+
+    # Adminlarni tekshirmaymiz
+    if await is_group_admin(update, context):
+        return
+
+    # Barcha GIFlar o'chiriladi
+    await process_violation(update, context, "GIF yoki animatsiya")
+
 # ============================================================
 # BOT ADDED TO GROUP HANDLER
 # ============================================================
 async def on_bot_added_to_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Bot guruhga qo'shilganda — buyruqlar menyusini sozlash"""
     my_chat_member = update.my_chat_member
     if not my_chat_member:
         return
@@ -980,6 +1198,22 @@ def start_bot():
         application.add_handler(CommandHandler("mute", mute_cmd))
         application.add_handler(CommandHandler("unmute", unmute_cmd))
         application.add_handler(CommandHandler("clear", clear_cmd))
+        application.add_handler(CommandHandler("warns", warns_cmd))
+        application.add_handler(CommandHandler("resetwarns", resetwarns_cmd))
+
+        # Avtomoderatsiya (Faqat guruhlarda ishlaydi)
+        application.add_handler(MessageHandler(
+            filters.TEXT & ~filters.COMMAND & filters.ChatType.GROUPS,
+            text_filter
+        ))
+        application.add_handler(MessageHandler(
+            filters.Sticker & filters.ChatType.GROUPS,
+            sticker_filter
+        ))
+        application.add_handler(MessageHandler(
+            filters.ANIMATION & filters.ChatType.GROUPS,
+            gif_filter
+        ))
 
         # Broadcast handler
         application.add_handler(MessageHandler(
