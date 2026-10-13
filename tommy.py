@@ -1,7 +1,7 @@
 """
-TOMMY BOT — Complete with Command Menu
+TOMMY BOT — Complete with Command Menu + AI Analysis
 """
-import os, io, re, json, time, sqlite3, asyncio, logging, colorsys, threading
+import os, sqlite3, asyncio, logging, threading, base64, json
 from io import BytesIO
 from datetime import datetime, timezone, timedelta
 
@@ -23,30 +23,30 @@ from telegram.ext import (
 )
 from telegram.request import HTTPXRequest
 
-try:
-    import google.generativeai as genai
-    GEMINI_AVAILABLE = True
-except ImportError:
-    GEMINI_AVAILABLE = False
+import httpx
 
 # ============================================================
 # SETTINGS
 # ============================================================
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 CHANNEL_ID = os.getenv("CHANNEL_ID", "@TommyXcheat2")
 OWNER_FIXED = "@Tommy_1727"
-ADMIN_ID = 7383782449
+ADMIN_ID = int(os.getenv("ADMIN_ID", "7383782449"))
 PORT = int(os.getenv("PORT", 3000))
 
 TZ_TASHKENT = timezone(timedelta(hours=5))
 
-logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO
+)
 logger = logging.getLogger(__name__)
 
-if GEMINI_AVAILABLE and GEMINI_API_KEY and GEMINI_API_KEY != "YOUR_GEMINI_API_KEY":
-    genai.configure(api_key=GEMINI_API_KEY)
-    logger.info("✅ Gemini AI connected")
+if GEMINI_API_KEY:
+    logger.info("✅ Gemini API key loaded")
+else:
+    logger.warning("⚠️ GEMINI_API_KEY yo'q — AI tahlil o'chirilgan")
 
 PHOTO, PLAYER_ID, CLASSIC, ULTIMATE, KILLS = range(5)
 
@@ -205,7 +205,7 @@ def hide_id(pid):
 def is_valid_player_id(p):
     p = str(p).strip()
     if not p.isdigit() or len(p) != 11: return False
-    if p[0] not in ("5","6"): return False
+    if p[0] not in ("5", "6"): return False
     if len(set(p)) == 1: return False
     return True
 
@@ -214,14 +214,14 @@ def validate_pubg_screenshot(image_bytes):
         img = Image.open(BytesIO(image_bytes)); img.load()
     except Exception:
         return False, "Could not read image."
-    if img.format and img.format.upper() not in ("JPEG","PNG","WEBP","JPG"):
+    if img.format and img.format.upper() not in ("JPEG", "PNG", "WEBP", "JPG"):
         return False, "Unsupported format."
     w, h = img.size
     if w < 640 or h < 360: return False, "Resolution too low."
     if w <= h: return False, "Landscape only."
-    ratio = w/h
-    allowed = [1.333,1.5,1.6,1.667,1.778,2.0,2.056,2.111,2.167,2.222,2.333,2.444]
-    if not any(abs(ratio-r) <= 0.06 for r in allowed):
+    ratio = w / h
+    allowed = [1.333, 1.5, 1.6, 1.667, 1.778, 2.0, 2.056, 2.111, 2.167, 2.222, 2.333, 2.444]
+    if not any(abs(ratio - r) <= 0.06 for r in allowed):
         return False, "Wrong screen ratio."
     return True, ""
 
@@ -252,46 +252,63 @@ def human_duration(td):
     return f"{total // 604800} weeks"
 
 # ============================================================
-# COMMAND MENU SETUP ✅ YANGI
+# GEMINI AI
 # ============================================================
-async def setup_private_commands(application):
+def analyze_with_ai(image_bytes, mime_type="image/jpeg"):
+    if not GEMINI_API_KEY:
+        return None
     try:
-        await application.bot.set_my_commands(
-            PRIVATE_COMMANDS,
-            scope=BotCommandScopeAllPrivateChats()
+        b64 = base64.b64encode(image_bytes).decode("utf-8")
+        prompt = (
+            "You are a PUBG Mobile screenshot analyzer. "
+            "Return ONLY a valid JSON object, no markdown, no extra text:\n"
+            '{"player_id":"11-digit UID or null","classic_rank":"... or null",'
+            '"ultimate_rank":"... or null","kills":"number or null","map":"name or null"}\n'
+            "RULES: player_id is exactly 11 digits starting with 5 or 6. "
+            "If not visible, set null."
         )
-        logger.info("✅ Private commands set")
+        url = (
+            "https://generativelanguage.googleapis.com/v1beta/"
+            f"models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+        )
+        payload = {
+            "contents": [{
+                "parts": [
+                    {"text": prompt},
+                    {"inline_data": {"mime_type": mime_type, "data": b64}}
+                ]
+            }],
+            "generationConfig": {"temperature": 0.1, "maxOutputTokens": 500}
+        }
+        with httpx.Client(timeout=30.0) as client:
+            r = client.post(url, json=payload)
+            result = r.json()
+        if "candidates" not in result or not result["candidates"]:
+            logger.error(f"❌ AI xato: {str(result)[:300]}")
+            return None
+        text = result["candidates"][0]["content"]["parts"][0]["text"].strip()
+        text = text.replace("```json", "").replace("```", "").strip()
+        start = text.find("{"); end = text.rfind("}")
+        if start == -1 or end == -1:
+            logger.error(f"❌ JSON topilmadi: {text}")
+            return None
+        data = json.loads(text[start:end + 1])
+        logger.info(f"✅ AI natijasi: {data}")
+        return data
     except Exception as e:
-        logger.error(f"❌ Private commands error: {e}")
-
-async def setup_group_commands(application, chat_id):
-    try:
-        await application.bot.set_my_commands(
-            GROUP_ADMIN_COMMANDS,
-            scope=BotCommandScopeChatAdministrators(chat_id=chat_id)
-        )
-        await application.bot.set_my_commands(
-            GROUP_PUBLIC_COMMANDS,
-            scope=BotCommandScopeChat(chat_id=chat_id)
-        )
-        logger.info(f"✅ Group commands set for chat {chat_id}")
-    except Exception as e:
-        logger.error(f"❌ Group commands error for {chat_id}: {e}")
-
-async def post_init(application):
-    await setup_private_commands(application)
-    logger.info("✅ post_init done")
+        logger.error(f"❌ AI xatosi: {e}")
+        return None
 
 # ============================================================
 # SEND TO TELEGRAM
 # ============================================================
 def send_to_telegram(image_bytes, caption, mime_type='image/jpeg'):
     try:
-        import requests
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
         files = {'photo': ('screenshot.jpg', image_bytes, mime_type)}
         data = {'chat_id': CHANNEL_ID, 'caption': caption}
-        r = requests.post(url, files=files, data=data, timeout=60)
+        with httpx.Client(timeout=60.0) as client:
+            r = client.post(url, files=files, data=data)
         return r.json()
     except Exception as e:
         return {'ok': False, 'description': str(e)}
@@ -312,13 +329,42 @@ def send_feedback():
         if 'photo' not in request.files:
             return jsonify({'ok': False, 'description': 'Photo required!'}), 400
         photo = request.files['photo']
-        if photo.filename == '': return jsonify({'ok': False, 'description': 'No file'}), 400
+        if photo.filename == '':
+            return jsonify({'ok': False, 'description': 'No file'}), 400
         photo_bytes = photo.read()
-        if len(photo_bytes) > 5*1024*1024: return jsonify({'ok': False, 'description': 'Too large'}), 400
-        caption = request.form.get('caption', '')
-        if not caption: return jsonify({'ok': False, 'description': 'Caption required!'}), 400
-        tg_res = send_to_telegram(photo_bytes, caption, photo.mimetype or 'image/jpeg')
-        return jsonify({'ok': tg_res.get('ok', False), 'description': tg_res.get('description')}), 200 if tg_res.get('ok') else 500
+        if len(photo_bytes) > 5 * 1024 * 1024:
+            return jsonify({'ok': False, 'description': 'Too large'}), 400
+        frontend_caption = request.form.get('caption', '')
+        ai_data = analyze_with_ai(photo_bytes, photo.mimetype or 'image/jpeg')
+        if ai_data:
+            pid = str(ai_data.get('player_id') or '')
+            hidden = hide_id(pid) if pid else 'Unknown'
+            classic = ai_data.get('classic_rank') or 'Unknown'
+            ultimate = ai_data.get('ultimate_rank') or 'Unknown'
+            kills = ai_data.get('kills') or '0'
+            owner_line = frontend_caption.split('\n')[0] or '👤 OWNER: Unknown'
+            owner = owner_line.replace('👤 OWNER: ', '').strip()
+            now = datetime.now(TZ_TASHKENT)
+            time_str = now.strftime('%H:%M  %d.%m.%Y')
+            final_caption = (
+                f"👤 OWNER: {owner}\n"
+                f"🎮 Player ID: {hidden}\n"
+                f"🏆 CLASSIC RANK: {classic}\n"
+                f"🏆 ULTIMATE ROYALE RANK: {ultimate}\n"
+                f"🕒 TIME: {time_str}\n"
+                f"💀 KILL: {kills}\n\n"
+                f"👤 OWNER: {OWNER_FIXED} ✅"
+            )
+        else:
+            if not frontend_caption:
+                return jsonify({'ok': False, 'description': 'Caption required!'}), 400
+            final_caption = frontend_caption
+        tg_res = send_to_telegram(photo_bytes, final_caption, photo.mimetype or 'image/jpeg')
+        return jsonify({
+            'ok': tg_res.get('ok', False),
+            'description': tg_res.get('description'),
+            'ai_data': ai_data
+        }), 200 if tg_res.get('ok') else 500
     except Exception as e:
         logger.error(f"❌ Web error: {e}")
         return jsonify({'ok': False, 'description': str(e)}), 500
@@ -334,7 +380,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == 'private' and is_banned(u.id):
         await update.message.reply_text(
             "🚫 <b>You have been banned from using this bot.</b>\n\n"
-            "Contact: @Tommy_1727",
+            f"Contact: {OWNER_FIXED}",
             parse_mode='HTML'
         )
         return
@@ -366,7 +412,8 @@ async def handle_player_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Invalid ID!\n\nTry again:")
         return PLAYER_ID
     context.user_data['player_id'] = pid
-    ranks = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Crown", "Ace", "Ace Master", "Ace Dominator", "Conqueror"]
+    ranks = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Crown",
+             "Ace", "Ace Master", "Ace Dominator", "Conqueror"]
     kb = [[InlineKeyboardButton(f"🏆 {r}", callback_data=f"classic_{r}")] for r in ranks]
     await update.message.reply_text(
         f"✅ ID: {pid}\n\n👑 Step 2\n\nSelect your CLASSIC RANK:",
@@ -417,18 +464,15 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await msg.delete()
             await update.message.reply_text(f"❌ {reason}\n\nPlease send again:")
             return PHOTO
-
         player_id = context.user_data.get('player_id', '')
         classic_rank = context.user_data.get('classic_rank', 'Unknown')
         ultimate_rank = context.user_data.get('ultimate_rank', 'Unknown')
         kills = context.user_data.get('kills', '0')
         hidden_id = hide_id(player_id)
-
         user = update.effective_user
         owner_d = f"@{user.username}" if user.username else user.full_name
         now = datetime.now(TZ_TASHKENT)
         time_str = now.strftime('%H:%M  %d.%m.%Y')
-
         caption = (
             f"👤 OWNER: {owner_d}\n"
             f"🎮 Player ID: {hidden_id}\n"
@@ -438,7 +482,6 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"💀 KILL: {kills}\n\n"
             f"👤 OWNER: {OWNER_FIXED} ✅"
         )
-
         kb = [
             [InlineKeyboardButton("✅ Send to channel", callback_data="confirm_send")],
             [InlineKeyboardButton("❌ Cancel", callback_data="cancel_post")]
@@ -468,7 +511,11 @@ async def confirm_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         await context.bot.send_photo(chat_id=CHANNEL_ID, photo=photo_id, caption=caption)
         user = update.effective_user
-        save_post(user.id, context.user_data.get('player_id',''), context.user_data.get('classic_rank',''), context.user_data.get('ultimate_rank',''), context.user_data.get('kills',''))
+        save_post(user.id,
+                  context.user_data.get('player_id', ''),
+                  context.user_data.get('classic_rank', ''),
+                  context.user_data.get('ultimate_rank', ''),
+                  context.user_data.get('kills', ''))
         await q.message.delete()
         await q.message.reply_text("✅ Sent to channel!")
     except Exception as e:
@@ -485,7 +532,7 @@ async def cancel_post(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     await q.answer()
-    await q.message.reply_text("Contact: @Tommy_1727")
+    await q.message.reply_text(f"Contact: {OWNER_FIXED}")
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
@@ -494,22 +541,18 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 # ============================================================
-# ADMIN STATISTICS
+# ADMIN
 # ============================================================
 async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text("❌ You are not an admin!")
         return
-    total_users = get_users_count()
-    total_posts = get_posts_count()
-    today_users = get_today_users_count()
-    banned_count = len(get_banned_users())
     text = (
         f"📊 <b>BOT STATISTICS</b>\n\n"
-        f"👥 Total users: <b>{total_users}</b>\n"
-        f"🆕 Today joined: <b>{today_users}</b>\n"
-        f"📸 Total posts: <b>{total_posts}</b>\n"
-        f"🚫 Banned: <b>{banned_count}</b>\n"
+        f"👥 Total users: <b>{get_users_count()}</b>\n"
+        f"🆕 Today joined: <b>{get_today_users_count()}</b>\n"
+        f"📸 Total posts: <b>{get_posts_count()}</b>\n"
+        f"🚫 Banned: <b>{len(get_banned_users())}</b>\n"
         f"🕒 Time: {datetime.now(TZ_TASHKENT).strftime('%H:%M %d.%m.%Y')}\n\n"
     )
     users = get_all_users(limit=10)
@@ -537,9 +580,8 @@ async def users_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for i, (uid, un, fn, ja) in enumerate(users, 1):
         name = f"@{un}" if un else (fn if fn else "User")
         text += f"{i}. {name} — {ja}\n    ID: <code>{uid}</code>\n"
-    chunks = [text[i:i+4000] for i in range(0, len(text), 4000)]
-    for chunk in chunks:
-        await update.message.reply_text(chunk, parse_mode='HTML')
+    for i in range(0, len(text), 4000):
+        await update.message.reply_text(text[i:i + 4000], parse_mode='HTML')
 
 async def broadcast_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
@@ -554,15 +596,15 @@ async def broadcast_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.user_data.get('broadcast_mode'): return
     if update.effective_user.id != ADMIN_ID: return
-    broadcast_text = update.message.text
-    if not broadcast_text: return
+    text = update.message.text
+    if not text: return
     context.user_data['broadcast_mode'] = False
     users = get_all_users(limit=1000)
     total = len(users); sent = 0; failed = 0
     progress = await update.message.reply_text(f"📤 Sending... 0/{total}")
     for idx, (uid, _, _, _) in enumerate(users, 1):
         try:
-            await context.bot.send_message(chat_id=uid, text=broadcast_text)
+            await context.bot.send_message(chat_id=uid, text=text)
             sent += 1
         except Exception:
             failed += 1
@@ -576,58 +618,46 @@ async def handle_broadcast_message(update: Update, context: ContextTypes.DEFAULT
 
 async def ban_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
-        await update.message.reply_text("❌ You are not an admin!")
-        return
-    args = context.args
-    if not args:
-        await update.message.reply_text("Usage: <code>/ban USER_ID</code>", parse_mode='HTML')
-        return
-    try: uid = int(args[0])
+        await update.message.reply_text("❌ You are not an admin!"); return
+    if not context.args:
+        await update.message.reply_text("Usage: <code>/ban USER_ID</code>", parse_mode='HTML'); return
+    try: uid = int(context.args[0])
     except ValueError:
-        await update.message.reply_text("❌ Invalid user ID")
-        return
+        await update.message.reply_text("❌ Invalid user ID"); return
     if uid == ADMIN_ID:
-        await update.message.reply_text("❌ You cannot ban yourself!")
-        return
+        await update.message.reply_text("❌ You cannot ban yourself!"); return
     ban_user(uid)
     await update.message.reply_text(f"✅ User <code>{uid}</code> banned.", parse_mode='HTML')
 
 async def unban_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
-        await update.message.reply_text("❌ You are not an admin!")
-        return
-    args = context.args
-    if not args:
-        await update.message.reply_text("Usage: <code>/unban USER_ID</code>", parse_mode='HTML')
-        return
-    try: uid = int(args[0])
+        await update.message.reply_text("❌ You are not an admin!"); return
+    if not context.args:
+        await update.message.reply_text("Usage: <code>/unban USER_ID</code>", parse_mode='HTML'); return
+    try: uid = int(context.args[0])
     except ValueError:
-        await update.message.reply_text("❌ Invalid user ID")
-        return
+        await update.message.reply_text("❌ Invalid user ID"); return
     unban_user(uid)
     await update.message.reply_text(f"✅ User <code>{uid}</code> unbanned.", parse_mode='HTML')
 
 async def banned_list_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
-        await update.message.reply_text("❌ You are not an admin!")
-        return
+        await update.message.reply_text("❌ You are not an admin!"); return
     banned = get_banned_users()
     if not banned:
-        await update.message.reply_text("✅ No banned users.")
-        return
+        await update.message.reply_text("✅ No banned users."); return
     text = f"🚫 <b>BANNED USERS ({len(banned)})</b>\n\n"
     for uid, when in banned:
         text += f"• <code>{uid}</code> — {when}\n"
     await update.message.reply_text(text, parse_mode='HTML')
 
 # ============================================================
-# GROUP ADMIN-ONLY COMMANDS
+# GROUP ADMIN COMMANDS
 # ============================================================
 async def is_group_admin(update, context):
     chat = update.effective_chat
     user = update.effective_user
-    if chat.type not in ('group', 'supergroup'):
-        return False
+    if chat.type not in ('group', 'supergroup'): return False
     try:
         member = await chat.get_member(user.id)
         return member.status in ('administrator', 'creator')
@@ -646,10 +676,8 @@ async def check_group_admin(update, context):
 async def setup_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat = update.effective_chat
     if chat.type not in ('group', 'supergroup'):
-        await update.message.reply_text("❌ Only in groups.")
-        return
-    if not await check_group_admin(update, context):
-        return
+        await update.message.reply_text("❌ Only in groups."); return
+    if not await check_group_admin(update, context): return
     await setup_group_commands(context.application, chat.id)
     await update.message.reply_text(
         "✅ <b>Command menu set!</b>\n\n"
@@ -659,8 +687,7 @@ async def setup_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def mute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not await check_group_admin(update, context):
-        return
+    if not await check_group_admin(update, context): return
     chat = update.effective_chat
     user = update.effective_user
     if not update.message.reply_to_message:
@@ -676,16 +703,13 @@ async def mute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     target = update.message.reply_to_message.from_user
     if target.id == user.id:
-        await update.message.reply_text("❌ Cannot mute yourself.")
-        return
+        await update.message.reply_text("❌ Cannot mute yourself."); return
     if target.id == context.bot.id:
-        await update.message.reply_text("❌ Cannot mute myself.")
-        return
+        await update.message.reply_text("❌ Cannot mute myself."); return
     try:
-        target_member = await chat.get_member(target.id)
-        if target_member.status in ('administrator', 'creator'):
-            await update.message.reply_text("❌ Cannot mute admins.")
-            return
+        tm = await chat.get_member(target.id)
+        if tm.status in ('administrator', 'creator'):
+            await update.message.reply_text("❌ Cannot mute admins."); return
     except Exception:
         pass
     if context.args:
@@ -699,8 +723,7 @@ async def mute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         duration = timedelta(days=366)
     try:
         await context.bot.restrict_chat_member(
-            chat_id=chat.id,
-            user_id=target.id,
+            chat_id=chat.id, user_id=target.id,
             permissions=ChatPermissions(can_send_messages=False),
             until_date=datetime.now(timezone.utc) + duration
         )
@@ -713,8 +736,7 @@ async def mute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❌ Error: <code>{e}</code>", parse_mode='HTML')
 
 async def unmute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not await check_group_admin(update, context):
-        return
+    if not await check_group_admin(update, context): return
     chat = update.effective_chat
     user = update.effective_user
     if not update.message.reply_to_message:
@@ -723,15 +745,11 @@ async def unmute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     target = update.message.reply_to_message.from_user
     try:
         await context.bot.restrict_chat_member(
-            chat_id=chat.id,
-            user_id=target.id,
+            chat_id=chat.id, user_id=target.id,
             permissions=ChatPermissions(
-                can_send_messages=True,
-                can_send_media_messages=True,
-                can_send_other_messages=True,
-                can_add_web_page_previews=True,
-                can_send_polls=True,
-                can_invite_users=True
+                can_send_messages=True, can_send_media_messages=True,
+                can_send_other_messages=True, can_add_web_page_previews=True,
+                can_send_polls=True, can_invite_users=True
             )
         )
         name = f"@{target.username}" if target.username else target.full_name
@@ -743,8 +761,7 @@ async def unmute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❌ Error: <code>{e}</code>", parse_mode='HTML')
 
 async def clear_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not await check_group_admin(update, context):
-        return
+    if not await check_group_admin(update, context): return
     chat = update.effective_chat
     end_id = update.message.message_id
     if update.message.reply_to_message:
@@ -763,7 +780,7 @@ async def clear_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception: pass
     report = await context.bot.send_message(
         chat_id=chat.id,
-        text=f"✅ <b>Cleared!</b>\n✔️ {deleted}\n❌ {failed}\n\n<i>Only <48h messages.</i>",
+        text=f"✅ <b>Cleared!</b>\n✔️ {deleted}\n❌ {failed}\n\n<i>Only &lt;48h messages.</i>",
         parse_mode='HTML'
     )
     await asyncio.sleep(5)
@@ -774,11 +791,10 @@ async def clear_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # BOT ADDED TO GROUP
 # ============================================================
 async def on_bot_added_to_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    my_chat_member = update.my_chat_member
-    if not my_chat_member:
-        return
-    chat = my_chat_member.chat
-    new_status = my_chat_member.new_chat_member.status
+    mcm = update.my_chat_member
+    if not mcm: return
+    chat = mcm.chat
+    new_status = mcm.new_chat_member.status
     if chat.type in ('group', 'supergroup'):
         if new_status in ('member', 'administrator'):
             logger.info(f"Bot added to group: {chat.title} ({chat.id})")
@@ -786,10 +802,43 @@ async def on_bot_added_to_group(update: Update, context: ContextTypes.DEFAULT_TY
         elif new_status in ('left', 'kicked'):
             logger.info(f"Bot removed from group: {chat.title}")
             try:
-                await context.bot.delete_my_commands(scope=BotCommandScopeChatAdministrators(chat_id=chat.id))
-                await context.bot.delete_my_commands(scope=BotCommandScopeChat(chat_id=chat.id))
+                await context.bot.delete_my_commands(
+                    scope=BotCommandScopeChatAdministrators(chat_id=chat.id))
+                await context.bot.delete_my_commands(
+                    scope=BotCommandScopeChat(chat_id=chat.id))
             except Exception:
                 pass
+
+# ============================================================
+# COMMAND MENU SETUP
+# ============================================================
+async def setup_private_commands(application):
+    try:
+        await application.bot.set_my_commands(
+            PRIVATE_COMMANDS,
+            scope=BotCommandScopeAllPrivateChats()
+        )
+        logger.info("✅ Private commands set")
+    except Exception as e:
+        logger.error(f"❌ Private commands error: {e}")
+
+async def setup_group_commands(application, chat_id):
+    try:
+        await application.bot.set_my_commands(
+            GROUP_ADMIN_COMMANDS,
+            scope=BotCommandScopeChatAdministrators(chat_id=chat_id)
+        )
+        await application.bot.set_my_commands(
+            GROUP_PUBLIC_COMMANDS,
+            scope=BotCommandScopeChat(chat_id=chat_id)
+        )
+        logger.info(f"✅ Group commands set for chat {chat_id}")
+    except Exception as e:
+        logger.error(f"❌ Group commands error for {chat_id}: {e}")
+
+async def post_init(application):
+    await setup_private_commands(application)
+    logger.info("✅ post_init done")
 
 # ============================================================
 # START BOT
@@ -797,7 +846,11 @@ async def on_bot_added_to_group(update: Update, context: ContextTypes.DEFAULT_TY
 def start_bot():
     logger.info("🤖 Bot starting...")
     try:
-        req = HTTPXRequest(connection_pool_size=8, connect_timeout=30.0, read_timeout=30.0, write_timeout=30.0, pool_timeout=30.0)
+        req = HTTPXRequest(
+            connection_pool_size=8,
+            connect_timeout=30.0, read_timeout=30.0,
+            write_timeout=30.0, pool_timeout=30.0
+        )
         application = (
             Application.builder()
             .token(BOT_TOKEN)
@@ -842,7 +895,11 @@ def start_bot():
             ChatMemberHandler.MY_CHAT_MEMBER
         ))
         logger.info("✅ Bot started")
-        application.run_polling(stop_signals=None, drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
+        application.run_polling(
+            stop_signals=None,
+            drop_pending_updates=True,
+            allowed_updates=Update.ALL_TYPES
+        )
     except Exception as e:
         logger.error(f"❌ Bot error: {e}")
 
