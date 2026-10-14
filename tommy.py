@@ -1,5 +1,5 @@
 """
-TOMMY BOT — Full: bad words + bad emojis + bad stickers/GIFs + warn system
+TOMMY BOT — Full: bad words (UZ+RU+EN) + bad emojis + bad stickers/GIFs + warn
 """
 import os, sqlite3, asyncio, logging, threading, base64, json, re
 from io import BytesIO
@@ -46,12 +46,13 @@ BAD_WORDS = [
     # ==================================================
     "jalab", "jalap", "jallob", "jalloblar",
     "qotoq", "qotoqlar",
-    "siktir", "sikish", "sikaman", "sikasan", "sikadi",
+    "am",        # ← qo'shildi
+    "sika", "siki", "sikaman", "sikasan", "sikadi", "sikish",  # ← qo'shildi
+    "siktir", "sikiltir", "sikingni", "siking",
     "haromi", "haromzoda", "haromilar",
     "qanjiq", "qanjiqlar",
     "itvachcha", "itvachchalar",
     "onangni", "otangni", "onang", "otang",
-    "sikiltir", "sikingni",
 
     # ==================================================
     # 🇷🇺 РУССКИЙ МАТ
@@ -89,14 +90,11 @@ BAD_WORDS = [
 ]
 
 # ============================================================
-# ⚠️ YOMON EMOJILAR (faqat shu emojilar uchun warn)
+# ⚠️ YOMON EMOJILAR
 # ============================================================
 BAD_EMOJIS = [
-    "🖕", "🖕🏻", "🖕🏼", "🖕🏽", "🖕🏾", "🖕🏿",  # o'rta barmoq
-    "🤬",  # qarg'ish
-    "🤮",  # qusish
-    "💩",  # najas
-    "🤡",  # clown (haqorat uchun ishlatiladi)
+    "🖕", "🖕🏻", "🖕🏼", "🖕🏽", "🖕🏾", "🖕🏿",
+    "🤬", "🤮", "💩", "🤡",
 ]
 
 MAX_WARNINGS = 3
@@ -226,7 +224,7 @@ body{color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,s
 <div class="info-row"><span class="info-label">Bot:</span><span class="info-value">TOMMY BOT</span></div>
 <div class="info-row"><span class="info-label">Channel:</span><span class="info-value green">@TommyXcheat2</span></div>
 <div class="info-row"><span class="info-label">Owner:</span><span class="info-value" style="color:#FFC107">@Tommy_1727</span></div>
-<div class="info-row"><span class="info-label">Version:</span><span class="info-value">v3.7</span></div>
+<div class="info-row"><span class="info-label">Version:</span><span class="info-value">v3.8</span></div>
 </div>
 <button class="btn btn-primary" onclick="openChannel()">📊 STATISTICS</button>
 <button class="btn btn-secondary" onclick="startNew()">📤 START NEW</button>
@@ -311,11 +309,6 @@ def get_today_users_count():
 def get_all_users(limit=30):
     conn = sqlite3.connect("users.db"); c = conn.cursor()
     c.execute("SELECT user_id, username, first_name, joined_at FROM users ORDER BY joined_at DESC LIMIT ?", (limit,))
-    r = c.fetchall(); conn.close(); return r
-
-def get_recent_posts(limit=10):
-    conn = sqlite3.connect("users.db"); c = conn.cursor()
-    c.execute("SELECT user_id, player_id, classic_rank, ultimate_rank, kills, created_at FROM posts ORDER BY id DESC LIMIT ?", (limit,))
     r = c.fetchall(); conn.close(); return r
 
 def ban_user(uid):
@@ -423,9 +416,15 @@ def human_duration(td):
 # ✅ SO'KINISH VA EMOJI TEKSHIRUVI
 # ============================================================
 def contains_bad_word(text):
-    """Faqat ALOHIDA yozilgan so'kinishlarni topadi"""
+    """
+    Faqat ALOHIDA (ajratilgan) so'kinishlarni topadi.
+    - Katta/kichik harf farqi yo'q
+    - "Sika man" → "sika" topiladi (so'zlar ajratilgan)
+    - "kiraman" → topilmaydi (bir so'z)
+    """
     if not text:
         return None
+    # So'zlarga ajratish (harflar + apostrof)
     words = re.findall(r"[a-zA-Zа-яА-ЯёЁ\u0400-\u04FF']+", text.lower())
     for word in words:
         if word in BAD_WORDS:
@@ -715,8 +714,7 @@ async def setup_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def mute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
     if not update.message.reply_to_message:
-        await update.message.reply_text("Reply to a user's message with /mute")
-        return
+        await update.message.reply_text("Reply to a user's message with /mute"); return
     target = update.message.reply_to_message.from_user
     if target.id == update.effective_user.id:
         await update.message.reply_text("Can't mute self"); return
@@ -725,8 +723,7 @@ async def mute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if dur > timedelta(days=366): dur = timedelta(days=366)
     try:
         await context.bot.restrict_chat_member(
-            chat_id=update.effective_chat.id,
-            user_id=target.id,
+            chat_id=update.effective_chat.id, user_id=target.id,
             permissions=ChatPermissions(can_send_messages=False),
             until_date=datetime.now(timezone.utc) + dur
         )
@@ -738,25 +735,16 @@ async def mute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def unmute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
     if not update.message.reply_to_message:
-        await update.message.reply_text("🔊 Reply to a user's message with /unmute")
-        return
+        await update.message.reply_text("🔊 Reply to a user's message with /unmute"); return
     target = update.message.reply_to_message.from_user
     try:
         await context.bot.restrict_chat_member(
-            chat_id=update.effective_chat.id,
-            user_id=target.id,
+            chat_id=update.effective_chat.id, user_id=target.id,
             permissions=ChatPermissions(
-                can_send_messages=True,
-                can_send_audios=True,
-                can_send_documents=True,
-                can_send_photos=True,
-                can_send_videos=True,
-                can_send_video_notes=True,
-                can_send_voice_notes=True,
-                can_send_polls=True,
-                can_send_other_messages=True,
-                can_add_web_page_previews=True,
-                can_invite_users=True
+                can_send_messages=True, can_send_audios=True, can_send_documents=True,
+                can_send_photos=True, can_send_videos=True, can_send_video_notes=True,
+                can_send_voice_notes=True, can_send_polls=True, can_send_other_messages=True,
+                can_add_web_page_previews=True, can_invite_users=True
             )
         )
         name = f"@{target.username}" if target.username else target.full_name
@@ -767,41 +755,29 @@ async def unmute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def mute_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
     if not update.message.reply_to_message:
-        await update.message.reply_text("🎭 Reply to a user's message with /mutesticker")
-        return
+        await update.message.reply_text("🎭 Reply to a user's message with /mutesticker"); return
     target = update.message.reply_to_message.from_user
     if target.id == update.effective_user.id:
         await update.message.reply_text("Can't mute yourself"); return
     try:
         await context.bot.restrict_chat_member(
-            chat_id=update.effective_chat.id,
-            user_id=target.id,
+            chat_id=update.effective_chat.id, user_id=target.id,
             permissions=ChatPermissions(
-                can_send_messages=True,
-                can_send_audios=True,
-                can_send_documents=True,
-                can_send_photos=True,
-                can_send_videos=True,
-                can_send_video_notes=True,
-                can_send_voice_notes=True,
-                can_send_polls=True,
-                can_send_other_messages=False,
+                can_send_messages=True, can_send_audios=True, can_send_documents=True,
+                can_send_photos=True, can_send_videos=True, can_send_video_notes=True,
+                can_send_voice_notes=True, can_send_polls=True, can_send_other_messages=False,
                 can_add_web_page_previews=True
             )
         )
         name = f"@{target.username}" if target.username else target.full_name
-        await update.message.reply_text(
-            f"🎭 <b>{name}</b> — sticker va GIF yuborishi taqiqlandi.",
-            parse_mode='HTML'
-        )
+        await update.message.reply_text(f"🎭 <b>{name}</b> — sticker va GIF yuborishi taqiqlandi.", parse_mode='HTML')
     except Exception as e:
         await update.message.reply_text(f"❌ {e}")
 
 async def warn_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
     if not update.message.reply_to_message:
-        await update.message.reply_text("⚠️ Reply to a user's message with /warn")
-        return
+        await update.message.reply_text("⚠️ Reply to a user's message with /warn"); return
     target = update.message.reply_to_message.from_user
     if target.id == update.effective_user.id:
         await update.message.reply_text("Can't warn yourself"); return
@@ -821,26 +797,17 @@ async def warn_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 permissions=ChatPermissions(can_send_messages=False),
                 until_date=datetime.now(timezone.utc) + WARN_MUTE_DURATION
             )
-            await update.message.reply_text(
-                f"🔇 <b>{name}</b> — {MAX_WARNINGS} ta ogohlantirish!\n"
-                f"Jazo: <b>1 soat mute</b>",
-                parse_mode='HTML'
-            )
+            await update.message.reply_text(f"🔇 <b>{name}</b> — {MAX_WARNINGS} ta ogohlantirish!\nJazo: <b>1 soat mute</b>", parse_mode='HTML')
             clear_warn(chat_id, target.id)
         except Exception as e:
             await update.message.reply_text(f"❌ {e}")
     else:
-        await update.message.reply_text(
-            f"⚠️ <b>{name}</b> ogohlantirildi!\n"
-            f"Ogohlantirish: <b>{count}/{MAX_WARNINGS}</b>",
-            parse_mode='HTML'
-        )
+        await update.message.reply_text(f"⚠️ <b>{name}</b> ogohlantirildi!\nOgohlantirish: <b>{count}/{MAX_WARNINGS}</b>", parse_mode='HTML')
 
 async def unwarn_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
     if not update.message.reply_to_message:
-        await update.message.reply_text("Reply to a user's message with /unwarn")
-        return
+        await update.message.reply_text("Reply to a user's message with /unwarn"); return
     target = update.message.reply_to_message.from_user
     clear_warn(update.effective_chat.id, target.id)
     name = f"@{target.username}" if target.username else target.full_name
@@ -849,43 +816,30 @@ async def unwarn_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def warns_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
     if not update.message.reply_to_message:
-        await update.message.reply_text("Reply to a user's message with /warns")
-        return
+        await update.message.reply_text("Reply to a user's message with /warns"); return
     target = update.message.reply_to_message.from_user
     count = get_warn_count(update.effective_chat.id, target.id)
     name = f"@{target.username}" if target.username else target.full_name
-    await update.message.reply_text(
-        f"⚠️ <b>{name}</b> — ogohlantirishlar: <b>{count}/{MAX_WARNINGS}</b>",
-        parse_mode='HTML'
-    )
+    await update.message.reply_text(f"⚠️ <b>{name}</b> — ogohlantirishlar: <b>{count}/{MAX_WARNINGS}</b>", parse_mode='HTML')
 
 async def add_bad_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
     if not update.message.reply_to_message:
-        await update.message.reply_text("🎭 Reply to a sticker or GIF with /addbadsticker")
-        return
+        await update.message.reply_text("🎭 Reply to a sticker or GIF with /addbadsticker"); return
     rm = update.message.reply_to_message
     if not (rm.sticker or rm.animation):
-        await update.message.reply_text("❌ Reply to a sticker or GIF only!")
-        return
+        await update.message.reply_text("❌ Reply to a sticker or GIF only!"); return
     file_id = rm.sticker.file_unique_id if rm.sticker else rm.animation.file_unique_id
     add_bad_sticker(file_id)
-    await update.message.reply_text(
-        f"✅ Sticker/GIF belgilandi!\n\n"
-        f"Endi uni kim yuborsa — <b>ogohlantirish</b> oladi.\n"
-        f"3 ta ogohlantirishdan keyin <b>1 soat mute</b>.",
-        parse_mode='HTML'
-    )
+    await update.message.reply_text(f"✅ Sticker/GIF belgilandi!\nEndi uni kim yuborsa — <b>ogohlantirish</b> oladi.", parse_mode='HTML')
 
 async def del_bad_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
     if not update.message.reply_to_message:
-        await update.message.reply_text("🎭 Reply to a sticker or GIF with /delbadsticker")
-        return
+        await update.message.reply_text("🎭 Reply to a sticker or GIF with /delbadsticker"); return
     rm = update.message.reply_to_message
     if not (rm.sticker or rm.animation):
-        await update.message.reply_text("❌ Reply to a sticker or GIF only!")
-        return
+        await update.message.reply_text("❌ Reply to a sticker or GIF only!"); return
     file_id = rm.sticker.file_unique_id if rm.sticker else rm.animation.file_unique_id
     remove_bad_sticker(file_id)
     await update.message.reply_text("✅ Sticker/GIF ro'yxatdan olib tashlandi.")
@@ -894,13 +848,8 @@ async def list_bad_stickers_cmd(update: Update, context: ContextTypes.DEFAULT_TY
     if not await check_group_admin(update, context): return
     stickers = get_bad_stickers()
     if not stickers:
-        await update.message.reply_text("📭 Taqiqlangan sticker/GIF yo'q.")
-        return
-    await update.message.reply_text(
-        f"🎭 <b>Taqiqlangan sticker/GIF: {len(stickers)} ta</b>\n\n"
-        f"<i>Yangi sticker qo'shish uchun unga reply qilib /addbadsticker yozing.</i>",
-        parse_mode='HTML'
-    )
+        await update.message.reply_text("📭 Taqiqlangan sticker/GIF yo'q."); return
+    await update.message.reply_text(f"🎭 <b>Taqiqlangan sticker/GIF: {len(stickers)} ta</b>", parse_mode='HTML')
 
 async def clear_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
@@ -926,10 +875,9 @@ async def on_bot_added_to_group(update: Update, context: ContextTypes.DEFAULT_TY
         except: pass
 
 # ============================================================
-# AUTO-MODERATION (so'kinish + emoji + sticker/GIF)
+# AUTO-MODERATION
 # ============================================================
 async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Har bir xabarni tekshiradi: so'kinish + emoji + sticker/GIF"""
     msg = update.effective_message
     if not msg: return
     if update.effective_chat.type not in ('group', 'supergroup'): return
@@ -940,18 +888,15 @@ async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     violation_reason = None
 
-    # 1. So'kinish (faqat ALOHIDA so'zlar)
     if msg.text:
         bad_word = contains_bad_word(msg.text)
         if bad_word:
             violation_reason = f"so'kinish: <code>{bad_word}</code>"
         else:
-            # 2. Yomon emoji
             bad_emoji = contains_bad_emoji(msg.text)
             if bad_emoji:
                 violation_reason = f"yomon emoji: {bad_emoji}"
 
-    # 3. Yomon sticker/GIF
     if not violation_reason and (msg.sticker or msg.animation):
         file_id = None
         if msg.sticker: file_id = msg.sticker.file_unique_id
@@ -961,11 +906,9 @@ async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not violation_reason: return
 
-    # Xabarni o'chirish
     try: await msg.delete()
     except: pass
 
-    # Warn qo'shish
     count = get_warn_count(chat_id, user.id) + 1
     set_warn_count(chat_id, user.id, count)
     name = f"@{user.username}" if user.username else user.full_name
@@ -1069,7 +1012,6 @@ def run_bot_in_thread():
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & filters.User(ADMIN_ID) & filters.ChatType.PRIVATE, handle_broadcast_message))
         app.add_handler(ChatMemberHandler(on_bot_added_to_group, ChatMemberHandler.MY_CHAT_MEMBER))
 
-        # AUTO-MODERATION (group=1)
         app.add_handler(
             MessageHandler(
                 (filters.TEXT | filters.Sticker.ALL | filters.ANIMATION) &
