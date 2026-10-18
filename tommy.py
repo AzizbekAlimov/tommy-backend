@@ -1,7 +1,8 @@
 """
-TOMMY BOT — Full: bad words (UZ+RU+EN) + bad emojis + bad stickers/GIFs + warn
+TOMMY BOT — Full: bad words (UZ+RU+EN) + bad emojis + bad stickers/GIFs + warn + PostgreSQL Keys
 """
 import os, sqlite3, asyncio, logging, threading, base64, json, re
+import psycopg2 # <--- YANGI: PostgreSQL uchun
 from io import BytesIO
 from datetime import datetime, timezone, timedelta
 
@@ -35,75 +36,30 @@ OWNER_FIXED = "@Tommy_1727"
 ADMIN_ID = int(os.getenv("ADMIN_ID", "7383782449"))
 PORT = int(os.getenv("PORT", "10000"))
 
+# YANGI: PostgreSQL bazasi manzili
+DATABASE_URL = os.getenv("DATABASE_URL")
+
 TZ_TASHKENT = timezone(timedelta(hours=5))
 
 # ============================================================
 # ⚠️ SO'KINISH SO'ZLARI (faqat ALOHIDA yozilganda tekshiriladi)
 # ============================================================
 BAD_WORDS = [
-    # ==================================================
     # 🇺🇿 O'ZBEKCHA
-    # ==================================================
-    "jalab", "jalap", "jallob", "jalloblar",
-    "qotoq", "qotoqlar",
-    "am",        # ← qo'shildi
-    "sika", "siki", "sikaman", "sikasan", "sikadi", "sikish",  # ← qo'shildi
-    "siktir", "sikiltir", "sikingni", "siking",
-    "haromi", "haromzoda", "haromilar",
-    "qanjiq", "qanjiqlar",
-    "itvachcha", "itvachchalar",
-    "onangni", "otangni", "onang", "otang",
-
-    # ==================================================
+    "jalab", "jalap", "jallob", "jalloblar", "qotoq", "qotoqlar", "am", "sika", "siki", "sikaman", "sikasan", "sikadi", "sikish", "siktir", "sikiltir", "sikingni", "siking", "haromi", "haromzoda", "haromilar", "qanjiq", "qanjiqlar", "itvachcha", "itvachchalar", "onangni", "otangni", "onang", "otang",
     # 🇷🇺 РУССКИЙ МАТ
-    # ==================================================
-    "blyad", "blyadina", "blyadskiy", "blyadstvo",
-    "huy", "huynya", "huyni", "huyak", "huyok",
-    "pizdec", "pizda", "pizdets",
-    "suka", "suchka", "sukin",
-    "nahuy", "nahui", "nahuya",
-    "mudak", "mudila", "mudozvon", "mudaki",
-    "govno", "govnyuk", "govnyak",
-    "ebat", "yebat", "yobanyy", "yebal", "yebanashka",
-    "dolboyob",
-    "pidar", "pidoras", "pidaraz", "pidor",
-    "zalupa", "zhopa", "zhopu",
-    "gandon", "gandoni",
-
-    # ==================================================
+    "blyad", "blyadina", "blyadskiy", "blyadstvo", "huy", "huynya", "huyni", "huyak", "huyok", "pizdec", "pizda", "pizdets", "suka", "suchka", "sukin", "nahuy", "nahui", "nahuya", "mudak", "mudila", "mudozvon", "mudaki", "govno", "govnyuk", "govnyak", "ebat", "yebat", "yobanyy", "yebal", "yebanashka", "dolboyob", "pidar", "pidoras", "pidaraz", "pidor", "zalupa", "zhopa", "zhopu", "gandon", "gandoni",
     # 🇬🇧 ENGLISH
-    # ==================================================
-    "fuck", "fucking", "fucker", "fucked", "fuckers",
-    "motherfucker", "motherfucking", "clusterfuck",
-    "fuckface", "fuckhead", "fucktard",
-    "shit", "shitty", "bullshit", "shitshow", "shithead",
-    "bitch", "bitches", "bitchy",
-    "asshole", "assholes",
-    "bastard", "bastards",
-    "dick", "dickhead", "dickheads", "dickface",
-    "pussy", "pussies",
-    "cunt", "cunts",
-    "slut", "sluts", "slutty",
-    "whore", "whores",
-    "cocksucker", "cocksuckers",
-    "dumbass", "dumbasses",
+    "fuck", "fucking", "fucker", "fucked", "fuckers", "motherfucker", "motherfucking", "clusterfuck", "fuckface", "fuckhead", "fucktard", "shit", "shitty", "bullshit", "shitshow", "shithead", "bitch", "bitches", "bitchy", "asshole", "assholes", "bastard", "bastards", "dick", "dickhead", "dickheads", "dickface", "pussy", "pussies", "cunt", "cunts", "slut", "sluts", "slutty", "whore", "whores", "cocksucker", "cocksuckers", "dumbass", "dumbasses",
 ]
 
-# ============================================================
 # ⚠️ YOMON EMOJILAR
-# ============================================================
-BAD_EMOJIS = [
-    "🖕", "🖕🏻", "🖕🏼", "🖕🏽", "🖕🏾", "🖕🏿",
-    "🤬", "🤮", "💩", "🤡",
-]
+BAD_EMOJIS = ["🖕", "🖕🏻", "🖕🏼", "🖕🏽", "🖕🏾", "🖕🏿", "🤬", "🤮", "💩", "🤡"]
 
 MAX_WARNINGS = 3
 WARN_MUTE_DURATION = timedelta(hours=1)
 
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO
-)
+logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 if not BOT_TOKEN:
@@ -129,23 +85,17 @@ PRIVATE_COMMANDS = [
     BotCommand("banned", "Banned users list"),
 ]
 GROUP_ADMIN_COMMANDS = [
-    BotCommand("start", "Start the bot"),
-    BotCommand("setup", "Setup command menu"),
-    BotCommand("mute", "Mute user (reply)"),
-    BotCommand("unmute", "Unmute user (reply)"),
-    BotCommand("mutesticker", "Mute stickers/GIFs"),
-    BotCommand("warn", "Warn user (reply)"),
-    BotCommand("unwarn", "Clear user warnings"),
-    BotCommand("warns", "Show user warnings"),
-    BotCommand("addbadsticker", "Mark sticker/GIF as bad"),
-    BotCommand("delbadsticker", "Unmark sticker/GIF"),
-    BotCommand("listbadstickers", "List bad stickers"),
-    BotCommand("clear", "Clear recent messages"),
+    BotCommand("start", "Start the bot"), BotCommand("setup", "Setup command menu"),
+    BotCommand("mute", "Mute user (reply)"), BotCommand("unmute", "Unmute user (reply)"),
+    BotCommand("mutesticker", "Mute stickers/GIFs"), BotCommand("warn", "Warn user (reply)"),
+    BotCommand("unwarn", "Clear user warnings"), BotCommand("warns", "Show user warnings"),
+    BotCommand("addbadsticker", "Mark sticker/GIF as bad"), BotCommand("delbadsticker", "Unmark sticker/GIF"),
+    BotCommand("listbadstickers", "List bad stickers"), BotCommand("clear", "Clear recent messages"),
 ]
 GROUP_PUBLIC_COMMANDS = [BotCommand("start", "Start the bot")]
 
 # ============================================================
-# WEBAPP HTML
+# WEBAPP HTML (O'ZGARMAGAN)
 # ============================================================
 INDEX_HTML = r'''<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>TOMMY BOT</title>
@@ -268,7 +218,7 @@ tg.BackButton.show();tg.BackButton.onClick(()=>tg.close());
 </script></body></html>'''
 
 # ============================================================
-# DATABASE
+# SQLITE DATABASE
 # ============================================================
 def init_db():
     conn = sqlite3.connect("users.db"); c = conn.cursor()
@@ -281,6 +231,31 @@ def init_db():
     c.execute("""CREATE TABLE IF NOT EXISTS bad_stickers
                  (file_id TEXT PRIMARY KEY, added_at TEXT)""")
     conn.commit(); conn.close()
+
+# ============================================================
+# POSTGRESQL DATABASE (PUBG KEYLAR UCHUN)
+# ============================================================
+def init_pg_db():
+    if not DATABASE_URL:
+        logger.warning("⚠️ DATABASE_URL topilmadi! Key tizimi ishlamaydi.")
+        return
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS vip_keys (
+                id SERIAL PRIMARY KEY,
+                key_code VARCHAR(100) UNIQUE NOT NULL,
+                key_type VARCHAR(20) NOT NULL,
+                expire_date TIMESTAMP NOT NULL
+            );
+        """)
+        conn.commit()
+        cur.close()
+        conn.close()
+        logger.info("✅ PostgreSQL (vip_keys) jadvali muvaffaqiyatli tekshirildi!")
+    except Exception as e:
+        logger.error(f"❌ PostgreSQL ulanish xatosi: {e}")
 
 def save_user(uid, un, fn):
     conn = sqlite3.connect("users.db"); c = conn.cursor()
@@ -416,36 +391,23 @@ def human_duration(td):
 # ✅ SO'KINISH VA EMOJI TEKSHIRUVI
 # ============================================================
 def contains_bad_word(text):
-    """
-    Faqat ALOHIDA (ajratilgan) so'kinishlarni topadi.
-    - Katta/kichik harf farqi yo'q
-    - "Sika man" → "sika" topiladi (so'zlar ajratilgan)
-    - "kiraman" → topilmaydi (bir so'z)
-    """
-    if not text:
-        return None
-    # So'zlarga ajratish (harflar + apostrof)
+    if not text: return None
     words = re.findall(r"[a-zA-Zа-яА-ЯёЁ\u0400-\u04FF']+", text.lower())
     for word in words:
-        if word in BAD_WORDS:
-            return word
+        if word in BAD_WORDS: return word
     return None
 
 def contains_bad_emoji(text):
-    """Yomon emojilarni topadi"""
-    if not text:
-        return None
+    if not text: return None
     for emoji in BAD_EMOJIS:
-        if emoji in text:
-            return emoji
+        if emoji in text: return emoji
     return None
 
 # ============================================================
 # GEMINI AI
 # ============================================================
 def analyze_with_ai(image_bytes, mime_type="image/jpeg"):
-    if not GEMINI_API_KEY:
-        return None
+    if not GEMINI_API_KEY: return None
     try:
         b64 = base64.b64encode(image_bytes).decode("utf-8")
         prompt = 'Return ONLY JSON: {"player_id":"11-digit or null","classic_rank":"... or null","ultimate_rank":"... or null","kills":"number or null"}'
@@ -473,7 +435,7 @@ def send_to_telegram(image_bytes, caption, mime_type='image/jpeg'):
         return {'ok': False, 'description': str(e)}
 
 # ============================================================
-# FLASK
+# FLASK API
 # ============================================================
 flask_app = Flask(__name__)
 CORS(flask_app, resources={r"/*": {"origins": "*"}})
@@ -519,6 +481,45 @@ def send_feedback():
     except Exception as e:
         logger.error(f"Web error: {e}")
         return jsonify({'ok': False, 'description': str(e)}), 500
+
+# ============================================================
+# 🆕 YANGI: KEYNI TEKSHIRISH API (LUA UCHUN)
+# ============================================================
+@flask_app.route('/verify_key', methods=['POST'])
+def verify_key():
+    data = request.get_json()
+    if not data or 'key' not in data:
+        return jsonify({"status": False, "message": "KEY BO'SH"}), 400
+
+    key = data['key']
+
+    if not DATABASE_URL:
+        return jsonify({"status": False, "message": "BAZA ULANMAGAN"}), 500
+
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        cur.execute("SELECT expire_date FROM vip_keys WHERE key_code = %s", (key,))
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not result:
+            return jsonify({"status": False, "message": "BUNDAY KEY YO'Q"}), 404
+
+        expire_date = result[0]
+        now = datetime.now()
+
+        if now > expire_date:
+            return jsonify({"status": False, "message": "MUDDATI TUGAGAN"}), 403
+
+        kalan_gun = (expire_date - now).days
+        return jsonify({"status": True, "message": f"QOLGAN: {kalan_gun} kun"}), 200
+
+    except Exception as e:
+        logger.error(f"Verify key error: {e}")
+        return jsonify({"status": False, "message": "SERVER XATOLIGI"}), 500
+
 
 def run_flask():
     flask_app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False, threaded=True)
@@ -1044,6 +1045,7 @@ def run_bot_in_thread():
 # ============================================================
 def main():
     init_db()
+    init_pg_db()  # <--- YANGI: PostgreSQL bazasini ishga tushirish
     logger.info("=" * 50)
     logger.info("🚀 TOMMY BOT STARTING")
     logger.info("=" * 50)
