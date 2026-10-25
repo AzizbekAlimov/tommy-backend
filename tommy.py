@@ -5,7 +5,7 @@ TOMMY BOT — IDEAL STRONG VERSION
 - Yomon emojilar (kengaytirilgan)
 - AI media: photo, sticker (webp/webm/tgs), GIF, video note, video
 - Username/ism tekshirish (cooldown bilan)
-- Warn + mute + blacklist
+- Warn + mute + blacklist + STICKER PACK LINK ORQALI QO'SHISH
 - PostgreSQL VIP keys
 - Concurrent updates + cache + confidence threshold
 """
@@ -240,7 +240,8 @@ GROUP_ADMIN_COMMANDS = [
     BotCommand("mute", "Mute user (reply)"), BotCommand("unmute", "Unmute user (reply)"),
     BotCommand("mutesticker", "Mute stickers/GIFs"), BotCommand("warn", "Warn user (reply)"),
     BotCommand("unwarn", "Clear user warnings"), BotCommand("warns", "Show user warnings"),
-    BotCommand("addbadsticker", "Mark sticker/GIF as bad"), BotCommand("delbadsticker", "Unmark sticker/GIF"),
+    BotCommand("addbadsticker", "Sticker qora ro'yxatga qo'shish"), 
+    BotCommand("delbadsticker", "Stickerni ro'yxatdan olish"),
     BotCommand("listbadstickers", "List bad stickers"), BotCommand("clear", "Clear recent messages"),
 ]
 GROUP_PUBLIC_COMMANDS = [BotCommand("start", "Start the bot")]
@@ -935,7 +936,7 @@ async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Not admin"); return
     ai_status = "✅ ON" if (AI_MEDIA_CHECK and GEMINI_API_KEY) else "❌ OFF"
     tgs_status = "✅ ON" if RLOTTIE_AVAILABLE else "❌ OFF"
-    text = (f"📊 <b>STATS (v4.0)</b>\n\n"
+    text = (f"📊 <b>STATS (v4.1)</b>\n\n"
             f"👥 Users: <b>{get_users_count()}</b>\n"
             f"🆕 Today: <b>{get_today_users_count()}</b>\n"
             f"📸 Posts: <b>{get_posts_count()}</b>\n"
@@ -1129,17 +1130,58 @@ async def warns_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     name = f"@{target.username}" if target.username else target.full_name
     await update.message.reply_text(f"⚠️ <b>{html_lib.escape(name)}</b> — ogohlantirishlar: <b>{count}/{MAX_WARNINGS}</b>", parse_mode='HTML')
 
+# YANGILANGAN: STICKER PACK LINK ORQALI HAM QO'SHISH
 async def add_bad_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
+    
+    # 1) Agar argument (link yoki nom) berilgan bo'lsa
+    if context.args:
+        text = " ".join(context.args)
+        # Linkdan to'plam nomini ajratib olish (masalan: t.me/addstickers/artsla -> artsla)
+        match = re.search(r'(?:t\.me/addstickers/|t\.me/addemoji/)([a-zA-Z0-9_]+)', text)
+        pack_name = match.group(1) if match else text.strip().split('/')[-1]
+        
+        if not pack_name:
+            await update.message.reply_text("❌ Noto'g'ri link yoki nom kiritildi.")
+            return
+            
+        msg = await update.message.reply_text(f"⏳ <b>{pack_name}</b> to'plami tekshirilmoqda...", parse_mode='HTML')
+        try:
+            # Telegram API orqali to'plamni olish
+            sticker_set = await context.bot.get_sticker_set(name=pack_name)
+            count = 0
+            for sticker in sticker_set.stickers:
+                add_bad_sticker(sticker.file_unique_id)
+                delete_media_verdict(sticker.file_unique_id)
+                count += 1
+                
+            await msg.edit_text(
+                f"✅ <b>{sticker_set.title}</b> to'plamidagi {count} ta sticker qora ro'yxatga qo'shildi!\n"
+                f"Endi ularni kim yuborsa, avtomatik o'chiriladi va ogohlantirish oladi.",
+                parse_mode='HTML'
+            )
+        except Exception as e:
+            await msg.edit_text(f"❌ Xatolik: To'plam topilmadi yoki bot unga a'zo emas.\n<code>{e}</code>", parse_mode='HTML')
+        return
+
+    # 2) Agar reply qilingan bo'lsa (bitta sticker/gif)
     if not update.message.reply_to_message:
-        await update.message.reply_text("🎭 Reply to a sticker or GIF with /addbadsticker"); return
+        await update.message.reply_text(
+            "🎭 Ishlatish usullari:\n\n"
+            "1️⃣ Bitta sticker/GIF ga reply qilib: <code>/addbadsticker</code>\n"
+            "2️⃣ Link yuborib: <code>/addbadsticker https://t.me/addstickers/artsla</code>",
+            parse_mode='HTML'
+        )
+        return
+        
     rm = update.message.reply_to_message
     if not (rm.sticker or rm.animation):
         await update.message.reply_text("❌ Reply to a sticker or GIF only!"); return
+        
     file_id = rm.sticker.file_unique_id if rm.sticker else rm.animation.file_unique_id
     add_bad_sticker(file_id)
     delete_media_verdict(file_id)
-    await update.message.reply_text(f"✅ Sticker/GIF belgilandi!\nEndi uni kim yuborsa — <b>ogohlantirish</b> oladi.", parse_mode='HTML')
+    await update.message.reply_text(f"✅ Bitta Sticker/GIF belgilandi!\nEndi uni kim yuborsa — <b>ogohlantirish</b> oladi.", parse_mode='HTML')
 
 async def del_bad_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
@@ -1289,9 +1331,9 @@ async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
             mime_hint = "video/mp4"
 
         if file_unique_id:
-            # A) Qo'lda qora ro'yxat
+            # A) Qo'lda qora ro'yxat (Endi to'plam linki orqali qo'shilganlar ham shu yerda ushlanadi)
             if file_unique_id in get_bad_stickers():
-                violation_reason = "taqiqlangan sticker/GIF (qo'lda belgilangan)"
+                violation_reason = "taqiqlangan sticker/GIF (qora ro'yxatda bor)"
             # B) AI tekshiruvi
             elif AI_MEDIA_CHECK and GEMINI_API_KEY and mime_hint:
                 cached = get_media_verdict(file_unique_id)
@@ -1486,7 +1528,7 @@ def main():
     init_db()
     init_pg_db()
     logger.info("=" * 50)
-    logger.info("🚀 TOMMY BOT v4.0 — IDEAL STRONG")
+    logger.info("🚀 TOMMY BOT v4.1 — IDEAL STRONG + PACK SUPPORT")
     logger.info("=" * 50)
     logger.info(f"🌐 Flask: port {PORT}")
     logger.info(f"📢 Channel: {CHANNEL_ID}")
