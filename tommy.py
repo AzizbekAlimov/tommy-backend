@@ -1,8 +1,17 @@
 """
-TOMMY BOT — Full: bad words (UZ+RU+EN) + bad emojis + bad stickers/GIFs + warn + PostgreSQL Keys
+TOMMY BOT — IDEAL STRONG VERSION
+================================
+- So'kinish (UZ/RU/EN) + anti-evasion (f*ck, f.u.c.k, kirill lookalike, fuuuck)
+- Yomon emojilar (kengaytirilgan)
+- AI media: photo, sticker (webp/webm/tgs), GIF, video note, video
+- Username/ism tekshirish (cooldown bilan)
+- Warn + mute + blacklist
+- PostgreSQL VIP keys
+- Concurrent updates + cache + confidence threshold
 """
-import os, sqlite3, asyncio, logging, threading, base64, json, re
-import psycopg2 # <--- YANGI: PostgreSQL uchun
+import os, sqlite3, asyncio, logging, threading, base64, json, re, gzip, tempfile
+import html as html_lib
+import psycopg2
 from io import BytesIO
 from datetime import datetime, timezone, timedelta
 
@@ -35,30 +44,155 @@ CHANNEL_ID = os.getenv("CHANNEL_ID", "@TommyXcheat2")
 OWNER_FIXED = "@Tommy_1727"
 ADMIN_ID = int(os.getenv("ADMIN_ID", "7383782449"))
 PORT = int(os.getenv("PORT", "10000"))
-
-# YANGI: PostgreSQL bazasi manzili
 DATABASE_URL = os.getenv("DATABASE_URL")
+
+AI_MEDIA_CHECK = os.getenv("AI_MEDIA_CHECK", "true").lower() in ("1", "true", "yes", "on")
 
 TZ_TASHKENT = timezone(timedelta(hours=5))
 
+MAX_WARNINGS = 3
+WARN_MUTE_DURATION = timedelta(hours=1)
+NAME_WARN_COOLDOWN = timedelta(hours=2)
+AI_CONFIDENCE_THRESHOLD = 0.55
+
 # ============================================================
-# ⚠️ SO'KINISH SO'ZLARI (faqat ALOHIDA yozilganda tekshiriladi)
+# BAD WORDS — KENGAYTIRILGAN
 # ============================================================
 BAD_WORDS = [
     # 🇺🇿 O'ZBEKCHA
-    "jalab", "jalap", "jallob", "jalloblar", "qotoq", "qotoqlar", "am", "sika", "siki", "sikaman", "sikasan", "sikadi", "sikish", "siktir", "sikiltir", "sikingni", "siking", "haromi", "haromzoda", "haromilar", "qanjiq", "qanjiqlar", "itvachcha", "itvachchalar", "onangni", "otangni", "onang", "otang",
+    "jalab", "jalap", "jallob", "jalloblar", "qotoq", "qotoqlar",
+    "am", "sika", "siki", "sikaman", "sikasan", "sikadi", "sikish",
+    "siktir", "sikiltir", "sikingni", "siking", "sikking",
+    "haromi", "haromzoda", "haromilar", "haromzodalar",
+    "qanjiq", "qanjiqlar", "itvachcha", "itvachchalar",
+    "onangni", "otangni", "onang", "otang",
+    "onabachcha", "onabachchal", "jalablar",
     # 🇷🇺 РУССКИЙ МАТ
-    "blyad", "blyadina", "blyadskiy", "blyadstvo", "huy", "huynya", "huyni", "huyak", "huyok", "pizdec", "pizda", "pizdets", "suka", "suchka", "sukin", "nahuy", "nahui", "nahuya", "mudak", "mudila", "mudozvon", "mudaki", "govno", "govnyuk", "govnyak", "ebat", "yebat", "yobanyy", "yebal", "yebanashka", "dolboyob", "pidar", "pidoras", "pidaraz", "pidor", "zalupa", "zhopa", "zhopu", "gandon", "gandoni",
-    # 🇬🇧 ENGLISH
-    "fuck", "fucking", "fucker", "fucked", "fuckers", "motherfucker", "motherfucking", "clusterfuck", "fuckface", "fuckhead", "fucktard", "shit", "shitty", "bullshit", "shitshow", "shithead", "bitch", "bitches", "bitchy", "asshole", "assholes", "bastard", "bastards", "dick", "dickhead", "dickheads", "dickface", "pussy", "pussies", "cunt", "cunts", "slut", "sluts", "slutty", "whore", "whores", "cocksucker", "cocksuckers", "dumbass", "dumbasses",
+    "blyad", "blyadina", "blyadskiy", "blyadstvo",
+    "huy", "huynya", "huyni", "huyak", "huyok", "huyli",
+    "pizdec", "pizda", "pizdets", "pizdato", "pizdatyy",
+    "suka", "suchka", "sukin", "nahuy", "nahui", "nahuya",
+    "mudak", "mudila", "mudozvon", "mudaki", "mudach", "mudachok",
+    "govno", "govnyuk", "govnyak",
+    "ebat", "yebat", "yobanyy", "yebal", "yebanashka",
+    "ebuchiy", "ebaniy", "ebuchka", "zaebal", "zaebis", "zaeb",
+    "dolboyob", "pidar", "pidoras", "pidaraz", "pidor",
+    "pidarchik", "pidrila", "pidrilo", "zalupa",
+    "zhopa", "zhopu", "gandon", "gandoni",
+    # 🇬🇧 ENGLISH (long forms)
+    "fuck", "fucking", "fucker", "fucked", "fuckers", "fuckface",
+    "fuckhead", "fucktard", "motherfucker", "motherfucking", "clusterfuck",
+    "shit", "shitty", "bullshit", "shitshow", "shithead",
+    "bitch", "bitches", "bitchy",
+    "asshole", "assholes", "bastard", "bastards",
+    "dick", "dickhead", "dickheads", "dickface",
+    "pussy", "pussies", "cunt", "cunts",
+    "slut", "sluts", "slutty", "whore", "whores",
+    "cocksucker", "cocksuckers", "dumbass", "dumbasses",
+    "faggot", "fagot", "retard", "retarded",
+    "nigger", "nigga", "nigg",
+    # 🇬🇧 SHORT / LEET / EVASION
+    "fck", "fuk", "fkk", "fuq", "phuck",
+    "fukin", "fuking", "fckin", "fcking",
+    "shyt", "sh1t", "sht", "sh1t",
+    "btch", "b1tch", "bich", "bish",
+    "d1ck", "dik", "dicc", "dikk",
+    "cnt", "kunt", "cun7",
+    "slu7", "wh0re", "hoe",
+    "n1ga", "n1gga",
 ]
 
-# ⚠️ YOMON EMOJILAR
-BAD_EMOJIS = ["🖕", "🖕🏻", "🖕🏼", "🖕🏽", "🖕🏾", "🖕🏿", "🤬", "🤮", "💩", "🤡"]
+BAD_WORDS_SET = frozenset(BAD_WORDS)
 
-MAX_WARNINGS = 3
-WARN_MUTE_DURATION = timedelta(hours=1)
+# ============================================================
+# BAD EMOJIS
+# ============================================================
+BAD_EMOJIS = [
+    "🖕", "🖕🏻", "🖕🏼", "🖕🏽", "🖕🏾", "🖕🏿",
+    "🤬", "🤮", "🤢", "🤡",
+    "💩", "🔞", "🍑", "🍆", "💦", "👅",
+    "卐", "卍",
+]
 
+# ============================================================
+# ANTI-EVASION NORMALIZATION
+# ============================================================
+ZERO_WIDTH_CHARS = '\u200b\u200c\u200d\u2060\ufeff\u180e'
+
+LEET_MAP = {
+    '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's',
+    '6': 'g', '7': 't', '8': 'b', '9': 'g',
+    '@': 'a', '$': 's', '!': 'i', '|': 'i', '€': 'e', '£': 'e',
+}
+
+CYR_LAT_MAP = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e',
+    'ё': 'e', 'ж': 'j', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k',
+    'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r',
+    'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'x', 'ц': 'c',
+    'ч': 'ch', 'ш': 'sh', 'щ': 'sh', 'ъ': '', 'ы': 'i', 'ь': '',
+    'э': 'e', 'ю': 'yu', 'я': 'ya',
+}
+
+def _transform_base(text):
+    """Cyr→Lat + leet konversiya (so'z chegaralari saqlanadi)."""
+    t = text.lower()
+    t = ''.join(c for c in t if c not in ZERO_WIDTH_CHARS)
+    t = ''.join(CYR_LAT_MAP.get(c, c) for c in t)
+    t = ''.join(LEET_MAP.get(c, c) for c in t)
+    return t
+
+def _normalize_words(text):
+    """So'zlar ro'yxati (collapse 2+)."""
+    t = _transform_base(text)
+    t = re.sub(r'(.)\1+', r'\1', t)
+    return re.findall(r'[a-z]+', t)
+
+def _joined(text):
+    """Barcha harflar biriktirilgan holda (f.u.c.k → fuck)."""
+    t = _transform_base(text)
+    t = re.sub(r'[^a-z]', '', t)
+    t = re.sub(r'(.)\1+', r'\1', t)
+    return t
+
+def contains_bad_word(text):
+    """3 bosqichli tekshiruv: raw → normalized → joined."""
+    if not text:
+        return None
+
+    # 1) Raw so'zlar (to'g'ridan-to'g'ri)
+    raw_words = re.findall(r"[a-zA-Zа-яА-ЯёЁ\u0400-\u04FF]+", text.lower())
+    for w in raw_words:
+        if w in BAD_WORDS_SET:
+            return w
+
+    # 2) Normalize qilingan so'zlar
+    for w in _normalize_words(text):
+        if w in BAD_WORDS_SET:
+            return w
+
+    # 3) Biriktirilgan matn (separator olib tashlangan)
+    joined = _joined(text)
+    if joined:
+        for bad in BAD_WORDS_SET:
+            if len(bad) < 4:
+                continue
+            if bad in joined and (len(joined) - len(bad)) <= 3:
+                return bad
+
+    return None
+
+def contains_bad_emoji(text):
+    if not text:
+        return None
+    for emoji in BAD_EMOJIS:
+        if emoji in text:
+            return emoji
+    return None
+
+# ============================================================
+# LOGGING
+# ============================================================
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -68,7 +202,24 @@ if not BOT_TOKEN:
 
 if GEMINI_API_KEY:
     logger.info("✅ Gemini API key loaded")
+else:
+    logger.warning("⚠️ GEMINI_API_KEY yo'q — AI media check ishlamaydi!")
 
+# ============================================================
+# OPTIONAL: rlottie
+# ============================================================
+try:
+    from rlottie_python import LottieAnimation
+    RLOTTIE_AVAILABLE = True
+    logger.info("✅ rlottie-python yuklandi — .tgs AI tekshiriladi")
+except Exception as e:
+    LottieAnimation = None
+    RLOTTIE_AVAILABLE = False
+    logger.warning(f"⚠️ rlottie-python yo'q — .tgs faqat qora ro'yxat ({e})")
+
+# ============================================================
+# CONVERSATION STATES
+# ============================================================
 PHOTO, PLAYER_ID, CLASSIC, ULTIMATE, KILLS = range(5)
 
 # ============================================================
@@ -95,7 +246,7 @@ GROUP_ADMIN_COMMANDS = [
 GROUP_PUBLIC_COMMANDS = [BotCommand("start", "Start the bot")]
 
 # ============================================================
-# WEBAPP HTML (O'ZGARMAGAN)
+# WEBAPP HTML (o'zgarmagan)
 # ============================================================
 INDEX_HTML = r'''<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>TOMMY BOT</title>
@@ -174,7 +325,7 @@ body{color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,s
 <div class="info-row"><span class="info-label">Bot:</span><span class="info-value">TOMMY BOT</span></div>
 <div class="info-row"><span class="info-label">Channel:</span><span class="info-value green">@TommyXcheat2</span></div>
 <div class="info-row"><span class="info-label">Owner:</span><span class="info-value" style="color:#FFC107">@Tommy_1727</span></div>
-<div class="info-row"><span class="info-label">Version:</span><span class="info-value">v3.8</span></div>
+<div class="info-row"><span class="info-label">Version:</span><span class="info-value">v4.0</span></div>
 </div>
 <button class="btn btn-primary" onclick="openChannel()">📊 STATISTICS</button>
 <button class="btn btn-secondary" onclick="startNew()">📤 START NEW</button>
@@ -218,7 +369,7 @@ tg.BackButton.show();tg.BackButton.onClick(()=>tg.close());
 </script></body></html>'''
 
 # ============================================================
-# SQLITE DATABASE
+# SQLITE
 # ============================================================
 def init_db():
     conn = sqlite3.connect("users.db"); c = conn.cursor()
@@ -228,12 +379,14 @@ def init_db():
     c.execute("""CREATE TABLE IF NOT EXISTS warnings
                  (chat_id INTEGER, user_id INTEGER, count INTEGER DEFAULT 0,
                   PRIMARY KEY (chat_id, user_id))""")
-    c.execute("""CREATE TABLE IF NOT EXISTS bad_stickers
-                 (file_id TEXT PRIMARY KEY, added_at TEXT)""")
+    c.execute("CREATE TABLE IF NOT EXISTS bad_stickers (file_id TEXT PRIMARY KEY, added_at TEXT)")
+    c.execute("""CREATE TABLE IF NOT EXISTS media_verdicts
+                 (file_unique_id TEXT PRIMARY KEY, is_bad INTEGER,
+                  reason TEXT, checked_at TEXT)""")
     conn.commit(); conn.close()
 
 # ============================================================
-# POSTGRESQL DATABASE (PUBG KEYLAR UCHUN)
+# POSTGRESQL
 # ============================================================
 def init_pg_db():
     if not DATABASE_URL:
@@ -250,21 +403,24 @@ def init_pg_db():
                 expire_date TIMESTAMP NOT NULL
             );
         """)
-        conn.commit()
-        cur.close()
-        conn.close()
-        logger.info("✅ PostgreSQL (vip_keys) jadvali muvaffaqiyatli tekshirildi!")
+        conn.commit(); cur.close(); conn.close()
+        logger.info("✅ PostgreSQL (vip_keys) jadvali tekshirildi!")
     except Exception as e:
         logger.error(f"❌ PostgreSQL ulanish xatosi: {e}")
 
+# ============================================================
+# USER DB HELPERS
+# ============================================================
 def save_user(uid, un, fn):
     conn = sqlite3.connect("users.db"); c = conn.cursor()
-    c.execute("INSERT OR IGNORE INTO users VALUES (?,?,?,?)", (uid, un or "", fn or "", datetime.now(TZ_TASHKENT).strftime("%Y-%m-%d %H:%M")))
+    c.execute("INSERT OR IGNORE INTO users VALUES (?,?,?,?)",
+              (uid, un or "", fn or "", datetime.now(TZ_TASHKENT).strftime("%Y-%m-%d %H:%M")))
     conn.commit(); conn.close()
 
 def save_post(uid, pid, cr, ur, k):
     conn = sqlite3.connect("users.db"); c = conn.cursor()
-    c.execute("INSERT INTO posts (user_id,player_id,classic_rank,ultimate_rank,kills,created_at) VALUES (?,?,?,?,?,?)", (uid, pid, cr, ur, k, datetime.now(TZ_TASHKENT).strftime("%Y-%m-%d %H:%M")))
+    c.execute("INSERT INTO posts (user_id,player_id,classic_rank,ultimate_rank,kills,created_at) VALUES (?,?,?,?,?,?)",
+              (uid, pid, cr, ur, k, datetime.now(TZ_TASHKENT).strftime("%Y-%m-%d %H:%M")))
     conn.commit(); conn.close()
 
 def get_users_count():
@@ -288,7 +444,8 @@ def get_all_users(limit=30):
 
 def ban_user(uid):
     conn = sqlite3.connect("users.db"); c = conn.cursor()
-    c.execute("INSERT OR IGNORE INTO banned_users VALUES (?,?)", (uid, datetime.now(TZ_TASHKENT).strftime("%Y-%m-%d %H:%M")))
+    c.execute("INSERT OR IGNORE INTO banned_users VALUES (?,?)",
+              (uid, datetime.now(TZ_TASHKENT).strftime("%Y-%m-%d %H:%M")))
     conn.commit(); conn.close()
 
 def unban_user(uid):
@@ -306,7 +463,7 @@ def get_banned_users():
     r = c.fetchall(); conn.close(); return r
 
 # ============================================================
-# WARN + BAD STICKER DB
+# WARN + BAD STICKERS
 # ============================================================
 def get_warn_count(chat_id, user_id):
     conn = sqlite3.connect("users.db"); c = conn.cursor()
@@ -339,6 +496,173 @@ def remove_bad_sticker(file_id):
     conn = sqlite3.connect("users.db"); c = conn.cursor()
     c.execute("DELETE FROM bad_stickers WHERE file_id=?", (file_id,))
     conn.commit(); conn.close()
+
+# ============================================================
+# MEDIA CACHE
+# ============================================================
+def get_media_verdict(fuid):
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("SELECT is_bad, reason FROM media_verdicts WHERE file_unique_id=?", (fuid,))
+    r = c.fetchone(); conn.close()
+    return (bool(r[0]), r[1]) if r else None
+
+def set_media_verdict(fuid, is_bad, reason):
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("INSERT OR REPLACE INTO media_verdicts VALUES (?,?,?,?)",
+              (fuid, 1 if is_bad else 0, reason or "",
+               datetime.now(TZ_TASHKENT).strftime("%Y-%m-%d %H:%M")))
+    conn.commit(); conn.close()
+
+def delete_media_verdict(fuid):
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("DELETE FROM media_verdicts WHERE file_unique_id=?", (fuid,))
+    conn.commit(); conn.close()
+
+def get_bad_media_count():
+    conn = sqlite3.connect("users.db"); c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM media_verdicts WHERE is_bad=1")
+    n = c.fetchone()[0]; conn.close(); return n
+
+# ============================================================
+# TGS → PNG FRAMES
+# ============================================================
+def tgs_to_png_frames(tgs_bytes, num_frames=3, size=512):
+    if not RLOTTIE_AVAILABLE or not tgs_bytes:
+        return []
+    tmp_path = None
+    anim = None
+    try:
+        json_data = gzip.decompress(tgs_bytes)
+        with tempfile.NamedTemporaryFile(suffix='.json', delete=False, mode='wb') as f:
+            f.write(json_data)
+            tmp_path = f.name
+        anim = LottieAnimation.from_file(tmp_path)
+        total = anim.lottie_animation_get_totalframes()
+        if not total or total <= 0:
+            return []
+        frames = []
+        for i in range(num_frames):
+            idx = int(total * (i + 0.5) / num_frames)
+            if idx >= total:
+                idx = total - 1
+            try:
+                pil_img = anim.lottie_animation_render(idx, size, size)
+            except Exception as fe:
+                logger.warning(f"Frame {idx} render error: {fe}")
+                continue
+            if pil_img is None:
+                continue
+            buf = BytesIO()
+            try:
+                if hasattr(pil_img, 'save'):
+                    pil_img.save(buf, format='PNG')
+                else:
+                    Image.fromarray(pil_img).save(buf, format='PNG')
+                frames.append(buf.getvalue())
+            except Exception as se:
+                logger.warning(f"PNG save error: {se}")
+        return frames
+    except Exception as e:
+        logger.error(f"TGS render error: {e}")
+        return []
+    finally:
+        if anim is not None:
+            try: anim.lottie_animation_destroy()
+            except: pass
+        if tmp_path:
+            try: os.unlink(tmp_path)
+            except: pass
+
+# ============================================================
+# AI MEDIA ANALYSIS (strict + confidence)
+# ============================================================
+async def analyze_media_content_with_ai(media_frames, mime_types=None):
+    if not GEMINI_API_KEY or not AI_MEDIA_CHECK:
+        return None, None
+    try:
+        if not isinstance(media_frames, list):
+            media_frames = [media_frames]
+        if mime_types is None:
+            mime_types = ['image/jpeg'] * len(media_frames)
+        elif not isinstance(mime_types, list):
+            mime_types = [mime_types] * len(media_frames)
+        if len(media_frames) != len(mime_types) or not media_frames:
+            return None, None
+
+        prompt = (
+            "You are an EXTREMELY STRICT content moderator for a Telegram group.\n"
+            "Analyze the provided media and decide if it contains BAD content.\n\n"
+
+            "FLAG AS BAD (bad=true) if ANY of these appear:\n"
+            "• Nudity, partial nudity, exposed genitals/breasts/buttocks\n"
+            "• Sexual content, pornography, suggestive poses, sexual acts\n"
+            "• Extreme violence, gore, open wounds, blood, corpses, dead bodies\n"
+            "• Weapons pointed at people (guns, knives, swords)\n"
+            "• Drugs, drug use, syringes, cocaine, marijuana as main subject\n"
+            "• Middle finger 🖕 gesture shown by a hand\n"
+            "• Offensive hand gestures (not thumbs up/down)\n"
+            "• Swastika, Nazi symbols, ISIS/terrorist flags, hate symbols\n"
+            "• Feces, poop, urine, vomit as main subject\n"
+            "• Self-harm, cutting, graphic injury\n"
+            "• Visible profanity or obscene words in any language\n"
+            "• Child in ANY sexual or exploitative context (always bad)\n"
+            "• Bestiality\n\n"
+
+            "DO NOT FLAG (bad=false):\n"
+            "• Normal selfies, portraits, family photos\n"
+            "• Normal memes, jokes (without explicit content)\n"
+            "• Food, animals, nature, sports\n"
+            "• Cartoons/anime (unless sexual/lewd)\n"
+            "• Weapons in safe context (museum, toy, game)\n"
+            "• Minor blood in medical/sports context\n"
+            "• Text messages, chat screenshots\n"
+            "• Innocent stickers, emojis, funny animations\n"
+            "• ANYTHING ambiguous — mark safe\n\n"
+
+            "If multiple frames provided, treat as ONE animation. "
+            "If ANY frame is bad, whole is bad.\n\n"
+
+            "Return ONLY valid JSON (no markdown, no extra text):\n"
+            '{"bad": true|false, "confidence": 0.0-1.0, '
+            '"reason": "max 60 chars in English or null"}'
+        )
+
+        parts = [{"text": prompt}]
+        for fb, mt in zip(media_frames, mime_types):
+            b64 = base64.b64encode(fb).decode("utf-8")
+            parts.append({"inline_data": {"mime_type": mt, "data": b64}})
+
+        url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+               f"gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}")
+        payload = {
+            "contents": [{"parts": parts}],
+            "generationConfig": {"temperature": 0.1, "maxOutputTokens": 200}
+        }
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            r = await client.post(url, json=payload)
+            result = r.json()
+        if "candidates" not in result or not result["candidates"]:
+            logger.warning(f"AI media: no candidates. Resp: {str(result)[:200]}")
+            return None, None
+        text = result["candidates"][0]["content"]["parts"][0]["text"].strip()
+        text = text.replace("```json", "").replace("```", "").strip()
+        s, e = text.find("{"), text.rfind("}")
+        if s == -1 or e == -1:
+            return None, None
+        data = json.loads(text[s:e + 1])
+        bad = bool(data.get("bad"))
+        try:
+            conf = float(data.get("confidence", 0.9))
+        except (ValueError, TypeError):
+            conf = 0.9
+        reason = data.get("reason")
+        if bad and conf < AI_CONFIDENCE_THRESHOLD:
+            logger.info(f"AI flag rejected (low conf {conf}): {reason}")
+            return False, None
+        return bad, reason
+    except Exception as e:
+        logger.error(f"Media AI error: {e}")
+        return None, None
 
 # ============================================================
 # HELPERS
@@ -376,7 +700,8 @@ def parse_duration(s):
         try: num = int(s); unit = 'm'
         except ValueError: return None
     if num <= 0: return None
-    units = {'s': timedelta(seconds=num), 'm': timedelta(minutes=num), 'h': timedelta(hours=num), 'd': timedelta(days=num), 'w': timedelta(weeks=num)}
+    units = {'s': timedelta(seconds=num), 'm': timedelta(minutes=num),
+             'h': timedelta(hours=num), 'd': timedelta(days=num), 'w': timedelta(weeks=num)}
     return units.get(unit)
 
 def human_duration(td):
@@ -388,23 +713,7 @@ def human_duration(td):
     return f"{t // 604800} weeks"
 
 # ============================================================
-# ✅ SO'KINISH VA EMOJI TEKSHIRUVI
-# ============================================================
-def contains_bad_word(text):
-    if not text: return None
-    words = re.findall(r"[a-zA-Zа-яА-ЯёЁ\u0400-\u04FF']+", text.lower())
-    for word in words:
-        if word in BAD_WORDS: return word
-    return None
-
-def contains_bad_emoji(text):
-    if not text: return None
-    for emoji in BAD_EMOJIS:
-        if emoji in text: return emoji
-    return None
-
-# ============================================================
-# GEMINI AI
+# GEMINI (PUBG screenshot)
 # ============================================================
 def analyze_with_ai(image_bytes, mime_type="image/jpeg"):
     if not GEMINI_API_KEY: return None
@@ -412,7 +721,8 @@ def analyze_with_ai(image_bytes, mime_type="image/jpeg"):
         b64 = base64.b64encode(image_bytes).decode("utf-8")
         prompt = 'Return ONLY JSON: {"player_id":"11-digit or null","classic_rank":"... or null","ultimate_rank":"... or null","kills":"number or null"}'
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
-        payload = {"contents": [{"parts": [{"text": prompt}, {"inline_data": {"mime_type": mime_type, "data": b64}}]}], "generationConfig": {"temperature": 0.1, "maxOutputTokens": 500}}
+        payload = {"contents": [{"parts": [{"text": prompt}, {"inline_data": {"mime_type": mime_type, "data": b64}}]}],
+                   "generationConfig": {"temperature": 0.1, "maxOutputTokens": 500}}
         with httpx.Client(timeout=30.0) as client:
             r = client.post(url, json=payload); result = r.json()
         if "candidates" not in result or not result["candidates"]: return None
@@ -435,7 +745,7 @@ def send_to_telegram(image_bytes, caption, mime_type='image/jpeg'):
         return {'ok': False, 'description': str(e)}
 
 # ============================================================
-# FLASK API
+# FLASK
 # ============================================================
 flask_app = Flask(__name__)
 CORS(flask_app, resources={r"/*": {"origins": "*"}})
@@ -482,44 +792,31 @@ def send_feedback():
         logger.error(f"Web error: {e}")
         return jsonify({'ok': False, 'description': str(e)}), 500
 
-# ============================================================
-# 🆕 YANGI: KEYNI TEKSHIRISH API (LUA UCHUN)
-# ============================================================
 @flask_app.route('/verify_key', methods=['POST'])
 def verify_key():
     data = request.get_json()
     if not data or 'key' not in data:
         return jsonify({"status": False, "message": "KEY BO'SH"}), 400
-
     key = data['key']
-
     if not DATABASE_URL:
         return jsonify({"status": False, "message": "BAZA ULANMAGAN"}), 500
-
     try:
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
         cur.execute("SELECT expire_date FROM vip_keys WHERE key_code = %s", (key,))
         result = cur.fetchone()
-        cur.close()
-        conn.close()
-
+        cur.close(); conn.close()
         if not result:
             return jsonify({"status": False, "message": "BUNDAY KEY YO'Q"}), 404
-
         expire_date = result[0]
         now = datetime.now()
-
         if now > expire_date:
             return jsonify({"status": False, "message": "MUDDATI TUGAGAN"}), 403
-
         kalan_gun = (expire_date - now).days
         return jsonify({"status": True, "message": f"QOLGAN: {kalan_gun} kun"}), 200
-
     except Exception as e:
         logger.error(f"Verify key error: {e}")
         return jsonify({"status": False, "message": "SERVER XATOLIGI"}), 500
-
 
 def run_flask():
     flask_app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False, threaded=True)
@@ -634,10 +931,19 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ADMIN
 async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID: await update.message.reply_text("❌ Not admin"); return
-    text = (f"📊 <b>STATS</b>\n\n👥 Users: <b>{get_users_count()}</b>\n🆕 Today: <b>{get_today_users_count()}</b>\n"
-            f"📸 Posts: <b>{get_posts_count()}</b>\n🚫 Banned: <b>{len(get_banned_users())}</b>\n"
-            f"⚠️ Bad stickers: <b>{len(get_bad_stickers())}</b>")
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("❌ Not admin"); return
+    ai_status = "✅ ON" if (AI_MEDIA_CHECK and GEMINI_API_KEY) else "❌ OFF"
+    tgs_status = "✅ ON" if RLOTTIE_AVAILABLE else "❌ OFF"
+    text = (f"📊 <b>STATS (v4.0)</b>\n\n"
+            f"👥 Users: <b>{get_users_count()}</b>\n"
+            f"🆕 Today: <b>{get_today_users_count()}</b>\n"
+            f"📸 Posts: <b>{get_posts_count()}</b>\n"
+            f"🚫 Banned: <b>{len(get_banned_users())}</b>\n"
+            f"⚠️ Bad stickers (manual): <b>{len(get_bad_stickers())}</b>\n"
+            f"🤖 AI media check: <b>{ai_status}</b>\n"
+            f"🎞 Animatsion sticker (.tgs): <b>{tgs_status}</b>\n"
+            f"🎯 Bad media (AI detected): <b>{get_bad_media_count()}</b>")
     await update.message.reply_text(text, parse_mode='HTML')
 
 async def users_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -647,7 +953,7 @@ async def users_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = f"👥 <b>USERS ({len(users)})</b>\n\n"
     for i, (uid, un, fn, ja) in enumerate(users, 1):
         n = f"@{un}" if un else (fn or "User")
-        text += f"{i}. {n} — {ja}\n    <code>{uid}</code>\n"
+        text += f"{i}. {html_lib.escape(n)} — {ja}\n    <code>{uid}</code>\n"
     for i in range(0, len(text), 4000):
         await update.message.reply_text(text[i:i+4000], parse_mode='HTML')
 
@@ -693,7 +999,7 @@ async def banned_list_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for uid, w in b: text += f"• <code>{uid}</code> — {w}\n"
     await update.message.reply_text(text, parse_mode='HTML')
 
-# GROUP
+# GROUP HELPERS
 async def is_group_admin(update, context):
     if update.effective_chat.type not in ('group','supergroup'): return False
     try:
@@ -729,7 +1035,7 @@ async def mute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
             until_date=datetime.now(timezone.utc) + dur
         )
         name = f"@{target.username}" if target.username else target.full_name
-        await update.message.reply_text(f"🔇 <b>{name}</b> muted for {human_duration(dur)}", parse_mode='HTML')
+        await update.message.reply_text(f"🔇 <b>{html_lib.escape(name)}</b> muted for {human_duration(dur)}", parse_mode='HTML')
     except Exception as e:
         await update.message.reply_text(f"❌ {e}")
 
@@ -749,7 +1055,7 @@ async def unmute_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         )
         name = f"@{target.username}" if target.username else target.full_name
-        await update.message.reply_text(f"🔊 <b>{name}</b> unmuted.", parse_mode='HTML')
+        await update.message.reply_text(f"🔊 <b>{html_lib.escape(name)}</b> unmuted.", parse_mode='HTML')
     except Exception as e:
         await update.message.reply_text(f"❌ Error: <code>{e}</code>", parse_mode='HTML')
 
@@ -771,7 +1077,7 @@ async def mute_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         )
         name = f"@{target.username}" if target.username else target.full_name
-        await update.message.reply_text(f"🎭 <b>{name}</b> — sticker va GIF yuborishi taqiqlandi.", parse_mode='HTML')
+        await update.message.reply_text(f"🎭 <b>{html_lib.escape(name)}</b> — sticker va GIF yuborishi taqiqlandi.", parse_mode='HTML')
     except Exception as e:
         await update.message.reply_text(f"❌ {e}")
 
@@ -798,12 +1104,12 @@ async def warn_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 permissions=ChatPermissions(can_send_messages=False),
                 until_date=datetime.now(timezone.utc) + WARN_MUTE_DURATION
             )
-            await update.message.reply_text(f"🔇 <b>{name}</b> — {MAX_WARNINGS} ta ogohlantirish!\nJazo: <b>1 soat mute</b>", parse_mode='HTML')
+            await update.message.reply_text(f"🔇 <b>{html_lib.escape(name)}</b> — {MAX_WARNINGS} ta ogohlantirish!\nJazo: <b>1 soat mute</b>", parse_mode='HTML')
             clear_warn(chat_id, target.id)
         except Exception as e:
             await update.message.reply_text(f"❌ {e}")
     else:
-        await update.message.reply_text(f"⚠️ <b>{name}</b> ogohlantirildi!\nOgohlantirish: <b>{count}/{MAX_WARNINGS}</b>", parse_mode='HTML')
+        await update.message.reply_text(f"⚠️ <b>{html_lib.escape(name)}</b> ogohlantirildi!\nOgohlantirish: <b>{count}/{MAX_WARNINGS}</b>", parse_mode='HTML')
 
 async def unwarn_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
@@ -812,7 +1118,7 @@ async def unwarn_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     target = update.message.reply_to_message.from_user
     clear_warn(update.effective_chat.id, target.id)
     name = f"@{target.username}" if target.username else target.full_name
-    await update.message.reply_text(f"✅ <b>{name}</b> — ogohlantirishlar tozalandi.", parse_mode='HTML')
+    await update.message.reply_text(f"✅ <b>{html_lib.escape(name)}</b> — ogohlantirishlar tozalandi.", parse_mode='HTML')
 
 async def warns_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
@@ -821,7 +1127,7 @@ async def warns_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     target = update.message.reply_to_message.from_user
     count = get_warn_count(update.effective_chat.id, target.id)
     name = f"@{target.username}" if target.username else target.full_name
-    await update.message.reply_text(f"⚠️ <b>{name}</b> — ogohlantirishlar: <b>{count}/{MAX_WARNINGS}</b>", parse_mode='HTML')
+    await update.message.reply_text(f"⚠️ <b>{html_lib.escape(name)}</b> — ogohlantirishlar: <b>{count}/{MAX_WARNINGS}</b>", parse_mode='HTML')
 
 async def add_bad_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
@@ -832,6 +1138,7 @@ async def add_bad_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE
         await update.message.reply_text("❌ Reply to a sticker or GIF only!"); return
     file_id = rm.sticker.file_unique_id if rm.sticker else rm.animation.file_unique_id
     add_bad_sticker(file_id)
+    delete_media_verdict(file_id)
     await update.message.reply_text(f"✅ Sticker/GIF belgilandi!\nEndi uni kim yuborsa — <b>ogohlantirish</b> oladi.", parse_mode='HTML')
 
 async def del_bad_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -843,6 +1150,7 @@ async def del_bad_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE
         await update.message.reply_text("❌ Reply to a sticker or GIF only!"); return
     file_id = rm.sticker.file_unique_id if rm.sticker else rm.animation.file_unique_id
     remove_bad_sticker(file_id)
+    delete_media_verdict(file_id)
     await update.message.reply_text("✅ Sticker/GIF ro'yxatdan olib tashlandi.")
 
 async def list_bad_stickers_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -876,6 +1184,34 @@ async def on_bot_added_to_group(update: Update, context: ContextTypes.DEFAULT_TY
         except: pass
 
 # ============================================================
+# USERNAME / NAME CHECK
+# ============================================================
+_name_warn_cooldown = {}  # (chat_id, user_id) -> datetime
+
+def check_user_name(update: Update):
+    """(bad_word, label) yoki None. Cooldown bilan."""
+    u = update.effective_user
+    if not u:
+        return None
+    chat_id = update.effective_chat.id
+    key = (chat_id, u.id)
+    now_utc = datetime.now(timezone.utc)
+    last = _name_warn_cooldown.get(key)
+    if last and (now_utc - last) < NAME_WARN_COOLDOWN:
+        return None
+
+    for text, label in ((u.first_name or "", "ism"),
+                        (u.last_name or "", "familiya"),
+                        (u.username or "", "username")):
+        if not text:
+            continue
+        bad = contains_bad_word(text)
+        if bad:
+            _name_warn_cooldown[key] = now_utc
+            return bad, label
+    return None
+
+# ============================================================
 # AUTO-MODERATION
 # ============================================================
 async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -887,29 +1223,123 @@ async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user = update.effective_user
     chat_id = update.effective_chat.id
+
+    # --- 0) USERNAME / ISM ---
+    name_check = check_user_name(update)
+    if name_check:
+        bad_word, label = name_check
+        name = f"@{user.username}" if user.username else user.full_name
+        try:
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=(f"⚠️ <b>{html_lib.escape(name)}</b>\n\n"
+                      f"Ism/{label}'da taqiqlangan so'z aniqlandi: <code>{html_lib.escape(bad_word)}</code>\n\n"
+                      f"Iltimos, Telegram sozlamalaridan ismni o'zgartiring."),
+                parse_mode='HTML'
+            )
+        except Exception as e:
+            logger.error(f"Name warn error: {e}")
+        # Xabarni o'chirmaymiz — ism uchun faqat ogohlantiramiz
+        return
+
     violation_reason = None
 
-    if msg.text:
-        bad_word = contains_bad_word(msg.text)
+    # --- 1) TEXT / CAPTION ---
+    text_to_check = msg.text or msg.caption
+    if text_to_check:
+        bad_word = contains_bad_word(text_to_check)
         if bad_word:
-            violation_reason = f"so'kinish: <code>{bad_word}</code>"
+            violation_reason = f"so'kinish: <code>{html_lib.escape(bad_word)}</code>"
         else:
-            bad_emoji = contains_bad_emoji(msg.text)
+            bad_emoji = contains_bad_emoji(text_to_check)
             if bad_emoji:
                 violation_reason = f"yomon emoji: {bad_emoji}"
 
-    if not violation_reason and (msg.sticker or msg.animation):
+    # --- 2) MEDIA ---
+    if not violation_reason and (msg.photo or msg.sticker or msg.animation or msg.video_note or msg.video):
         file_id = None
-        if msg.sticker: file_id = msg.sticker.file_unique_id
-        elif msg.animation: file_id = msg.animation.file_unique_id
-        if file_id and file_id in get_bad_stickers():
-            violation_reason = "taqiqlangan sticker/GIF"
+        file_unique_id = None
+        mime_hint = None
 
-    if not violation_reason: return
+        if msg.photo:
+            best = msg.photo[-1]
+            file_id = best.file_id
+            file_unique_id = best.file_unique_id
+            mime_hint = "image/jpeg"
+        elif msg.sticker:
+            file_id = msg.sticker.file_id
+            file_unique_id = msg.sticker.file_unique_id
+            if msg.sticker.is_video:
+                mime_hint = "video/webm"
+            elif msg.sticker.is_animated:
+                mime_hint = "tgs"
+            else:
+                mime_hint = "image/webp"
+        elif msg.animation:
+            file_id = msg.animation.file_id
+            file_unique_id = msg.animation.file_unique_id
+            mime_hint = "video/mp4"
+        elif msg.video_note:
+            file_id = msg.video_note.file_id
+            file_unique_id = msg.video_note.file_unique_id
+            mime_hint = "video/mp4"
+        elif msg.video:
+            file_id = msg.video.file_id
+            file_unique_id = msg.video.file_unique_id
+            mime_hint = "video/mp4"
 
-    try: await msg.delete()
-    except: pass
+        if file_unique_id:
+            # A) Qo'lda qora ro'yxat
+            if file_unique_id in get_bad_stickers():
+                violation_reason = "taqiqlangan sticker/GIF (qo'lda belgilangan)"
+            # B) AI tekshiruvi
+            elif AI_MEDIA_CHECK and GEMINI_API_KEY and mime_hint:
+                cached = get_media_verdict(file_unique_id)
+                if cached is not None:
+                    is_bad, ai_reason = cached
+                    if is_bad:
+                        violation_reason = f"taqiqlangan media: {html_lib.escape(ai_reason or 'AI aniqladi')}"
+                else:
+                    try:
+                        f = await context.bot.get_file(file_id)
+                        fsize = getattr(f, 'file_size', 0) or 0
+                        if fsize and fsize > 15 * 1024 * 1024:
+                            logger.info(f"Media too large to analyze: {fsize} bytes — skip")
+                        else:
+                            fb = bytes(await f.download_as_bytearray())
+                            is_bad, ai_reason = None, None
 
+                            if mime_hint == "tgs":
+                                try:
+                                    frames = await asyncio.to_thread(tgs_to_png_frames, fb, 3, 512)
+                                except AttributeError:
+                                    frames = tgs_to_png_frames(fb, 3, 512)
+                                if frames:
+                                    is_bad, ai_reason = await analyze_media_content_with_ai(
+                                        frames, ["image/png"] * len(frames)
+                                    )
+                                else:
+                                    logger.warning(f"TGS render bo'lmadi: {file_unique_id}")
+                            else:
+                                is_bad, ai_reason = await analyze_media_content_with_ai(fb, mime_hint)
+
+                            if is_bad is not None:
+                                set_media_verdict(file_unique_id, is_bad, ai_reason)
+                            if is_bad:
+                                violation_reason = f"taqiqlangan media: {html_lib.escape(ai_reason or 'AI aniqladi')}"
+                    except Exception as e:
+                        logger.error(f"Media download error: {e}")
+
+    if not violation_reason:
+        return
+
+    # --- 3) O'chirish ---
+    try:
+        await msg.delete()
+    except Exception:
+        pass
+
+    # --- 4) Ogohlantirish ---
     count = get_warn_count(chat_id, user.id) + 1
     set_warn_count(chat_id, user.id, count)
     name = f"@{user.username}" if user.username else user.full_name
@@ -923,7 +1353,7 @@ async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=(f"🔇 <b>{name}</b> — {MAX_WARNINGS} ta ogohlantirish!\n\n"
+                text=(f"🔇 <b>{html_lib.escape(name)}</b> — {MAX_WARNINGS} ta ogohlantirish!\n\n"
                       f"Sabab: {violation_reason}\n"
                       f"Jazo: <b>1 soat mute</b>"),
                 parse_mode='HTML'
@@ -935,7 +1365,7 @@ async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=(f"⚠️ <b>{name}</b> ogohlantirildi!\n\n"
+                text=(f"⚠️ <b>{html_lib.escape(name)}</b> ogohlantirildi!\n\n"
                       f"Sabab: {violation_reason}\n"
                       f"Ogohlantirish: <b>{count}/{MAX_WARNINGS}</b>\n\n"
                       f"<i>{MAX_WARNINGS - count} marta qoldi — keyin 1 soat mute.</i>"),
@@ -966,15 +1396,21 @@ async def post_init(app):
     logger.info("✅ post_init done")
 
 # ============================================================
-# 🤖 BOT — BACKGROUND THREAD
+# BOT THREAD
 # ============================================================
 def run_bot_in_thread():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
     async def bot_main():
-        req = HTTPXRequest(connection_pool_size=8, connect_timeout=30.0, read_timeout=30.0, write_timeout=30.0, pool_timeout=30.0)
-        app = Application.builder().token(BOT_TOKEN).request(req).post_init(post_init).build()
+        req = HTTPXRequest(connection_pool_size=8, connect_timeout=30.0,
+                           read_timeout=30.0, write_timeout=30.0, pool_timeout=30.0)
+        app = (Application.builder()
+               .token(BOT_TOKEN)
+               .request(req)
+               .post_init(post_init)
+               .concurrent_updates(True)
+               .build())
 
         conv = ConversationHandler(
             entry_points=[CallbackQueryHandler(rank_start, pattern="^rank_start$")],
@@ -1013,9 +1449,12 @@ def run_bot_in_thread():
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & filters.User(ADMIN_ID) & filters.ChatType.PRIVATE, handle_broadcast_message))
         app.add_handler(ChatMemberHandler(on_bot_added_to_group, ChatMemberHandler.MY_CHAT_MEMBER))
 
+        # AUTO-MODERATION — barcha media turlari + text
         app.add_handler(
             MessageHandler(
-                (filters.TEXT | filters.Sticker.ALL | filters.ANIMATION) &
+                (filters.TEXT | filters.CAPTION | filters.Sticker.ALL
+                 | filters.ANIMATION | filters.PHOTO
+                 | filters.VIDEO | filters.VIDEO_NOTE) &
                 (filters.ChatType.GROUP | filters.ChatType.SUPERGROUP),
                 auto_moderate
             ),
@@ -1045,15 +1484,19 @@ def run_bot_in_thread():
 # ============================================================
 def main():
     init_db()
-    init_pg_db()  # <--- YANGI: PostgreSQL bazasini ishga tushirish
+    init_pg_db()
     logger.info("=" * 50)
-    logger.info("🚀 TOMMY BOT STARTING")
+    logger.info("🚀 TOMMY BOT v4.0 — IDEAL STRONG")
     logger.info("=" * 50)
     logger.info(f"🌐 Flask: port {PORT}")
     logger.info(f"📢 Channel: {CHANNEL_ID}")
-    logger.info(f"⚠️ Bad words: {len(BAD_WORDS)} ta")
-    logger.info(f"⚠️ Bad emojis: {len(BAD_EMOJIS)} ta")
+    logger.info(f"⚠️ Bad words: {len(BAD_WORDS)}")
+    logger.info(f"⚠️ Bad emojis: {len(BAD_EMOJIS)}")
+    logger.info(f"🤖 AI media check: {'ON' if (AI_MEDIA_CHECK and GEMINI_API_KEY) else 'OFF'}")
+    logger.info(f"🎞 Animatsion sticker (.tgs): {'ON' if RLOTTIE_AVAILABLE else 'OFF'}")
+    logger.info(f"🎯 AI confidence threshold: {AI_CONFIDENCE_THRESHOLD}")
     logger.info(f"⚠️ Max warnings: {MAX_WARNINGS} → 1 soat mute")
+    logger.info(f"👤 Name check cooldown: {NAME_WARN_COOLDOWN}")
 
     bot_thread = threading.Thread(target=run_bot_in_thread, daemon=True)
     bot_thread.start()
