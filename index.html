@@ -7,12 +7,8 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --primary: #6366f1;
-            --bg-dark: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: rgba(255, 255, 255, 0.1);
+            --primary: #6366f1; --bg-dark: #0f172a; --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc; --text-muted: #94a3b8; --border: rgba(255, 255, 255, 0.1);
         }
         body {
             background: radial-gradient(circle at top left, #1e1b4b, #0f172a, #000000);
@@ -27,7 +23,6 @@
             cursor: pointer; backdrop-filter: blur(10px); -webkit-appearance: none;
         }
         .lang-select option { background: #1e293b; color: white; }
-        
         .header { text-align: center; margin-bottom: 30px; }
         .icon-circle {
             width: 110px; height: 110px; border-radius: 50%;
@@ -43,7 +38,6 @@
         }
         h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 1px;}
         p.subtitle { color: var(--text-muted); font-size: 14px; margin-top: 5px; }
-        
         .card {
             background: var(--card-bg); backdrop-filter: blur(20px);
             border: 1px solid var(--border); border-radius: 24px;
@@ -56,7 +50,6 @@
             box-sizing: border-box; outline: none; font-size: 15px;
         }
         input:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(99,102,241,0.3); }
-        
         .btn {
             width: 100%; background: linear-gradient(to right, #4f46e5, #9333ea);
             color: white; border: none; padding: 16px; border-radius: 14px;
@@ -65,9 +58,8 @@
             box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4); transition: 0.2s;
         }
         .btn:active { transform: scale(0.96); }
-        
-        #status { text-align: center; margin-top: 15px; font-size: 14px; font-weight: bold; }
-        
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        #status { text-align: center; margin-top: 15px; font-size: 14px; font-weight: bold; line-height: 1.4; }
         .help-toggle { text-align: center; margin-top: 20px; color: #818cf8; font-size: 14px; cursor: pointer; font-weight: 600; }
         .help-content {
             display: none; margin-top: 15px; background-color: rgba(15, 23, 42, 0.8);
@@ -78,23 +70,18 @@
         .help-content h4:first-child { margin-top: 0; }
         .help-content b { color: #fbbf24; }
         .help-content a { color: #fbbf24; text-decoration: underline; font-weight: bold; }
-        
-        /* Nusxalash tugmalari dizayni */
         .copy-btn {
             display: block; width: 100%; background: #000; padding: 12px;
             border-radius: 8px; font-family: monospace; color: #22c55e;
             margin: 10px 0; cursor: pointer; border: 1px solid #22c55e;
-            text-align: center; font-size: 14px; font-weight: bold;
-            transition: 0.2s; box-sizing: border-box;
+            text-align: center; font-size: 14px; font-weight: bold; transition: 0.2s; box-sizing: border-box;
         }
         .copy-btn:active { transform: scale(0.98); background: #1e293b; }
-        
         .footer { text-align: center; margin-top: auto; padding-top: 20px; font-size: 14px; color: var(--text-muted); }
         .footer a { color: #60a5fa; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
-
     <div class="top-bar">
         <select class="lang-select" id="langSwitcher" onchange="changeLanguage(this.value)">
             <option value="uz">🇺🇿 UZ</option>
@@ -102,205 +89,144 @@
             <option value="en">🇬🇧 EN</option>
         </select>
     </div>
-
     <div class="header">
         <div class="icon-circle">📸</div>
         <h1 id="txt-title">INSTAGRAM BOT</h1>
         <p class="subtitle" id="txt-subtitle">Obunachilarni avtomatik tozalash</p>
     </div>
-
     <div class="card">
         <label id="txt-label-session">Instagram Session ID (cookie)</label>
         <input type="password" id="sessionid" placeholder="Session ID...">
-        
         <label id="txt-label-count">Nechta odamni unfollow qilish? (1 - 10,000)</label>
         <input type="number" id="count" min="1" max="10000" value="100">
-        
-        <button class="btn" onclick="sendData()" id="txt-btn-unfollow">
-            🔄 Unfollow Boshlash
-        </button>
+        <button class="btn" onclick="sendData()" id="btn-unfollow">🔄 Unfollow Boshlash</button>
         <div id="status"></div>
-
         <div class="help-toggle" id="helpBtn" onclick="toggleHelp()">❓ Session ID qanday olinadi?</div>
-        
-        <div class="help-content" id="helpContent">
-            <div id="help-text"></div>
-        </div>
+        <div class="help-content" id="helpContent"><div id="help-text"></div></div>
     </div>
-
     <div class="footer">
-        <span id="txt-created">Yaratuvchi:</span> 
-        <a href="https://t.me/Tommy_1727" target="_blank">@Tommy_1727</a>
+        <span id="txt-created">Yaratuvchi:</span> <a href="https://t.me/Tommy_1727" target="_blank">@Tommy_1727</a>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand(); 
-
         const termuxLink = '<a href="https://play.google.com/store/apps/details?id=com.termux" target="_blank">Termux</a>';
-        const currentHost = window.location.origin; // Render'dagi dinamik havola
+        const currentHost = window.location.origin;
 
         const translations = {
             uz: {
-                title: "INSTAGRAM BOT",
-                subtitle: "Obunachilarni avtomatik tozalash",
-                labelSession: "Instagram Session ID (cookie)",
-                labelCount: "Nechta odamni unfollow qilish? (1 - 10,000)",
-                btn: "🔄 Unfollow Boshlash",
-                helpBtnOpen: "❓ Session ID qanday olinadi?",
-                helpBtnClose: "❌ Ma'lumotni yopish",
+                title: "INSTAGRAM BOT", subtitle: "Obunachilarni avtomatik tozalash",
+                labelSession: "Instagram Session ID (cookie)", labelCount: "Nechta odamni unfollow qilish? (1 - 10,000)",
+                btn: "🔄 Unfollow Boshlash", helpBtnOpen: "❓ Session ID qanday olinadi?", helpBtnClose: "❌ Ma'lumotni yopish",
                 created: "Yaratuvchi:",
                 help: `
                     <h4>📱 ${termuxLink} orqali olish (Oson usul)</h4>
-                    <p><b>1-qadam:</b> Play Market'dan ${termuxLink} yuklab oling va oching.<br>
-                    
-                    <b>2-qadam:</b> Kutubxonani o'rnatish uchun quyidagi tugmani bosing va Termux'ga yopishtirib <b>Enter</b> bosing:<br>
-                    <button class="copy-btn" onclick="copyText('pip install instagrapi', this)">📋 pip install instagrapi</button>
-                    
-                    <b>3-qadam:</b> Dastur kodini serverdan yuklab olish uchun shu tugmani bosing:<br>
+                    <p><b>1-qadam:</b> Play Market'dan ${termuxLink} yuklab oling.<br>
+                    <b>2-qadam:</b> Kutubxonani yangilash:<br>
+                    <button class="copy-btn" onclick="copyText('pip install -U instagrapi', this)">📋 pip install -U instagrapi</button>
+                    <b>3-qadam:</b> Dastur kodini yuklash:<br>
                     <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyText('curl -s -o get_id.py ${currentHost}/get_id.py', this)">📋 Kodni Yuklash (Copy)</button>
-                    Termux'ga yopishtiring va <b>Enter</b> bosing.<br>
-                    
-                    <b>4-qadam:</b> Endi dasturni ishga tushirish uchun shu tugmani bosing:<br>
+                    <b>4-qadam:</b> Dasturni ishga tushirish:<br>
                     <button class="copy-btn" onclick="copyText('python get_id.py', this)">📋 python get_id.py</button>
-                    Termux'ga yopishtirib <b>Enter</b> bosing.<br>
-
-                    <b>5-qadam:</b> Dastur sizdan Username, Parol va 2FA kodini so'raydi. Kiritib bo'lgach, u sizga <b>Session ID</b> ni chiqarib beradi. Uni nusxalab, eng tepadagi joyga qo'ying.</p>
+                    <b>5-qadam:</b> Parol va 2FA kodini kiritib, chiqqan Session ID'ni nusxalang va joylashtiring.</p>
                 `
             },
             ru: {
-                title: "INSTAGRAM BOT",
-                subtitle: "Автоматическая очистка подписок",
-                labelSession: "Instagram Session ID (cookie)",
-                labelCount: "Сколько отписаться? (1 - 10,000)",
-                btn: "🔄 Начать отписку",
-                helpBtnOpen: "❓ Как получить Session ID?",
-                helpBtnClose: "❌ Закрыть информацию",
+                title: "INSTAGRAM BOT", subtitle: "Автоматическая очистка подписок",
+                labelSession: "Instagram Session ID (cookie)", labelCount: "Сколько отписаться? (1 - 10,000)",
+                btn: "🔄 Начать отписку", helpBtnOpen: "❓ Как получить Session ID?", helpBtnClose: "❌ Закрыть",
                 created: "Создатель:",
                 help: `
-                    <h4>📱 Через ${termuxLink} (Легкий способ)</h4>
-                    <p><b>Шаг 1:</b> Скачайте ${termuxLink} из Play Market.<br>
-                    <b>Шаг 2:</b> Установите библиотеку:<br>
-                    <button class="copy-btn" onclick="copyText('pip install instagrapi', this)">📋 pip install instagrapi</button>
-                    
-                    <b>Шаг 3:</b> Скачайте скрипт с сервера:<br>
+                    <h4>📱 Через ${termuxLink}</h4>
+                    <p><b>Шаг 1:</b> Скачайте ${termuxLink}.<br>
+                    <b>Шаг 2:</b> Обновите библиотеку:<br>
+                    <button class="copy-btn" onclick="copyText('pip install -U instagrapi', this)">📋 pip install -U instagrapi</button>
+                    <b>Шаг 3:</b> Скачайте скрипт:<br>
                     <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyText('curl -s -o get_id.py ${currentHost}/get_id.py', this)">📋 Скачать скрипт (Copy)</button>
-                    Вставьте в Termux и нажмите <b>Enter</b>.<br>
-                    
                     <b>Шаг 4:</b> Запустите скрипт:<br>
                     <button class="copy-btn" onclick="copyText('python get_id.py', this)">📋 python get_id.py</button>
-                    Вставьте и нажмите <b>Enter</b>.<br>
-
-                    <b>Шаг 5:</b> Введите логин, пароль и 2FA. Скопируйте ваш <b>Session ID</b> и вставьте в бота.</p>
+                    <b>Шаг 5:</b> Введите логин, пароль и 2FA. Скопируйте Session ID.</p>
                 `
             },
             en: {
-                title: "INSTAGRAM BOT",
-                subtitle: "Automatic follower cleanup",
-                labelSession: "Instagram Session ID (cookie)",
-                labelCount: "How many to unfollow? (1 - 10,000)",
-                btn: "🔄 Start Unfollow",
-                helpBtnOpen: "❓ How to get Session ID?",
-                helpBtnClose: "❌ Close info",
+                title: "INSTAGRAM BOT", subtitle: "Automatic follower cleanup",
+                labelSession: "Instagram Session ID (cookie)", labelCount: "How many to unfollow? (1 - 10,000)",
+                btn: "🔄 Start Unfollow", helpBtnOpen: "❓ How to get Session ID?", helpBtnClose: "❌ Close info",
                 created: "Created by:",
                 help: `
-                    <h4>📱 Via ${termuxLink} (Easy way)</h4>
-                    <p><b>Step 1:</b> Download ${termuxLink} from Play Market.<br>
+                    <h4>📱 Via ${termuxLink}</h4>
+                    <p><b>Step 1:</b> Download ${termuxLink}.<br>
                     <b>Step 2:</b> Install the library:<br>
-                    <button class="copy-btn" onclick="copyText('pip install instagrapi', this)">📋 pip install instagrapi</button>
-                    
-                    <b>Step 3:</b> Download the script from the server:<br>
+                    <button class="copy-btn" onclick="copyText('pip install -U instagrapi', this)">📋 pip install -U instagrapi</button>
+                    <b>Step 3:</b> Download the script:<br>
                     <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyText('curl -s -o get_id.py ${currentHost}/get_id.py', this)">📋 Download Script (Copy)</button>
-                    Paste it into Termux and press <b>Enter</b>.<br>
-                    
                     <b>Step 4:</b> Run the script:<br>
                     <button class="copy-btn" onclick="copyText('python get_id.py', this)">📋 python get_id.py</button>
-                    Paste and press <b>Enter</b>.<br>
-
-                    <b>Step 5:</b> Enter username, password, and 2FA code. Copy the <b>Session ID</b> and paste it into the bot.</p>
+                    <b>Step 5:</b> Enter username, password, and 2FA. Copy the Session ID.</p>
                 `
             }
         };
 
-        let currentLang = 'uz';
-        let helpOpen = false;
+        let currentLang = 'uz', helpOpen = false;
 
         function changeLanguage(lang) {
             currentLang = lang;
             const t = translations[lang];
-            
             document.getElementById('txt-title').innerText = t.title;
             document.getElementById('txt-subtitle').innerText = t.subtitle;
             document.getElementById('txt-label-session').innerText = t.labelSession;
             document.getElementById('txt-label-count').innerText = t.labelCount;
-            document.getElementById('txt-btn-unfollow').innerText = t.btn;
+            document.getElementById('btn-unfollow').innerText = t.btn;
             document.getElementById('txt-created').innerText = t.created;
             document.getElementById('help-text').innerHTML = t.help;
-            
-            const helpBtn = document.getElementById('helpBtn');
-            helpBtn.innerText = helpOpen ? t.helpBtnClose : t.helpBtnOpen;
+            document.getElementById('helpBtn').innerText = helpOpen ? t.helpBtnClose : t.helpBtnOpen;
         }
 
         function toggleHelp() {
             const content = document.getElementById('helpContent');
             const btn = document.getElementById('helpBtn');
             helpOpen = !helpOpen;
-            
-            if (helpOpen) {
-                content.style.display = 'block';
-                btn.innerText = translations[currentLang].helpBtnClose;
-            } else {
-                content.style.display = 'none';
-                btn.innerText = translations[currentLang].helpBtnOpen;
-            }
+            content.style.display = helpOpen ? 'block' : 'none';
+            btn.innerText = helpOpen ? translations[currentLang].helpBtnClose : translations[currentLang].helpBtnOpen;
         }
 
-        // Universal nusxalash (Copy) funksiyasi
         function copyText(text, btn) {
             navigator.clipboard.writeText(text).then(() => {
-                if (window.Telegram && window.Telegram.WebApp) {
-                    window.Telegram.WebApp.showAlert("✅ Nusxalandi! Endi Termux'ga yopishtiring.");
-                } else {
-                    alert("✅ Nusxalandi!");
-                }
-                
+                if (window.Telegram) window.Telegram.WebApp.showAlert("✅ Nusxalandi!");
+                else alert("✅ Nusxalandi!");
                 const originalText = btn.innerHTML;
                 btn.innerHTML = "✅ Nusxalandi!";
-                btn.style.backgroundColor = "#22c55e";
-                btn.style.color = "#fff";
-                
+                btn.style.backgroundColor = "#22c55e"; btn.style.color = "#fff";
                 setTimeout(() => { 
                     btn.innerHTML = originalText; 
                     btn.style.backgroundColor = "#000"; 
-                    if(originalText.includes("Yuklash") || originalText.includes("Скачать") || originalText.includes("Download")) {
-                         btn.style.color = "#60a5fa";
-                    } else {
-                         btn.style.color = "#22c55e";
-                    }
+                    btn.style.color = originalText.includes("Yuklash") || originalText.includes("Скачать") || originalText.includes("Download") ? "#60a5fa" : "#22c55e";
                 }, 1500);
-            }).catch(err => {
-                alert("Xatolik: Matnni nusxalab bo'lmadi.");
             });
         }
 
         async function sendData() {
-            const sessionId = document.getElementById('sessionid').value;
+            const sessionId = document.getElementById('sessionid').value.trim();
             const count = parseInt(document.getElementById('count').value);
             const statusDiv = document.getElementById('status');
+            const btn = document.getElementById('btn-unfollow');
 
-            if (!sessionId) {
+            if (!sessionId || sessionId.length < 20) {
                 statusDiv.style.color = "#ef4444";
-                statusDiv.innerText = currentLang === 'uz' ? "❌ Session ID ni kiriting!" : "❌ Enter Session ID!";
+                statusDiv.innerText = "❌ Session ID ni to'g'ri kiriting!";
                 return;
             }
             if (count < 1 || count > 10000) {
                 statusDiv.style.color = "#ef4444";
-                statusDiv.innerText = currentLang === 'uz' ? "❌ Xato! Son 1 dan 10,000 gacha bo'lishi kerak." : "❌ Error! Number must be 1 - 10,000.";
+                statusDiv.innerText = "❌ Xato! Son 1 dan 10,000 gacha bo'lishi kerak.";
                 return;
             }
 
+            btn.disabled = true;
+            btn.innerText = "⏳ Tekshirilmoqda...";
             statusDiv.style.color = "#f59e0b";
-            statusDiv.innerText = currentLang === 'uz' ? "⏳ Jarayon boshlandi..." : "⏳ Process started...";
+            statusDiv.innerText = "⏳ Session ID tekshirilmoqda va jarayon boshlanmoqda...";
 
             try {
                 const response = await fetch('/api/unfollow', {
@@ -313,14 +239,19 @@
 
                 if (response.ok) {
                     statusDiv.style.color = "#22c55e";
-                    statusDiv.innerText = "✅ " + result.message;
+                    statusDiv.innerText = "✅ " + result.message + " (Obunachilar sekin-asta o'chadi, bu 50 daqiqagacha vaqt olishi mumkin)";
                 } else {
                     statusDiv.style.color = "#ef4444";
-                    statusDiv.innerText = "❌ " + result.detail;
+                    statusDiv.innerText = "❌ Xatolik: " + result.detail;
                 }
             } catch (error) {
                 statusDiv.style.color = "#ef4444";
-                statusDiv.innerText = currentLang === 'uz' ? "❌ Server bilan aloqa yo'q!" : "❌ No connection to server!";
+                statusDiv.innerText = "❌ Server bilan aloqa yo'q! (Render uxlagan bo'lishi mumkin)";
+            } finally {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerText = translations[currentLang].btn;
+                }, 5000);
             }
         }
         
