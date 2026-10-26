@@ -1,10 +1,11 @@
 import os
 import time
+import random
 from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse, PlainTextResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from instagrapi import Client
-from instagrapi.exceptions import LoginRequired, RateLimitError
+from instagrapi.exceptions import LoginRequired, RateLimitError, TwoFactorRequired
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
@@ -52,7 +53,7 @@ async def read_index():
     except FileNotFoundError:
         return "Xatolik: index.html topilmadi!"
 
-# --- TERMUX UCHUN SKRIPT (Faqat Session ID chiqaradi) ---
+# --- TERMUX UCHUN SKRIPT ---
 @app.get("/get_id.py", response_class=PlainTextResponse)
 async def serve_python_script():
     script = """from instagrapi import Client
@@ -60,27 +61,27 @@ from instagrapi.exceptions import TwoFactorRequired
 import sys
 
 print("\\n--- Instagram Session ID Olish ---")
-u = input("Username: ")
-p = input("Parol: ")
+u = input("Instagram Username: ")
+p = input("Instagram Parol: ")
 
 c = Client()
 try:
     c.login(u, p)
 except TwoFactorRequired:
-    print("\\n[!] 2FA (Ikki bosqichli himoya) talab qilinmoqda.")
-    code = input("2FA kodini kiriting: ")
+    print("\\n[!] Akkauntda 2FA (Ikki bosqichli himoya) yoqilgan.")
+    code = input("Google Authenticator yoki SMS dan 6 xonali kodni kiriting: ")
     try:
         c.login(u, p, verification_code=code)
     except Exception as e2:
         print("\\n❌ Xatolik:", e2)
+        print("Maslahat: Kodni to'g'ri kiritganingizga ishonch hosil qiling.")
         sys.exit()
 except Exception as e:
     print("\\n❌ Kirishda xatolik:", e)
     sys.exit()
 
-# Kirish muvaffaqiyatli bo'lgach, Session ID ni chiqaramiz
 print("\\n✅ Muvaffaqiyatli kirdingiz!")
-print("Sizning Session ID'ingiz (nusxalab oling):\\n")
+print("Sizning Session ID'ingiz (nusxalab oling, bu uzun matn):\\n")
 print(c.sessionid)
 print("\\n")
 """
@@ -88,13 +89,13 @@ print("\\n")
 
 class UnfollowRequest(BaseModel):
     session_id: str
-    count: int
+    count: int = Field(..., ge=1, le=1000) # Faqat 1 dan 1000 gacha qabul qiladi
 
+# --- ASOSIY MANTIQ: FOLLOWING O'CHIRISH ---
 def process_unfollow(session_id: str, count: int):
     try:
         cl = Client()
         cl.login_by_sessionid(session_id)
-        print("Instagram'ga ulandi. Obunalar olinmoqda...")
         
         following = cl.user_following(cl.user_id)
         unfollowed_count = 0
@@ -106,12 +107,15 @@ def process_unfollow(session_id: str, count: int):
                 cl.user_unfollow(user_id)
                 unfollowed_count += 1
                 print(f"O'chirildi: {unfollowed_count}/{count}")
-                time.sleep(1.5) 
+                
+                # Tasodifiy kutish (Instagram bloklamasligi uchun)
+                time.sleep(random.uniform(1.2, 2.5))
+                
             except RateLimitError:
-                print("⚠️ Instagram blokladi! 15 daqiqa kutish...")
-                time.sleep(900) 
+                print("⚠️ Instagram vaqtincha blokladi! 15 daqiqa kutish...")
+                time.sleep(900) # 15 daqiqa
             except Exception as e:
-                print(f"Xatolik: {e}")
+                print(f"Bitta odamni o'chirishda xato: {e}")
                 continue
                 
         print(f"Jami {unfollowed_count} ta obuna bekor qilindi.")
@@ -122,17 +126,19 @@ def process_unfollow(session_id: str, count: int):
 
 @app.post("/api/unfollow")
 async def start_unfollow(request: UnfollowRequest, background_tasks: BackgroundTasks):
-    if request.count < 1 or request.count > 1000:
-        raise HTTPException(status_code=400, detail="Xavfsizlik uchun bir martada maksimal 1000 ta odamni o'chirish mumkin!")
+    
+    # 1. Inputlarni tekshirish (Frontenddan tashqari xavfsizlik)
     if not request.session_id or len(request.session_id) < 20:
-        raise HTTPException(status_code=400, detail="Session ID noto'g'ri kiritilgan!")
+        raise HTTPException(status_code=400, detail="Session ID formati noto'g'ri. Iltimos, Termux orqali qaytadan oling.")
 
+    # 2. Session ID haqiqiy ekanligini Instagram orqali tekshirish
     try:
         test_cl = Client()
         test_cl.login_by_sessionid(request.session_id)
-        test_cl.get_timeline_feed() 
-    except Exception as e:
-        raise HTTPException(status_code=401, detail="Session ID xato yoki eskirgan!")
+        test_cl.get_timeline_feed() # Haqiqatan ham kira olyaptimi?
+    except Exception:
+        raise HTTPException(status_code=401, detail="Kiritilgan Session ID xato yoki eskirgan. Qaytadan oling!")
 
+    # 3. Agar hamma narsa to'g'ri bo'lsa, orqa fonga yuboramiz
     background_tasks.add_task(process_unfollow, request.session_id, request.count)
     return {"status": "success", "message": f"{request.count} ta obunani bekor qilish boshlandi."}
