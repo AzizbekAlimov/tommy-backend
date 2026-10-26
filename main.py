@@ -54,6 +54,7 @@ async def read_index():
 
 @app.get("/get_id.py", response_class=PlainTextResponse)
 async def serve_python_script():
+    # Termux uchun yangilangan versiya
     script = """from instagrapi import Client
 import sys
 
@@ -68,7 +69,7 @@ try:
     c.login(u, p)
 except Exception as e:
     if "two_factor" in str(e).lower():
-        print("\\n[!] 2FA (Ikki bosqichli himoya) talab qilinmoqda.")
+        print("\\n[!] 2FA talab qilinmoqda.")
         code = input("2FA kodini kiriting: ")
         try:
             c.login(u, p, verification_code=code)
@@ -90,18 +91,15 @@ class UnfollowRequest(BaseModel):
     session_id: str
     count: int
 
-# --- ASOSIY MANTIQ: FAQAT FOLLOWING O'CHIRILADI ---
 def process_unfollow(session_id: str, count: int):
     try:
         cl = Client()
         cl.login_by_sessionid(session_id)
-        print("Instagram'ga muvaffaqiyatli ulandi. Obunalar ro'yxati olinmoqda...")
+        print("Instagram'ga ulandi. Obunalar olinmoqda...")
         
-        # Faqat siz obuna bo'lganlarni olish
         following = cl.user_following(cl.user_id)
-        print(f"Jami {len(following)} ta obuna topildi. O'chirish boshlandi...")
-        
         unfollowed_count = 0
+
         for user_id in list(following.keys()):
             if unfollowed_count >= count:
                 break
@@ -109,9 +107,12 @@ def process_unfollow(session_id: str, count: int):
                 cl.user_unfollow(user_id)
                 unfollowed_count += 1
                 print(f"O'chirildi: {unfollowed_count}/{count}")
-                time.sleep(3) # Instagram bloklamasligi uchun 3 soniya kutish
+                
+                # Vaqt 3 soniyadan 1.5 soniyaga tushirildi (1000 ta ~ 25 daqiqa)
+                time.sleep(1.5) 
+                
             except RateLimitError:
-                print("Instagram vaqtincha blokladi, 15 daqiqa kutish...")
+                print("⚠️ Instagram blokladi! 15 daqiqa kutish...")
                 time.sleep(900) # 15 daqiqa kutish
             except Exception as e:
                 print(f"Xatolik: {e}")
@@ -125,18 +126,18 @@ def process_unfollow(session_id: str, count: int):
 
 @app.post("/api/unfollow")
 async def start_unfollow(request: UnfollowRequest, background_tasks: BackgroundTasks):
-    if request.count < 1 or request.count > 10000:
-        raise HTTPException(status_code=400, detail="Xato! Son 1 dan 10,000 gacha bo'lishi kerak.")
+    # Maksimal limit 1000 qilib qat'iy belgilandi
+    if request.count < 1 or request.count > 1000:
+        raise HTTPException(status_code=400, detail="Xavfsizlik uchun bir martada maksimal 1000 ta odamni o'chirish mumkin!")
     if not request.session_id or len(request.session_id) < 20:
-        raise HTTPException(status_code=400, detail="Session ID juda qisqa yoki noto'g'ri kiritilgan!")
+        raise HTTPException(status_code=400, detail="Session ID noto'g'ri kiritilgan!")
 
-    # Session ID to'g'riligini tekshirish
     try:
         test_cl = Client()
         test_cl.login_by_sessionid(request.session_id)
         test_cl.get_timeline_feed() 
     except Exception as e:
-        raise HTTPException(status_code=401, detail="Session ID xato yoki eskirgan. Iltimos, qaytadan oling!")
+        raise HTTPException(status_code=401, detail="Session ID xato yoki eskirgan!")
 
     background_tasks.add_task(process_unfollow, request.session_id, request.count)
     return {"status": "success", "message": f"{request.count} ta obunani bekor qilish boshlandi."}
