@@ -52,10 +52,11 @@ async def read_index():
     except FileNotFoundError:
         return "Xatolik: index.html topilmadi!"
 
+# --- TERMUX UCHUN SKRIPT (Faqat Session ID chiqaradi) ---
 @app.get("/get_id.py", response_class=PlainTextResponse)
 async def serve_python_script():
-    # Termux uchun yangilangan versiya
     script = """from instagrapi import Client
+from instagrapi.exceptions import TwoFactorRequired
 import sys
 
 print("\\n--- Instagram Session ID Olish ---")
@@ -63,23 +64,21 @@ u = input("Username: ")
 p = input("Parol: ")
 
 c = Client()
-c.set_device({"app_version": "269.0.0.18.75"})
-
 try:
     c.login(u, p)
-except Exception as e:
-    if "two_factor" in str(e).lower():
-        print("\\n[!] 2FA talab qilinmoqda.")
-        code = input("2FA kodini kiriting: ")
-        try:
-            c.login(u, p, verification_code=code)
-        except Exception as e2:
-            print("\\n❌ Xatolik:", e2)
-            sys.exit()
-    else:
-        print("\\n❌ Kirishda xatolik:", e)
+except TwoFactorRequired:
+    print("\\n[!] 2FA (Ikki bosqichli himoya) talab qilinmoqda.")
+    code = input("2FA kodini kiriting: ")
+    try:
+        c.login(u, p, verification_code=code)
+    except Exception as e2:
+        print("\\n❌ Xatolik:", e2)
         sys.exit()
+except Exception as e:
+    print("\\n❌ Kirishda xatolik:", e)
+    sys.exit()
 
+# Kirish muvaffaqiyatli bo'lgach, Session ID ni chiqaramiz
 print("\\n✅ Muvaffaqiyatli kirdingiz!")
 print("Sizning Session ID'ingiz (nusxalab oling):\\n")
 print(c.sessionid)
@@ -107,13 +106,10 @@ def process_unfollow(session_id: str, count: int):
                 cl.user_unfollow(user_id)
                 unfollowed_count += 1
                 print(f"O'chirildi: {unfollowed_count}/{count}")
-                
-                # Vaqt 3 soniyadan 1.5 soniyaga tushirildi (1000 ta ~ 25 daqiqa)
                 time.sleep(1.5) 
-                
             except RateLimitError:
                 print("⚠️ Instagram blokladi! 15 daqiqa kutish...")
-                time.sleep(900) # 15 daqiqa kutish
+                time.sleep(900) 
             except Exception as e:
                 print(f"Xatolik: {e}")
                 continue
@@ -126,7 +122,6 @@ def process_unfollow(session_id: str, count: int):
 
 @app.post("/api/unfollow")
 async def start_unfollow(request: UnfollowRequest, background_tasks: BackgroundTasks):
-    # Maksimal limit 1000 qilib qat'iy belgilandi
     if request.count < 1 or request.count > 1000:
         raise HTTPException(status_code=400, detail="Xavfsizlik uchun bir martada maksimal 1000 ta odamni o'chirish mumkin!")
     if not request.session_id or len(request.session_id) < 20:
