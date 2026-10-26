@@ -59,11 +59,11 @@ async def read_index():
     except FileNotFoundError:
         return "Xatolik: index.html fayli topilmadi!"
 
-# --- TERMUX UCHUN SKRIPTNI TARQATISH ---
+# --- TERMUX UCHUN SKRIPTNI TARQATISH (2FA bilan) ---
 @app.get("/get_id.py", response_class=PlainTextResponse)
 async def serve_python_script():
-    """Bu manzil orqali foydalanuvchi Termux'ga to'g'ridan-to'g'ri kodni yuklab oladi"""
     script = """from instagrapi import Client
+from instagrapi.exceptions import TwoFactorRequired
 import sys
 
 print("\\n--- Instagram Session ID Olish ---")
@@ -73,17 +73,17 @@ p = input("Parol: ")
 c = Client()
 try:
     c.login(u, p)
-except Exception as e:
-    if "two_factor" in str(e).lower():
-        code = input("2FA kod: ")
-        try:
-            c.login(u, p, verification_code=code)
-        except Exception as e2:
-            print("Xatolik:", e2)
-            sys.exit()
-    else:
-        print("Xatolik:", e)
+except TwoFactorRequired:
+    print("\\n[!] Akkauntda 2FA (ikki bosqichli himoya) yoqilgan.")
+    code = input("2FA kodini kiriting (SMS yoki Authenticator): ")
+    try:
+        c.login(u, p, verification_code=code)
+    except Exception as e2:
+        print("\\n❌ 2FA kodida xatolik:", e2)
         sys.exit()
+except Exception as e:
+    print("\\n❌ Kirishda xatolik:", e)
+    sys.exit()
 
 print("\\n✅ Muvaffaqiyatli kirdingiz!")
 print("Sizning Session ID'ingiz (nusxalab oling):\\n")
