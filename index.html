@@ -179,16 +179,17 @@
         .copy-code {
             display: block;
             background: #000;
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             font-family: monospace;
             color: #22c55e;
-            margin-bottom: 8px;
+            margin: 10px 0;
             cursor: pointer;
-            word-break: break-all; /* Uzun havola sig'masa pastga tushadi */
+            word-break: break-all;
             border: 1px solid #22c55e;
             transition: 0.2s;
             text-align: center;
+            font-size: 14px;
         }
         .copy-code:active {
             transform: scale(0.98);
@@ -260,7 +261,34 @@
         // Termux uchun Play Market havolasi
         const termuxLink = '<a href="https://play.google.com/store/apps/details?id=com.termux" target="_blank">Termux</a>';
 
-        // Tillar lug'ati (Copy tugmalari va havolalar bilan)
+        // To'liq Python kodi (nusxalash uchun)
+        const pythonCode = `from instagrapi import Client
+
+print("\\n--- Instagram Session ID Olish ---")
+username = input("Username: ")
+password = input("Parol: ")
+
+cl = Client()
+
+try:
+    cl.login(username, password)
+except Exception as e:
+    if "two_factor" in str(e).lower() or "challenge" in str(e).lower():
+        code = input("2FA kodini kiriting (SMS yoki Authenticator): ")
+        try:
+            cl.login(username, password, verification_code=code)
+        except Exception as e2:
+            print(f"\\n❌ Xatolik: {e2}")
+            exit()
+    else:
+        print(f"\\n❌ Kirishda xatolik: {e}")
+        exit()
+
+print("\\n✅ Muvaffaqiyatli kirdingiz!")
+print("Sizning Session ID'ingiz (nusxalab oling):")
+print("\\n" + cl.sessionid + "\\n")`;
+
+        // Tillar lug'ati (To'liq Termux qo'llanmasi bilan)
         const translations = {
             uz: {
                 title: "INSTAGRAM BOT",
@@ -273,19 +301,23 @@
                 created: "Yaratuvchi:",
                 help: `
                     <h4>📱 ${termuxLink} orqali olish (Android)</h4>
-                    <p>1. Play Market'dan ${termuxLink} yuklab oling.<br>
-                    2. Termux'ni ochib, quyidagi buyruqlarni ustiga bosib nusxalang (Copy) va Termux'ga yopishtiring (Paste):<br>
-                    <span class="copy-code" onclick="copyToClipboard('pkg update -y && pkg install python git -y', this)">pkg update -y && pkg install python git -y</span>
-                    <span class="copy-code" onclick="copyToClipboard('git clone https://github.com/DominatorStufs/InstaSnap.git', this)">git clone https://github.com/DominatorStufs/InstaSnap.git</span>
-                    <span class="copy-code" onclick="copyToClipboard('cd InstaSnap', this)">cd InstaSnap</span>
-                    <span class="copy-code" onclick="copyToClipboard('bash setup.sh', this)">bash setup.sh</span>
-                    <span class="copy-code" onclick="copyToClipboard('python cookie_extractor.py', this)">python cookie_extractor.py</span>
-                    3. Username va parolingizni kiriting. <i>(Parol yozilganda ekranda ko'rinmaydi, yozib bo'lib Enter bosing)</i>.<br>
-                    4. Agar <b>"Security Checkpoint"</b> xatosi chiqsa, rasmiy Instagram ilovasiga kirib <b>"This Was Me"</b> tugmasini bosing va Termux'da qayta urinib ko'ring.<br>
-                    5. Session ID terminalda chiqadi. Agar ko'rinmasa, ushbu buyruqni yozing:<br>
-                    <span class="copy-code" onclick="copyToClipboard('cat config.py', this)">cat config.py</span></p>
-                    <h4>💻 Kompyuter uchun</h4>
-                    <p>1. Chrome brauzerida Instagram'ga kiring.<br>2. <b>F12</b> tugmasini bosing.<br>3. <b>Application</b> -> <b>Cookies</b> bo'limiga o'ting.<br>4. <b>sessionid</b> qatoridagi uzun matnni nusxalab oling.</p>
+                    <p><b>1-qadam:</b> Play Market'dan ${termuxLink} yuklab oling va oching.<br>
+                    <b>2-qadam:</b> Kerakli kutubxonani o'rnatish uchun quyidagi yozuvni ustiga bosib nusxalang va Termux'ga yopishtirib (Paste) Enter bosing:<br>
+                    <span class="copy-code" onclick="copyToClipboard('pip install instagrapi', this)">📋 pip install instagrapi</span>
+                    
+                    <b>3-qadam:</b> Yangi fayl yaratish uchun shu buyruqni nusxalab, Termux'ga yozing va Enter bosing:<br>
+                    <span class="copy-code" onclick="copyToClipboard('nano get_id.py', this)">📋 nano get_id.py</span>
+                    
+                    <b>4-qadam:</b> Ochilgan qora ekranga quyidagi Python kodini nusxalab joylashtiring:<br>
+                    <span class="copy-code" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyToClipboard(\`${pythonCode}\`, this)">📋 Python Kodini Nusxalash (Copy)</span>
+                    
+                    <b>5-qadam:</b> Kodni qo'yib bo'lgach, klaviaturangizdagi <b>CTRL</b> ni bosib turib <b>O</b> harfini bosing (Saqlash), so'ngra <b>Enter</b> bosing. Chiqish uchun yana <b>CTRL</b> ni bosib turib <b>X</b> harfini bosing.
+                    
+                    <b>6-qadam:</b> Dasturni ishga tushirish uchun shu buyruqni bering:<br>
+                    <span class="copy-code" onclick="copyToClipboard('python get_id.py', this)">📋 python get_id.py</span>
+                    
+                    <b>7-qadam:</b> Dastur sizdan Username, Parol va agar yoqilgan bo'lsa 2FA kodini so'raydi. (Parol yozilganda ekranda ko'rinmaydi).<br>
+                    <b>8-qadam:</b> Dastur oxirida sizga uzun <b>Session ID</b> ni chiqaradi. Uni nusxalab, botning eng tepasidagi joyga qo'ying.</p>
                 `
             },
             ru: {
@@ -299,19 +331,23 @@
                 created: "Создатель:",
                 help: `
                     <h4>📱 Через ${termuxLink} (Android)</h4>
-                    <p>1. Скачайте ${termuxLink} из Play Market.<br>
-                    2. Откройте Termux, нажмите на команды ниже чтобы скопировать, и вставьте их:<br>
-                    <span class="copy-code" onclick="copyToClipboard('pkg update -y && pkg install python git -y', this)">pkg update -y && pkg install python git -y</span>
-                    <span class="copy-code" onclick="copyToClipboard('git clone https://github.com/DominatorStufs/InstaSnap.git', this)">git clone https://github.com/DominatorStufs/InstaSnap.git</span>
-                    <span class="copy-code" onclick="copyToClipboard('cd InstaSnap', this)">cd InstaSnap</span>
-                    <span class="copy-code" onclick="copyToClipboard('bash setup.sh', this)">bash setup.sh</span>
-                    <span class="copy-code" onclick="copyToClipboard('python cookie_extractor.py', this)">python cookie_extractor.py</span>
-                    3. Введите логин и пароль. <i>(Пароль не отображается)</i>.<br>
-                    4. Если появится ошибка <b>"Security Checkpoint"</b>, нажмите <b>"This Was Me"</b> в приложении Instagram и попробуйте снова.<br>
-                    5. Session ID появится в терминале. Если нет, введите:<br>
-                    <span class="copy-code" onclick="copyToClipboard('cat config.py', this)">cat config.py</span></p>
-                    <h4>💻 Для компьютера</h4>
-                    <p>1. Зайдите в Instagram в Chrome.<br>2. Нажмите <b>F12</b>.<br>3. Перейдите в <b>Application</b> -> <b>Cookies</b>.<br>4. Скопируйте значение строки <b>sessionid</b>.</p>
+                    <p><b>Шаг 1:</b> Скачайте ${termuxLink} из Play Market и откройте.<br>
+                    <b>Шаг 2:</b> Нажмите на команду ниже, чтобы скопировать, и вставьте в Termux:<br>
+                    <span class="copy-code" onclick="copyToClipboard('pip install instagrapi', this)">📋 pip install instagrapi</span>
+                    
+                    <b>Шаг 3:</b> Создайте файл:<br>
+                    <span class="copy-code" onclick="copyToClipboard('nano get_id.py', this)">📋 nano get_id.py</span>
+                    
+                    <b>Шаг 4:</b> Вставьте этот код Python в открывшееся окно:<br>
+                    <span class="copy-code" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyToClipboard(\`${pythonCode}\`, this)">📋 Скопировать код Python</span>
+                    
+                    <b>Шаг 5:</b> Нажмите <b>CTRL + O</b> (Сохранить), затем <b>Enter</b>. Выйдите через <b>CTRL + X</b>.
+                    
+                    <b>Шаг 6:</b> Запустите скрипт:<br>
+                    <span class="copy-code" onclick="copyToClipboard('python get_id.py', this)">📋 python get_id.py</span>
+                    
+                    <b>Шаг 7:</b> Введите логин, пароль и код 2FA.<br>
+                    <b>Шаг 8:</b> Скопируйте ваш <b>Session ID</b> и вставьте в бота.</p>
                 `
             },
             en: {
@@ -325,19 +361,23 @@
                 created: "Created by:",
                 help: `
                     <h4>📱 Via ${termuxLink} (Android)</h4>
-                    <p>1. Download ${termuxLink} from Play Market.<br>
-                    2. Open Termux, tap the commands below to copy, and paste them:<br>
-                    <span class="copy-code" onclick="copyToClipboard('pkg update -y && pkg install python git -y', this)">pkg update -y && pkg install python git -y</span>
-                    <span class="copy-code" onclick="copyToClipboard('git clone https://github.com/DominatorStufs/InstaSnap.git', this)">git clone https://github.com/DominatorStufs/InstaSnap.git</span>
-                    <span class="copy-code" onclick="copyToClipboard('cd InstaSnap', this)">cd InstaSnap</span>
-                    <span class="copy-code" onclick="copyToClipboard('bash setup.sh', this)">bash setup.sh</span>
-                    <span class="copy-code" onclick="copyToClipboard('python cookie_extractor.py', this)">python cookie_extractor.py</span>
-                    3. Enter username and password. <i>(Password won't show)</i>.<br>
-                    4. If <b>"Security Checkpoint"</b> error, tap <b>"This Was Me"</b> in Instagram app and try again.<br>
-                    5. Session ID will appear in terminal. If not, type:<br>
-                    <span class="copy-code" onclick="copyToClipboard('cat config.py', this)">cat config.py</span></p>
-                    <h4>💻 For Computer</h4>
-                    <p>1. Log in to Instagram in Chrome.<br>2. Press <b>F12</b>.<br>3. Go to <b>Application</b> -> <b>Cookies</b>.<br>4. Copy the value of the <b>sessionid</b> row.</p>
+                    <p><b>Step 1:</b> Download ${termuxLink} from Play Market and open it.<br>
+                    <b>Step 2:</b> Tap the command to copy and paste it into Termux:<br>
+                    <span class="copy-code" onclick="copyToClipboard('pip install instagrapi', this)">📋 pip install instagrapi</span>
+                    
+                    <b>Step 3:</b> Create a file:<br>
+                    <span class="copy-code" onclick="copyToClipboard('nano get_id.py', this)">📋 nano get_id.py</span>
+                    
+                    <b>Step 4:</b> Paste this python code:<br>
+                    <span class="copy-code" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyToClipboard(\`${pythonCode}\`, this)">📋 Copy Python Code</span>
+                    
+                    <b>Step 5:</b> Press <b>CTRL + O</b> (Save) and <b>Enter</b>. Exit with <b>CTRL + X</b>.
+                    
+                    <b>Step 6:</b> Run the script:<br>
+                    <span class="copy-code" onclick="copyToClipboard('python get_id.py', this)">📋 python get_id.py</span>
+                    
+                    <b>Step 7:</b> Enter username, password, and 2FA code.<br>
+                    <b>Step 8:</b> Copy the <b>Session ID</b> and paste it into the bot.</p>
                 `
             }
         };
@@ -378,14 +418,12 @@
         // Matnni nusxalash (Copy) funksiyasi
         function copyToClipboard(text, element) {
             navigator.clipboard.writeText(text).then(() => {
-                // Telegram orqali xabar ko'rsatish
                 if (window.Telegram && window.Telegram.WebApp) {
                     window.Telegram.WebApp.showAlert("✅ Nusxalandi! Endi Termux'ga yopishtiring.");
                 } else {
                     alert("✅ Nusxalandi!");
                 }
 
-                // Vizual effekt (yashil rangga o'tadi)
                 const originalText = element.innerText;
                 element.innerText = "✅ Nusxalandi!";
                 element.style.backgroundColor = "#22c55e";
@@ -394,7 +432,11 @@
                 setTimeout(() => {
                     element.innerText = originalText;
                     element.style.backgroundColor = "#000";
-                    element.style.color = "#22c55e";
+                    if(originalText.includes("Python")) {
+                         element.style.color = "#60a5fa";
+                    } else {
+                         element.style.color = "#22c55e";
+                    }
                 }, 1500);
             }).catch(err => {
                 alert("Xatolik: Matnni nusxalab bo'lmadi.");
