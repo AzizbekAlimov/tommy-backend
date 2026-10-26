@@ -168,6 +168,13 @@
         }
         .help-content h4:first-child { margin-top: 0; }
         .help-content b { color: #fbbf24; }
+        
+        /* Havola (Link) dizayni */
+        .help-content a {
+            color: #60a5fa;
+            text-decoration: underline;
+            font-weight: bold;
+        }
 
         /* Mualliflik (Footer) */
         .footer {
@@ -231,6 +238,9 @@
         let tg = window.Telegram.WebApp;
         tg.expand(); 
 
+        // Kiwi Browser uchun Play Market havolasi
+        const kiwiLink = '<a href="https://play.google.com/store/apps/details?id=com.kiwibrowser.browser" target="_blank">Kiwi Browser</a>';
+
         // Tillar lug'ati (iOS va Android uchun aniq ko'rsatmalar bilan)
         const translations = {
             uz: {
@@ -244,7 +254,7 @@
                 created: "Yaratuvchi:",
                 help: `
                     <h4>📱 1. Android telefon uchun</h4>
-                    <p><b>Diqqat:</b> Oddiy Chrome brauzerida bo'lmaydi, Play Market'dan <b>Kiwi Browser</b> yuklab oling!<br>1. Kiwi Browser orqali Instagram'ga kiring.<br>2. 3 nuqtani bosib, <b>Extensions</b> ni tanlang.<br>3. <b>Cookie-Editor</b> ni o'rnating va oching.<br>4. <b>sessionid</b> qatorini topib, nusxalab oling.</p>
+                    <p><b>Diqqat:</b> Oddiy Chrome brauzerida bo'lmaydi, Play Market'dan ${kiwiLink} yuklab oling!<br>1. Kiwi Browser orqali Instagram'ga kiring.<br>2. 3 nuqtani bosib, <b>Extensions</b> ni tanlang.<br>3. <b>Cookie-Editor</b> ni o'rnating va oching.<br>4. <b>sessionid</b> qatorini topib, nusxalab oling.</p>
                     <h4>🍏 2. iOS (iPhone) uchun</h4>
                     <p>iPhone'da buni qilish qiyin. Iltimos, kompyuterdan yoki do'stingizning Android telefonidan foydalanib Session ID oling.</p>
                     <h4>💻 3. Kompyuter uchun</h4>
@@ -262,7 +272,7 @@
                 created: "Создатель:",
                 help: `
                     <h4>📱 1. Для Android</h4>
-                    <p><b>Внимание:</b> Обычный Chrome не подойдет, скачайте <b>Kiwi Browser</b> из Play Market!<br>1. Зайдите в Instagram через Kiwi Browser.<br>2. Нажмите 3 точки и выберите <b>Extensions</b>.<br>3. Установите и откройте <b>Cookie-Editor</b>.<br>4. Скопируйте строку <b>sessionid</b>.</p>
+                    <p><b>Внимание:</b> Обычный Chrome не подойдет, скачайте ${kiwiLink} из Play Market!<br>1. Зайдите в Instagram через Kiwi Browser.<br>2. Нажмите 3 точки и выберите <b>Extensions</b>.<br>3. Установите и откройте <b>Cookie-Editor</b>.<br>4. Скопируйте строку <b>sessionid</b>.</p>
                     <h4>🍏 2. Для iOS (iPhone)</h4>
                     <p>На iPhone это сделать сложно. Пожалуйста, используйте компьютер или Android-телефон друга.</p>
                     <h4>💻 3. Для компьютера</h4>
@@ -280,7 +290,7 @@
                 created: "Created by:",
                 help: `
                     <h4>📱 1. For Android</h4>
-                    <p><b>Note:</b> Normal Chrome won't work, download <b>Kiwi Browser</b> from Play Market!<br>1. Log in to Instagram using Kiwi Browser.<br>2. Tap 3 dots and select <b>Extensions</b>.<br>3. Install and open <b>Cookie-Editor</b>.<br>4. Find and copy the <b>sessionid</b> row.</p>
+                    <p><b>Note:</b> Normal Chrome won't work, download ${kiwiLink} from Play Market!<br>1. Log in to Instagram using Kiwi Browser.<br>2. Tap 3 dots and select <b>Extensions</b>.<br>3. Install and open <b>Cookie-Editor</b>.<br>4. Find and copy the <b>sessionid</b> row.</p>
                     <h4>🍏 2. For iOS (iPhone)</h4>
                     <p>It is difficult on iPhone. Please use a computer or a friend's Android phone.</p>
                     <h4>💻 3. For Computer</h4>
