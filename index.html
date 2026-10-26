@@ -4,11 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Instagram Bot</title>
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --primary: #6366f1; --bg-dark: #0f172a; --card-bg: rgba(30, 41, 59, 0.7);
-            --text-main: #f8fafc; --text-muted: #94a3b8; --border: rgba(255, 255, 255, 0.1);
+            --primary: #6366f1; 
+            --bg-dark: #0f172a; 
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc; 
+            --text-muted: #94a3b8; 
+            --border: rgba(255, 255, 255, 0.1);
         }
         body {
             background: radial-gradient(circle at top left, #1e1b4b, #0f172a, #000000);
@@ -76,14 +81,17 @@
         .help-content b { color: #fbbf24; }
         .help-content a { color: #fbbf24; text-decoration: underline; font-weight: bold; }
         
+        /* Nusxalash tugmalari */
         .copy-btn {
             display: block; width: 100%; background: #000; padding: 12px;
             border-radius: 8px; font-family: monospace; color: #22c55e;
             margin: 10px 0; cursor: pointer; border: 1px solid #22c55e;
-            text-align: center; font-size: 14px; font-weight: bold; transition: 0.2s; box-sizing: border-box;
+            text-align: center; font-size: 14px; font-weight: bold;
+            transition: 0.2s; box-sizing: border-box;
         }
         .copy-btn:active { transform: scale(0.98); background: #1e293b; }
         
+        /* Ogohlantirish */
         .warning-box {
             background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444;
             padding: 12px; border-radius: 8px; font-size: 13px; color: #fca5a5;
@@ -171,7 +179,7 @@
                     Shu payt <b>Google Authenticator</b> ilovasini oching va Instagram uchun berilgan 6 xonali kodni Termux'ga kiriting.</p>
                     
                     <h4>✅ 4-qadam: Session ID</h4>
-                    <p>Hammasi to'g'ri bo'lsa, ekranda uzun <b>Session ID</b> chiqadi. Uni nusxalab, botning eng tepasidagi joyga qo'ying.</p>
+                    <p>Hammasi to'g'ri bo'lsa, ekranda juda uzun <b>Session ID</b> chiqadi. Uni to'liq nusxalab, botning eng tepasidagi joyga qo'ying. (Qisqa raqamlar emas, aynan uzun harflar aralashmasi bo'lishi shart!)</p>
                 `
             },
             ru: {
@@ -197,7 +205,7 @@
                     <p>Введите логин и пароль. Затем программа запросит код <b>2FA</b>. Откройте <b>Google Authenticator</b> и введите 6-значный код для Instagram.</p>
                     
                     <h4>✅ Шаг 4: Session ID</h4>
-                    <p>Скопируйте полученный <b>Session ID</b> и вставьте его в бота.</p>
+                    <p>Скопируйте полученный длинный <b>Session ID</b> и вставьте его в бота. (Это не короткие цифры, а длинный набор букв и символов).</p>
                 `
             },
             en: {
@@ -223,7 +231,7 @@
                     <p>Enter your username and password. The script will ask for a <b>2FA code</b>. Open <b>Google Authenticator</b>, find Instagram, and enter the 6-digit code.</p>
                     
                     <h4>✅ Step 4: Session ID</h4>
-                    <p>Copy the generated <b>Session ID</b> and paste it into the bot.</p>
+                    <p>Copy the generated long <b>Session ID</b> and paste it into the bot. (It's not short numbers, it's a long mix of characters).</p>
                 `
             }
         };
@@ -296,7 +304,7 @@
 
             if (!sessionId || sessionId.length < 20) {
                 statusDiv.style.color = "#ef4444";
-                statusDiv.innerText = currentLang === 'uz' ? "❌ Session ID ni to'g'ri kiriting!" : "❌ Enter a valid Session ID!";
+                statusDiv.innerText = currentLang === 'uz' ? "❌ Session ID ni to'g'ri kiriting! (Uzun bo'lishi shart)" : "❌ Enter a valid Session ID!";
                 return;
             }
             if (count < 1 || count > 1000) {
@@ -343,4 +351,4 @@
         changeLanguage('uz');
     </script>
 </body>
-</html>
+    </html>
