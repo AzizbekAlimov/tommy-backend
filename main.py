@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse, PlainTextResponse
 from pydantic import BaseModel
 from instagrapi import Client
-from instagrapi.exceptions import LoginRequired, UserNotFound
+from instagrapi.exceptions import LoginRequired, RateLimitError
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
@@ -54,7 +54,6 @@ async def read_index():
 
 @app.get("/get_id.py", response_class=PlainTextResponse)
 async def serve_python_script():
-    # Versiya xatosini tuzatuvchi yangilangan skript
     script = """from instagrapi import Client
 import sys
 
@@ -63,7 +62,6 @@ u = input("Username: ")
 p = input("Parol: ")
 
 c = Client()
-# Instagram versiyasini yangilash (xatolikni oldini oladi)
 c.set_device({"app_version": "269.0.0.18.75"})
 
 try:
@@ -79,7 +77,6 @@ except Exception as e:
             sys.exit()
     else:
         print("\\n❌ Kirishda xatolik:", e)
-        print("Maslahat: Instagram versiyasi xatosi bo'lsa, 10 daqiqadan so'ng qayta urinib ko'ring.")
         sys.exit()
 
 print("\\n✅ Muvaffaqiyatli kirdingiz!")
@@ -93,30 +90,36 @@ class UnfollowRequest(BaseModel):
     session_id: str
     count: int
 
-# --- Session ID ni tekshirish va Orqa fonda Unfollow qilish ---
+# --- ASOSIY MANTIQ: FAQAT FOLLOWING O'CHIRILADI ---
 def process_unfollow(session_id: str, count: int):
     try:
         cl = Client()
-        # 1. Avval Session ID to'g'riligini tekshiramiz
         cl.login_by_sessionid(session_id)
-        user_id = cl.user_id # Agar ID xato bo'lsa, shu yerda xato beradi
+        print("Instagram'ga muvaffaqiyatli ulandi. Obunalar ro'yxati olinmoqda...")
         
-        following = cl.user_following(user_id)
+        # Faqat siz obuna bo'lganlarni olish
+        following = cl.user_following(cl.user_id)
+        print(f"Jami {len(following)} ta obuna topildi. O'chirish boshlandi...")
+        
         unfollowed_count = 0
-
         for user_id in list(following.keys()):
             if unfollowed_count >= count:
                 break
             try:
                 cl.user_unfollow(user_id)
                 unfollowed_count += 1
-                time.sleep(2) # 2 soniya xavfsiz kutish
+                print(f"O'chirildi: {unfollowed_count}/{count}")
+                time.sleep(3) # Instagram bloklamasligi uchun 3 soniya kutish
+            except RateLimitError:
+                print("Instagram vaqtincha blokladi, 15 daqiqa kutish...")
+                time.sleep(900) # 15 daqiqa kutish
             except Exception as e:
-                print(f"Bitta odamni unfollow qilishda xato: {e}")
+                print(f"Xatolik: {e}")
                 continue
+                
         print(f"Jami {unfollowed_count} ta obuna bekor qilindi.")
     except LoginRequired:
-        print("Sessiya eskirgan yoki noto'g'ri.")
+        print("Sessiya eskirgan yoki xato.")
     except Exception as e:
         print(f"Ulanishda xatolik: {e}")
 
@@ -127,14 +130,13 @@ async def start_unfollow(request: UnfollowRequest, background_tasks: BackgroundT
     if not request.session_id or len(request.session_id) < 20:
         raise HTTPException(status_code=400, detail="Session ID juda qisqa yoki noto'g'ri kiritilgan!")
 
-    # Session ID ni API qabul qilishdan oldin tekshirib ko'ramiz
+    # Session ID to'g'riligini tekshirish
     try:
         test_cl = Client()
         test_cl.login_by_sessionid(request.session_id)
-        test_cl.get_timeline_feed() # Haqiqatan ham ishlayaptimi tekshirish
+        test_cl.get_timeline_feed() 
     except Exception as e:
         raise HTTPException(status_code=401, detail="Session ID xato yoki eskirgan. Iltimos, qaytadan oling!")
 
-    # Agar ID to'g'ri bo'lsa, orqa fonga yuboramiz
     background_tasks.add_task(process_unfollow, request.session_id, request.count)
     return {"status": "success", "message": f"{request.count} ta obunani bekor qilish boshlandi."}
