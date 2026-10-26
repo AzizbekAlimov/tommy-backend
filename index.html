@@ -168,13 +168,6 @@
         }
         .help-content h4:first-child { margin-top: 0; }
         .help-content b { color: #fbbf24; }
-        
-        /* Havola (Link) dizayni */
-        .help-content a {
-            color: #60a5fa;
-            text-decoration: underline;
-            font-weight: bold;
-        }
 
         /* Mualliflik (Footer) */
         .footer {
@@ -238,13 +231,7 @@
         let tg = window.Telegram.WebApp;
         tg.expand(); 
 
-        // Lemur Browser va siz bergan Cookie-Editor (Edge) havolasi
-        const lemurLink = '<a href="https://play.google.com/store/apps/details?id=com.lemurbrowser.exts" target="_blank">Lemur Browser</a>';
-        
-        // O'zgartirilgan havola (Edge Add-ons)
-        const cookieEditorLink = '<a href="https://microsoftedge.microsoft.com/addons/detail/cookieeditor/neaplmfkghagebokkhpjpoebhdledlfi?hl=uz-UZ" target="_blank">Cookie-Editor</a>';
-
-        // Tillar lug'ati
+        // Tillar lug'ati (Cookie-Editor havolasi olib tashlangan)
         const translations = {
             uz: {
                 title: "INSTAGRAM BOT",
@@ -257,10 +244,10 @@
                 created: "Yaratuvchi:",
                 help: `
                     <h4>📱 1. Android telefon uchun</h4>
-                    <p><b>Diqqat:</b> Oddiy Chrome brauzerida bo'lmaydi. Play Market'dan ${lemurLink} yuklab oling!<br>
+                    <p><b>Diqqat:</b> Oddiy Chrome brauzerida bo'lmaydi. Play Market'dan <b>Lemur Browser</b> yuklab oling!<br>
                     1. Lemur Browser orqali Instagram'ga kiring.<br>
                     2. O'ng burchakdagi <b>jumboq (puzzle) 🧩</b> belgisini bosing.<br>
-                    3. <b>${cookieEditorLink}</b> ni o'rnating (shu yozuvni bossangiz o'zi ochiladi).<br>
+                    3. <b>Cookie-Editor</b> ni o'rnating.<br>
                     4. O'rnatilgach, Instagram sahifasida jumboq belgisini yana bosib, Cookie-Editor'ni oching.<br>
                     5. Qidiruvga <b>sessionid</b> deb yozib, nusxalab oling.</p>
                     <h4>🍏 2. iOS (iPhone) uchun</h4>
@@ -280,10 +267,10 @@
                 created: "Создатель:",
                 help: `
                     <h4>📱 1. Для Android</h4>
-                    <p><b>Внимание:</b> Обычный Chrome не подойдет. Скачайте ${lemurLink} из Play Market!<br>
+                    <p><b>Внимание:</b> Обычный Chrome не подойдет. Скачайте <b>Lemur Browser</b> из Play Market!<br>
                     1. Зайдите в Instagram через Lemur Browser.<br>
                     2. Нажмите на значок <b>пазла 🧩</b>.<br>
-                    3. Установите <b>${cookieEditorLink}</b>.<br>
+                    3. Установите <b>Cookie-Editor</b>.<br>
                     4. Откройте Cookie-Editor через значок пазла.<br>
                     5. В поиске введите <b>sessionid</b> и скопируйте его.</p>
                     <h4>🍏 2. Для iOS (iPhone)</h4>
@@ -303,10 +290,10 @@
                 created: "Created by:",
                 help: `
                     <h4>📱 1. For Android</h4>
-                    <p><b>Note:</b> Normal Chrome won't work. Download ${lemurLink} from Play Market!<br>
+                    <p><b>Note:</b> Normal Chrome won't work. Download <b>Lemur Browser</b> from Play Market!<br>
                     1. Log in to Instagram using Lemur Browser.<br>
                     2. Tap the <b>puzzle icon 🧩</b>.<br>
-                    3. Install <b>${cookieEditorLink}</b>.<br>
+                    3. Install <b>Cookie-Editor</b>.<br>
                     4. Open Cookie-Editor from the puzzle icon.<br>
                     5. Search for <b>sessionid</b> and copy it.</p>
                     <h4>🍏 2. For iOS (iPhone)</h4>
