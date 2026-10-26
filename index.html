@@ -231,7 +231,7 @@
         let tg = window.Telegram.WebApp;
         tg.expand(); 
 
-        // Tillar lug'ati
+        // Tillar lug'ati (iOS va Android uchun aniq ko'rsatmalar bilan)
         const translations = {
             uz: {
                 title: "INSTAGRAM BOT",
@@ -243,10 +243,12 @@
                 helpBtnClose: "❌ Ma'lumotni yopish",
                 created: "Yaratuvchi:",
                 help: `
-                    <h4>📱 1. Telefon uchun (Android)</h4>
-                    <p>1. Play Market'dan <b>Kiwi Browser</b> yuklab oling.<br>2. Shu brauzer orqali Instagram'ga kiring.<br>3. Yuqori o'ng burchakdagi 3 nuqtani bosib, <b>Extensions</b> ni tanlang.<br>4. <b>Cookie-Editor</b> ni o'rnating va uni oching.<br>5. Ro'yxatdan <b>sessionid</b> degan qatorni topib, "Copy" qiling.</p>
-                    <h4>💻 2. Kompyuter uchun (Chrome / Edge)</h4>
-                    <p>1. Brauzerda Instagram'ga kiring.<br>2. Klaviaturadan <b>F12</b> tugmasini bosing.<br>3. <b>Application</b> -> <b>Cookies</b> bo'limiga o'ting.<br>4. <b>sessionid</b> qatoridagi <b>Value</b> ustunidagi uzun matnni nusxalab oling.</p>
+                    <h4>📱 1. Android telefon uchun</h4>
+                    <p><b>Diqqat:</b> Oddiy Chrome brauzerida bo'lmaydi, Play Market'dan <b>Kiwi Browser</b> yuklab oling!<br>1. Kiwi Browser orqali Instagram'ga kiring.<br>2. 3 nuqtani bosib, <b>Extensions</b> ni tanlang.<br>3. <b>Cookie-Editor</b> ni o'rnating va oching.<br>4. <b>sessionid</b> qatorini topib, nusxalab oling.</p>
+                    <h4>🍏 2. iOS (iPhone) uchun</h4>
+                    <p>iPhone'da buni qilish qiyin. Iltimos, kompyuterdan yoki do'stingizning Android telefonidan foydalanib Session ID oling.</p>
+                    <h4>💻 3. Kompyuter uchun</h4>
+                    <p>1. Chrome brauzerida Instagram'ga kiring.<br>2. <b>F12</b> tugmasini bosing.<br>3. <b>Application</b> -> <b>Cookies</b> bo'limiga o'ting.<br>4. <b>sessionid</b> qatoridagi uzun matnni nusxalab oling.</p>
                 `
             },
             ru: {
@@ -259,10 +261,12 @@
                 helpBtnClose: "❌ Закрыть информацию",
                 created: "Создатель:",
                 help: `
-                    <h4>📱 1. Для телефона (Android)</h4>
-                    <p>1. Скачайте <b>Kiwi Browser</b> из Play Market.<br>2. Зайдите в Instagram через этот браузер.<br>3. Нажмите 3 точки и выберите <b>Extensions</b>.<br>4. Установите и откройте <b>Cookie-Editor</b>.<br>5. Найдите строку <b>sessionid</b> и скопируйте её.</p>
-                    <h4>💻 2. Для компьютера (Chrome / Edge)</h4>
-                    <p>1. Зайдите в Instagram в браузере.<br>2. Нажмите <b>F12</b> на клавиатуре.<br>3. Перейдите в <b>Application</b> -> <b>Cookies</b>.<br>4. Скопируйте значение строки <b>sessionid</b> из столбца <b>Value</b>.</p>
+                    <h4>📱 1. Для Android</h4>
+                    <p><b>Внимание:</b> Обычный Chrome не подойдет, скачайте <b>Kiwi Browser</b> из Play Market!<br>1. Зайдите в Instagram через Kiwi Browser.<br>2. Нажмите 3 точки и выберите <b>Extensions</b>.<br>3. Установите и откройте <b>Cookie-Editor</b>.<br>4. Скопируйте строку <b>sessionid</b>.</p>
+                    <h4>🍏 2. Для iOS (iPhone)</h4>
+                    <p>На iPhone это сделать сложно. Пожалуйста, используйте компьютер или Android-телефон друга.</p>
+                    <h4>💻 3. Для компьютера</h4>
+                    <p>1. Зайдите в Instagram в Chrome.<br>2. Нажмите <b>F12</b>.<br>3. Перейдите в <b>Application</b> -> <b>Cookies</b>.<br>4. Скопируйте значение строки <b>sessionid</b>.</p>
                 `
             },
             en: {
@@ -275,10 +279,12 @@
                 helpBtnClose: "❌ Close info",
                 created: "Created by:",
                 help: `
-                    <h4>📱 1. For Phone (Android)</h4>
-                    <p>1. Download <b>Kiwi Browser</b> from Play Market.<br>2. Log in to Instagram using this browser.<br>3. Tap the 3 dots and select <b>Extensions</b>.<br>4. Install and open <b>Cookie-Editor</b>.<br>5. Find the <b>sessionid</b> row and copy it.</p>
-                    <h4>💻 2. For Computer (Chrome / Edge)</h4>
-                    <p>1. Log in to Instagram in your browser.<br>2. Press <b>F12</b> on your keyboard.<br>3. Go to <b>Application</b> -> <b>Cookies</b>.<br>4. Copy the value of the <b>sessionid</b> row from the <b>Value</b> column.</p>
+                    <h4>📱 1. For Android</h4>
+                    <p><b>Note:</b> Normal Chrome won't work, download <b>Kiwi Browser</b> from Play Market!<br>1. Log in to Instagram using Kiwi Browser.<br>2. Tap 3 dots and select <b>Extensions</b>.<br>3. Install and open <b>Cookie-Editor</b>.<br>4. Find and copy the <b>sessionid</b> row.</p>
+                    <h4>🍏 2. For iOS (iPhone)</h4>
+                    <p>It is difficult on iPhone. Please use a computer or a friend's Android phone.</p>
+                    <h4>💻 3. For Computer</h4>
+                    <p>1. Log in to Instagram in Chrome.<br>2. Press <b>F12</b>.<br>3. Go to <b>Application</b> -> <b>Cookies</b>.<br>4. Copy the value of the <b>sessionid</b> row.</p>
                 `
             }
         };
