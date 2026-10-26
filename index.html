@@ -30,186 +30,76 @@
             overflow-x: hidden;
         }
 
-        /* Tepa qism (Tillar) */
-        .top-bar {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 20px;
-        }
-
+        .top-bar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
         .lang-select {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid var(--border);
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-size: 14px;
-            outline: none;
-            cursor: pointer;
-            backdrop-filter: blur(10px);
-            -webkit-appearance: none;
-            appearance: none;
+            background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid var(--border);
+            padding: 8px 12px; border-radius: 10px; font-size: 14px; outline: none;
+            cursor: pointer; backdrop-filter: blur(10px); -webkit-appearance: none;
         }
-        
-        .lang-select option {
-            background: #1e293b;
-            color: white;
-        }
+        .lang-select option { background: #1e293b; color: white; }
 
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+        .header { text-align: center; margin-bottom: 30px; }
         .icon-circle {
-            width: 110px; height: 110px;
-            border-radius: 50%;
+            width: 110px; height: 110px; border-radius: 50%;
             background: linear-gradient(135deg, #ec4899, #8b5cf6, #3b82f6);
             display: flex; justify-content: center; align-items: center;
-            font-size: 45px;
-            margin: 0 auto 15px;
-            box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
-            animation: pulse 2s infinite;
+            font-size: 45px; margin: 0 auto 15px;
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.4); animation: pulse 2s infinite;
         }
-
         @keyframes pulse {
             0% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); }
             50% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.7); }
             100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); }
         }
-
         h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 1px;}
         p.subtitle { color: var(--text-muted); font-size: 14px; margin-top: 5px; }
         
         .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            background: var(--card-bg); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-radius: 24px;
+            padding: 24px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
         
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 13px;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-        
+        label { display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-muted); font-weight: 600; }
         input {
-            width: 100%;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255,255,255,0.15);
-            color: white;
-            padding: 15px;
-            border-radius: 14px;
-            margin-bottom: 18px;
-            box-sizing: border-box;
-            outline: none;
-            font-size: 15px;
-            transition: border 0.3s;
+            width: 100%; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.15);
+            color: white; padding: 15px; border-radius: 14px; margin-bottom: 18px;
+            box-sizing: border-box; outline: none; font-size: 15px; transition: border 0.3s;
         }
         input:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(99,102,241,0.3); }
 
         .btn {
-            width: 100%;
-            background: linear-gradient(to right, #4f46e5, #9333ea);
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 14px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
+            width: 100%; background: linear-gradient(to right, #4f46e5, #9333ea);
+            color: white; border: none; padding: 16px; border-radius: 14px;
+            font-size: 16px; font-weight: bold; cursor: pointer;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
         }
         .btn:active { transform: scale(0.96); }
 
-        #status {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 14px;
-            font-weight: bold;
-        }
+        #status { text-align: center; margin-top: 15px; font-size: 14px; font-weight: bold; }
 
-        /* Qo'llanma (Help) */
-        .help-toggle {
-            text-align: center;
-            margin-top: 20px;
-            color: #818cf8;
-            font-size: 14px;
-            cursor: pointer;
-            font-weight: 600;
-        }
+        .help-toggle { text-align: center; margin-top: 20px; color: #818cf8; font-size: 14px; cursor: pointer; font-weight: 600; }
         .help-content {
-            display: none;
-            margin-top: 15px;
-            background-color: rgba(15, 23, 42, 0.8);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 15px;
-            font-size: 13px;
-            line-height: 1.6;
-            color: #cbd5e1;
+            display: none; margin-top: 15px; background-color: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border); border-radius: 14px; padding: 15px;
+            font-size: 13px; line-height: 1.6; color: #cbd5e1;
         }
-        .help-content h4 {
-            color: #fff;
-            margin: 15px 0 5px 0;
-            font-size: 14px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 5px;
-        }
+        .help-content h4 { color: #fff; margin: 15px 0 5px 0; font-size: 14px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
         .help-content h4:first-child { margin-top: 0; }
         .help-content b { color: #fbbf24; }
-        
-        .help-content a {
-            color: #fbbf24;
-            text-decoration: underline;
-            font-weight: bold;
-        }
+        .help-content a { color: #fbbf24; text-decoration: underline; font-weight: bold; }
 
-        /* Nusxalash (Copy) tugmalari dizayni */
         .copy-code {
-            display: block;
-            background: #000;
-            padding: 12px;
-            border-radius: 8px;
-            font-family: monospace;
-            color: #22c55e;
-            margin: 10px 0;
-            cursor: pointer;
-            word-break: break-all;
-            border: 1px solid #22c55e;
-            transition: 0.2s;
-            text-align: center;
-            font-size: 14px;
+            display: block; background: #000; padding: 12px; border-radius: 8px;
+            font-family: monospace; color: #22c55e; margin: 10px 0; cursor: pointer;
+            word-break: break-all; border: 1px solid #22c55e; transition: 0.2s;
+            text-align: center; font-size: 14px;
         }
-        .copy-code:active {
-            transform: scale(0.98);
-            background: #1e293b;
-        }
+        .copy-code:active { transform: scale(0.98); background: #1e293b; }
 
-        /* Mualliflik (Footer) */
-        .footer {
-            text-align: center;
-            margin-top: auto;
-            padding-top: 20px;
-            font-size: 14px;
-            color: var(--text-muted);
-        }
-        .footer a {
-            color: #60a5fa;
-            text-decoration: none;
-            font-weight: bold;
-            transition: color 0.3s;
-        }
+        .footer { text-align: center; margin-top: auto; padding-top: 20px; font-size: 14px; color: var(--text-muted); }
+        .footer a { color: #60a5fa; text-decoration: none; font-weight: bold; transition: color 0.3s; }
         .footer a:active { color: #3b82f6; }
     </style>
 </head>
@@ -259,29 +149,8 @@
 
         const termuxLink = '<a href="https://play.google.com/store/apps/details?id=com.termux" target="_blank">Termux</a>';
 
-        // Nusxalab olinadigan avtomatik yaratish kodi (nano o'rniga)
-        const autoCreateCode = `cat << 'EOF' > get_id.py
-from instagrapi import Client
-print("\\n--- Instagram Session ID Olish ---")
-u = input("Username: ")
-p = input("Parol: ")
-c = Client()
-try:
-    c.login(u, p)
-except Exception as e:
-    if "two_factor" in str(e).lower():
-        code = input("2FA kod: ")
-        try:
-            c.login(u, p, verification_code=code)
-        except Exception as e2:
-            print("Xatolik:", e2); exit()
-    else:
-        print("Xatolik:", e); exit()
-print("\\n✅ Muvaffaqiyatli kirdingiz!")
-print("Sizning Session ID'ingiz (nusxalab oling):\\n")
-print(c.sessionid)
-print("\\n")
-EOF`;
+        // Eng ishonchli usul: faylni printf orqali to'g'ridan-to'g'ri yaratish
+        const oneLineCreate = `printf "from instagrapi import Client\\nimport sys\\n\\nprint('--- Session ID ---')\\nu = input('Username: ')\\np = input('Parol: ')\\nc = Client()\\ntry:\\n    c.login(u, p)\\nexcept Exception as e:\\n    if 'two_factor' in str(e).lower():\\n        code = input('2FA kod: ')\\n        try:\\n            c.login(u, p, verification_code=code)\\n        except Exception as e2:\\n            print('Xato:', e2); sys.exit()\\n    else:\\n        print('Xato:', e); sys.exit()\\nprint('\\\\nSIZNING SESSION ID:\\\\n', c.sessionid, '\\\\n')\\n" > get_id.py`;
 
         const translations = {
             uz: {
@@ -294,21 +163,18 @@ EOF`;
                 helpBtnClose: "❌ Ma'lumotni yopish",
                 created: "Yaratuvchi:",
                 help: `
-                    <h4>📱 ${termuxLink} orqali olish (Eng oson yo'l)</h4>
-                    <p><b>1-qadam:</b> Play Market'dan ${termuxLink} yuklab oling va oching.<br>
-                    <b>2-qadam:</b> Kerakli dasturni o'rnatish uchun shu yozuvni bosing:<br>
+                    <h4>📱 ${termuxLink} orqali olish</h4>
+                    <p><b>1-qadam:</b> Play Market'dan ${termuxLink} yuklab oling.<br>
+                    <b>2-qadam:</b> Kutubxonani o'rnatish uchun quyidagini nusxalab, Termux'ga yopishtiring va <b>Enter</b> bosing:<br>
                     <span class="copy-code" onclick="copyToClipboard('pip install instagrapi', this)">📋 pip install instagrapi</span>
-                    Termux'ga yopishtirib (Paste) Enter bosing. (10-20 soniya kutadi).<br>
                     
-                    <b>3-qadam:</b> Kodni avtomatik yaratish uchun pastdagi uzun yashil blokni bosing va nusxalang:<br>
-                    <span class="copy-code" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyToClipboard(\`${autoCreateCode}\`, this)">📋 Kodni Avtomatik Yaratish (Copy)</span>
-                    Termux'ga yopishtiring (Paste) va Enter bosing. Hech narsa qilishingiz shart emas, fayl o'zi yaratiladi!<br>
+                    <b>3-qadam:</b> Dastur kodini yaratish uchun pastdagi yozuvni nusxalab, Termux'ga yopishtiring va <b>Enter</b> bosing:<br>
+                    <span class="copy-code" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyToClipboard(\`${oneLineCreate}\`, this)">📋 Kodni Yaratish (Copy)</span>
                     
-                    <b>4-qadam:</b> Dasturni ishga tushirish uchun shu yozuvni bosing:<br>
+                    <b>4-qadam:</b> Endi dasturni ishga tushirish uchun quyidagini nusxalab, yopishtiring va <b>Enter</b> bosing:<br>
                     <span class="copy-code" onclick="copyToClipboard('python get_id.py', this)">📋 python get_id.py</span>
-                    Enter bosing.<br>
-
-                    <b>5-qadam:</b> Dastur sizdan Username, Parol va 2FA kodini so'raydi. Ekranda chiqqan uzun <b>Session ID</b> ni nusxalab, eng tepadagi joyga qo'ying.</p>
+                    
+                    <b>5-qadam:</b> Username, Parol va 2FA kodini kiriting. Ekranda chiqqan <b>Session ID</b> ni nusxalab, botga qo'ying.</p>
                 `
             },
             ru: {
@@ -321,14 +187,13 @@ EOF`;
                 helpBtnClose: "❌ Закрыть информацию",
                 created: "Создатель:",
                 help: `
-                    <h4>📱 Через ${termuxLink} (Самый простой способ)</h4>
-                    <p><b>Шаг 1:</b> Скачайте ${termuxLink} из Play Market.<br>
+                    <h4>📱 Через ${termuxLink}</h4>
+                    <p><b>Шаг 1:</b> Скачайте ${termuxLink}.<br>
                     <b>Шаг 2:</b> Установите библиотеку:<br>
                     <span class="copy-code" onclick="copyToClipboard('pip install instagrapi', this)">📋 pip install instagrapi</span><br>
                     
-                    <b>Шаг 3:</b> Скопируйте этот блок (он сам создаст файл):<br>
-                    <span class="copy-code" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyToClipboard(\`${autoCreateCode}\`, this)">📋 Скопировать код для создания</span><br>
-                    Вставьте в Termux и нажмите Enter.<br>
+                    <b>Шаг 3:</b> Скопируйте этот блок и вставьте в Termux:<br>
+                    <span class="copy-code" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyToClipboard(\`${oneLineCreate}\`, this)">📋 Скопировать код для создания</span><br>
                     
                     <b>Шаг 4:</b> Запустите скрипт:<br>
                     <span class="copy-code" onclick="copyToClipboard('python get_id.py', this)">📋 python get_id.py</span><br>
@@ -346,14 +211,13 @@ EOF`;
                 helpBtnClose: "❌ Close info",
                 created: "Created by:",
                 help: `
-                    <h4>📱 Via ${termuxLink} (Easiest way)</h4>
-                    <p><b>Step 1:</b> Download ${termuxLink} from Play Market.<br>
+                    <h4>📱 Via ${termuxLink}</h4>
+                    <p><b>Step 1:</b> Download ${termuxLink}.<br>
                     <b>Step 2:</b> Install the library:<br>
                     <span class="copy-code" onclick="copyToClipboard('pip install instagrapi', this)">📋 pip install instagrapi</span><br>
                     
                     <b>Step 3:</b> Copy this block to create the file automatically:<br>
-                    <span class="copy-code" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyToClipboard(\`${autoCreateCode}\`, this)">📋 Copy Auto-Create Code</span><br>
-                    Paste it into Termux and press Enter.<br>
+                    <span class="copy-code" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyToClipboard(\`${oneLineCreate}\`, this)">📋 Copy Auto-Create Code</span><br>
                     
                     <b>Step 4:</b> Run the script:<br>
                     <span class="copy-code" onclick="copyToClipboard('python get_id.py', this)">📋 python get_id.py</span><br>
@@ -399,7 +263,7 @@ EOF`;
         function copyToClipboard(text, element) {
             navigator.clipboard.writeText(text).then(() => {
                 if (window.Telegram && window.Telegram.WebApp) {
-                    window.Telegram.WebApp.showAlert("✅ Nusxalandi! Endi Termux'ga yopishtiring.");
+                    window.Telegram.WebApp.showAlert("✅ Nusxalandi! Termux'ga yopishtiring.");
                 } else {
                     alert("✅ Nusxalandi!");
                 }
@@ -412,7 +276,7 @@ EOF`;
                 setTimeout(() => {
                     element.innerText = originalText;
                     element.style.backgroundColor = "#000";
-                    if(originalText.includes("Avtomatik") || originalText.includes("скопировать код") || originalText.includes("Auto-Create")) {
+                    if(originalText.includes("Yaratish") || originalText.includes("создания") || originalText.includes("Auto-Create")) {
                          element.style.color = "#60a5fa";
                     } else {
                          element.style.color = "#22c55e";
