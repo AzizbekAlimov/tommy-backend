@@ -238,10 +238,11 @@
         let tg = window.Telegram.WebApp;
         tg.expand(); 
 
-        // Lemur Browser uchun Play Market havolasi
+        // Lemur Browser va Cookie-Editor havolalari
         const lemurLink = '<a href="https://play.google.com/store/apps/details?id=com.lemurbrowser.exts" target="_blank">Lemur Browser</a>';
+        const cookieEditorLink = '<a href="https://chromewebstore.google.com/detail/cookie-editor/hlkenndednhfkekhgcdicdfddnkhmcdd" target="_blank">Cookie-Editor</a>';
 
-        // Tillar lug'ati (Batafsil qo'llanma bilan)
+        // Tillar lug'ati (Batafsil va havolali qo'llanma)
         const translations = {
             uz: {
                 title: "INSTAGRAM BOT",
@@ -254,7 +255,12 @@
                 created: "Yaratuvchi:",
                 help: `
                     <h4>📱 1. Android telefon uchun</h4>
-                    <p><b>Diqqat:</b> Oddiy Chrome brauzerida bo'lmaydi, Play Market'dan ${lemurLink} yuklab oling!<br>1. Lemur Browser orqali Instagram'ga kiring.<br>2. O'ng burchakdagi <b>jumboq (puzzle) 🧩</b> belgisini bosib, Chrome Web Store'ga o'ting.<br>3. <b>Cookie-Editor</b> ni o'rnating va oching.<br>4. Qidiruvga <b>sessionid</b> deb yozib, nusxalab oling.</p>
+                    <p><b>Diqqat:</b> Oddiy Chrome brauzerida bo'lmaydi. Play Market'dan ${lemurLink} yuklab oling!<br>
+                    1. Lemur Browser orqali Instagram'ga kiring.<br>
+                    2. O'ng burchakdagi <b>jumboq (puzzle) 🧩</b> belgisini bosing.<br>
+                    3. <b>${cookieEditorLink}</b> ni o'rnating (shu yozuvni bossangiz o'zi ochiladi).<br>
+                    4. O'rnatilgach, Instagram sahifasida jumboq belgisini yana bosib, Cookie-Editor'ni oching.<br>
+                    5. Qidiruvga <b>sessionid</b> deb yozib, nusxalab oling.</p>
                     <h4>🍏 2. iOS (iPhone) uchun</h4>
                     <p>iPhone'da buni qilish qiyin. Iltimos, kompyuterdan yoki do'stingizning Android telefonidan foydalanib Session ID oling.</p>
                     <h4>💻 3. Kompyuter uchun</h4>
@@ -272,7 +278,12 @@
                 created: "Создатель:",
                 help: `
                     <h4>📱 1. Для Android</h4>
-                    <p><b>Внимание:</b> Обычный Chrome не подойдет, скачайте ${lemurLink} из Play Market!<br>1. Зайдите в Instagram через Lemur Browser.<br>2. Нажмите на значок <b>пазла 🧩</b> и перейдите в Chrome Web Store.<br>3. Установите и откройте <b>Cookie-Editor</b>.<br>4. В поиске введите <b>sessionid</b> и скопируйте его.</p>
+                    <p><b>Внимание:</b> Обычный Chrome не подойдет. Скачайте ${lemurLink} из Play Market!<br>
+                    1. Зайдите в Instagram через Lemur Browser.<br>
+                    2. Нажмите на значок <b>пазла 🧩</b>.<br>
+                    3. Установите <b>${cookieEditorLink}</b>.<br>
+                    4. Откройте Cookie-Editor через значок пазла.<br>
+                    5. В поиске введите <b>sessionid</b> и скопируйте его.</p>
                     <h4>🍏 2. Для iOS (iPhone)</h4>
                     <p>На iPhone это сделать сложно. Пожалуйста, используйте компьютер или Android-телефон друга.</p>
                     <h4>💻 3. Для компьютера</h4>
@@ -290,7 +301,12 @@
                 created: "Created by:",
                 help: `
                     <h4>📱 1. For Android</h4>
-                    <p><b>Note:</b> Normal Chrome won't work, download ${lemurLink} from Play Market!<br>1. Log in to Instagram using Lemur Browser.<br>2. Tap the <b>puzzle icon 🧩</b> and go to Chrome Web Store.<br>3. Install and open <b>Cookie-Editor</b>.<br>4. Search for <b>sessionid</b> and copy it.</p>
+                    <p><b>Note:</b> Normal Chrome won't work. Download ${lemurLink} from Play Market!<br>
+                    1. Log in to Instagram using Lemur Browser.<br>
+                    2. Tap the <b>puzzle icon 🧩</b>.<br>
+                    3. Install <b>${cookieEditorLink}</b>.<br>
+                    4. Open Cookie-Editor from the puzzle icon.<br>
+                    5. Search for <b>sessionid</b> and copy it.</p>
                     <h4>🍏 2. For iOS (iPhone)</h4>
                     <p>It is difficult on iPhone. Please use a computer or a friend's Android phone.</p>
                     <h4>💻 3. For Computer</h4>
