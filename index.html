@@ -54,7 +54,7 @@
         input {
             width: 100%; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.15);
             color: white; padding: 15px; border-radius: 14px; margin-bottom: 18px;
-            box-sizing: border-box; outline: none; font-size: 15px;
+            box-sizing: border-box; outline: none; font-size: 15px; transition: 0.3s;
         }
         input:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(99,102,241,0.3); }
         
@@ -120,14 +120,14 @@
 
     <div class="card">
         <div class="warning-box">
-            ⚠️ <b>Diqqat:</b> Instagram tomonidan bloklanmaslik uchun bir martada maksimal 1,000 tagacha o'chirish tavsiya etiladi!
+            ⚠️ <b>Diqqat:</b> Xavfsizlik uchun bir martada maksimal 1,000 tagacha o'chirish tavsiya etiladi!
         </div>
 
         <label id="txt-label-session">Instagram Session ID (cookie)</label>
-        <input type="password" id="sessionid" placeholder="Session ID...">
+        <input type="password" id="sessionid" placeholder="Uzun Session ID matnini kiriting...">
         
-        <label id="txt-label-count">Nechta odamni unfollow qilish? (Maksimal: 1,000)</label>
-        <input type="number" id="count" min="1" max="1000" value="500">
+        <label id="txt-label-count">Nechta odamni unfollow qilish? (1 dan 1,000 gacha)</label>
+        <input type="number" id="count" min="1" max="1000" value="100">
         
         <button class="btn" onclick="sendData()" id="btn-unfollow">
             🔄 Unfollow Boshlash
@@ -159,14 +159,14 @@
                 title: "INSTAGRAM BOT",
                 subtitle: "Obunachilarni avtomatik tozalash",
                 labelSession: "Instagram Session ID (cookie)",
-                labelCount: "Nechta odamni unfollow qilish? (Maksimal: 1,000)",
+                labelCount: "Nechta odamni unfollow qilish? (1 dan 1,000 gacha)",
                 btn: "🔄 Unfollow Boshlash",
                 helpBtnOpen: "❓ Session ID qanday olinadi?",
                 helpBtnClose: "❌ Ma'lumotni yopish",
                 created: "Yaratuvchi:",
                 help: `
                     <h4>📱 1-qadam: Dasturlarni o'rnatish</h4>
-                    <p>Play Market'dan <b>${termuxLink}</b> va <b>${authAppLink}</b> (2FA uchun) yuklab oling.</p>
+                    <p>Play Market'dan <b>${termuxLink}</b> va <b>${authAppLink}</b> (2FA kodi uchun) yuklab oling.</p>
                     
                     <h4>💻 2-qadam: Termux buyruqlari</h4>
                     <p>Termux'ni ochib, quyidagi buyruqlarni ketma-ket nusxalab, yopishtiring va <b>Enter</b> bosing:<br>
@@ -174,22 +174,22 @@
                     <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyText('curl -s -o get_id.py ${currentHost}/get_id.py', this)">📋 Kodni Yuklash (Copy)</button>
                     <button class="copy-btn" onclick="copyText('python get_id.py', this)">📋 python get_id.py</button></p>
 
-                    <h4>🔐 3-qadam: 2FA (Autentifikator)</h4>
-                    <p>Dastur ishga tushganda Username va Parolni so'raydi. Parolni kiritib Enter bosgach, u <b>2FA kodini</b> so'raydi. <br>
-                    Shu payt <b>Google Authenticator</b> ilovasini oching va Instagram uchun berilgan 6 xonali kodni Termux'ga kiriting.</p>
+                    <h4>🔐 3-qadam: 2FA Kodini Kiritish</h4>
+                    <p>Dastur ishga tushganda Username va Parolni so'raydi. So'ngra <b>2FA kodi</b>ni so'raydi. <br>
+                    Shu payt <b>Google Authenticator</b> ilovasini ochib, Instagram uchun berilgan 6 xonali kodni Termux'ga yozing.</p>
                     
-                    <h4>✅ 4-qadam: Session ID</h4>
-                    <p>Hammasi to'g'ri bo'lsa, ekranda juda uzun <b>Session ID</b> chiqadi. Uni to'liq nusxalab, botning eng tepasidagi joyga qo'ying. (Qisqa raqamlar emas, aynan uzun harflar aralashmasi bo'lishi shart!)</p>
+                    <h4>✅ 4-qadam: Session ID'ni nusxalash</h4>
+                    <p>Hammasi to'g'ri bo'lsa, ekranda <b>juda uzun matn (harflar va raqamlar)</b> chiqadi. <b>Diqqat:</b> Bu qisqa raqam (User ID) emas! Shu uzun matnni to'liq nusxalab, botning eng tepasidagi joyga qo'ying.</p>
                 `
             },
             ru: {
                 title: "INSTAGRAM BOT",
                 subtitle: "Автоматическая очистка подписок",
                 labelSession: "Instagram Session ID (cookie)",
-                labelCount: "Сколько отписаться? (Максимум: 1,000)",
+                labelCount: "Сколько отписаться? (от 1 до 1,000)",
                 btn: "🔄 Начать отписку",
                 helpBtnOpen: "❓ Как получить Session ID?",
-                helpBtnClose: "❌ Закрыть информацию",
+                helpBtnClose: "❌ Закрыть",
                 created: "Создатель:",
                 help: `
                     <h4>📱 Шаг 1: Установка</h4>
@@ -201,18 +201,18 @@
                     <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyText('curl -s -o get_id.py ${currentHost}/get_id.py', this)">📋 Скачать скрипт (Copy)</button>
                     <button class="copy-btn" onclick="copyText('python get_id.py', this)">📋 python get_id.py</button></p>
 
-                    <h4>🔐 Шаг 3: 2FA</h4>
-                    <p>Введите логин и пароль. Затем программа запросит код <b>2FA</b>. Откройте <b>Google Authenticator</b> и введите 6-значный код для Instagram.</p>
+                    <h4>🔐 Шаг 3: Ввод кода 2FA</h4>
+                    <p>Введите логин и пароль. Затем программа запросит <b>код 2FA</b>. Откройте <b>Google Authenticator</b> и введите 6-значный код.</p>
                     
                     <h4>✅ Шаг 4: Session ID</h4>
-                    <p>Скопируйте полученный длинный <b>Session ID</b> и вставьте его в бота. (Это не короткие цифры, а длинный набор букв и символов).</p>
+                    <p>Скопируйте полученный длинный <b>Session ID</b> и вставьте его в бота. <b>Внимание:</b> Это не короткие цифры, а длинный набор символов!</p>
                 `
             },
             en: {
                 title: "INSTAGRAM BOT",
                 subtitle: "Automatic follower cleanup",
                 labelSession: "Instagram Session ID (cookie)",
-                labelCount: "How many to unfollow? (Max: 1,000)",
+                labelCount: "How many to unfollow? (1 to 1,000)",
                 btn: "🔄 Start Unfollow",
                 helpBtnOpen: "❓ How to get Session ID?",
                 helpBtnClose: "❌ Close info",
@@ -227,11 +227,11 @@
                     <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyText('curl -s -o get_id.py ${currentHost}/get_id.py', this)">📋 Download Script (Copy)</button>
                     <button class="copy-btn" onclick="copyText('python get_id.py', this)">📋 python get_id.py</button></p>
 
-                    <h4>🔐 Step 3: 2FA Code</h4>
-                    <p>Enter your username and password. The script will ask for a <b>2FA code</b>. Open <b>Google Authenticator</b>, find Instagram, and enter the 6-digit code.</p>
+                    <h4>🔐 Step 3: Enter 2FA Code</h4>
+                    <p>Enter username and password. The script will ask for a <b>2FA code</b>. Open <b>Google Authenticator</b>, find Instagram, and enter the 6-digit code.</p>
                     
                     <h4>✅ Step 4: Session ID</h4>
-                    <p>Copy the generated long <b>Session ID</b> and paste it into the bot. (It's not short numbers, it's a long mix of characters).</p>
+                    <p>Copy the generated long <b>Session ID</b> and paste it into the bot. <b>Note:</b> It's not short numbers (User ID), it's a long mix of characters.</p>
                 `
             }
         };
@@ -298,25 +298,28 @@
 
         async function sendData() {
             const sessionId = document.getElementById('sessionid').value.trim();
-            const count = parseInt(document.getElementById('count').value);
+            const countInput = document.getElementById('count').value;
+            const count = parseInt(countInput);
             const statusDiv = document.getElementById('status');
             const btn = document.getElementById('btn-unfollow');
 
+            // Frontend validation
             if (!sessionId || sessionId.length < 20) {
                 statusDiv.style.color = "#ef4444";
-                statusDiv.innerText = currentLang === 'uz' ? "❌ Session ID ni to'g'ri kiriting! (Uzun bo'lishi shart)" : "❌ Enter a valid Session ID!";
+                statusDiv.innerText = currentLang === 'uz' ? "❌ Session ID xato! Iltimos, Termux orqali olgan uzun matnni kiriting." : "❌ Invalid Session ID! Please enter the long text from Termux.";
                 return;
             }
-            if (count < 1 || count > 1000) {
+            if (isNaN(count) || count < 1 || count > 1000) {
                 statusDiv.style.color = "#ef4444";
-                statusDiv.innerText = currentLang === 'uz' ? "❌ Xato! Xavfsizlik uchun maksimal 1,000 ta!" : "❌ Error! Max limit is 1,000 for safety.";
+                statusDiv.innerText = currentLang === 'uz' ? "❌ Xato! Sonni 1 dan 1,000 gacha kiriting." : "❌ Error! Enter a number between 1 and 1,000.";
                 return;
             }
 
+            // Loading state
             btn.disabled = true;
-            btn.innerText = "⏳ Tekshirilmoqda...";
+            btn.innerText = currentLang === 'uz' ? "⏳ Tekshirilmoqda..." : "⏳ Checking...";
             statusDiv.style.color = "#f59e0b";
-            statusDiv.innerText = currentLang === 'uz' ? "⏳ Session ID tekshirilmoqda..." : "⏳ Checking Session ID...";
+            statusDiv.innerText = currentLang === 'uz' ? "⏳ Session ID tekshirilmoqda, kuting..." : "⏳ Verifying Session ID, please wait...";
 
             try {
                 const response = await fetch('/api/unfollow', {
@@ -332,7 +335,7 @@
 
                 if (response.ok) {
                     statusDiv.style.color = "#22c55e";
-                    statusDiv.innerText = "✅ " + result.message + (currentLang === 'uz' ? " (Jarayon orqa fonda davom etadi)" : "");
+                    statusDiv.innerText = "✅ " + result.message + (currentLang === 'uz' ? " (Orqa fonda davom etadi)" : " (Running in background)");
                 } else {
                     statusDiv.style.color = "#ef4444";
                     statusDiv.innerText = "❌ Xatolik: " + result.detail;
@@ -341,6 +344,7 @@
                 statusDiv.style.color = "#ef4444";
                 statusDiv.innerText = currentLang === 'uz' ? "❌ Server bilan aloqa yo'q!" : "❌ No connection to server!";
             } finally {
+                // 5 soniyadan keyin tugmani qayta yoqish
                 setTimeout(() => {
                     btn.disabled = false;
                     btn.innerText = translations[currentLang].btn;
@@ -351,4 +355,4 @@
         changeLanguage('uz');
     </script>
 </body>
-    </html>
+</html>
