@@ -168,6 +168,14 @@
         }
         .help-content h4:first-child { margin-top: 0; }
         .help-content b { color: #fbbf24; }
+        
+        .help-content code {
+            background: #000;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #22c55e;
+        }
 
         /* Mualliflik (Footer) */
         .footer {
@@ -231,7 +239,7 @@
         let tg = window.Telegram.WebApp;
         tg.expand(); 
 
-        // Tillar lug'ati (Cookie-Editor havolasi olib tashlangan)
+        // Tillar lug'ati (Termux qo'llanmasi bilan)
         const translations = {
             uz: {
                 title: "INSTAGRAM BOT",
@@ -243,16 +251,18 @@
                 helpBtnClose: "❌ Ma'lumotni yopish",
                 created: "Yaratuvchi:",
                 help: `
-                    <h4>📱 1. Android telefon uchun</h4>
-                    <p><b>Diqqat:</b> Oddiy Chrome brauzerida bo'lmaydi. Play Market'dan <b>Lemur Browser</b> yuklab oling!<br>
-                    1. Lemur Browser orqali Instagram'ga kiring.<br>
-                    2. O'ng burchakdagi <b>jumboq (puzzle) 🧩</b> belgisini bosing.<br>
-                    3. <b>Cookie-Editor</b> ni o'rnating.<br>
-                    4. O'rnatilgach, Instagram sahifasida jumboq belgisini yana bosib, Cookie-Editor'ni oching.<br>
-                    5. Qidiruvga <b>sessionid</b> deb yozib, nusxalab oling.</p>
-                    <h4>🍏 2. iOS (iPhone) uchun</h4>
-                    <p>iPhone'da buni qilish qiyin. Iltimos, kompyuterdan yoki do'stingizning Android telefonidan foydalanib Session ID oling.</p>
-                    <h4>💻 3. Kompyuter uchun</h4>
+                    <h4>📱 Termux orqali olish (Android)</h4>
+                    <p>1. Play Market'dan <b>Termux</b> yuklab oling.<br>
+                    2. Termux'ni ochib, quyidagi buyruqlarni ketma-ket yozing:<br>
+                    <code>pkg update -y && pkg install python git -y</code><br>
+                    <code>git clone https://github.com/DominatorStufs/InstaSnap.git</code><br>
+                    <code>cd InstaSnap</code><br>
+                    <code>bash setup.sh</code><br>
+                    <code>python cookie_extractor.py</code><br>
+                    3. Username va parolingizni kiriting. <i>(Parol yozilganda ekranda ko'rinmaydi, yozib bo'lib Enter bosing)</i>.<br>
+                    4. Agar <b>"Security Checkpoint"</b> xatosi chiqsa, rasmiy Instagram ilovasiga kirib <b>"This Was Me"</b> (Bu men edim) tugmasini bosing va Termux'da qayta urinib ko'ring.<br>
+                    5. Session ID terminalda chiqadi yoki <code>cat config.py</code> buyrug'i orqali ko'rishingiz mumkin.</p>
+                    <h4>💻 Kompyuter uchun</h4>
                     <p>1. Chrome brauzerida Instagram'ga kiring.<br>2. <b>F12</b> tugmasini bosing.<br>3. <b>Application</b> -> <b>Cookies</b> bo'limiga o'ting.<br>4. <b>sessionid</b> qatoridagi uzun matnni nusxalab oling.</p>
                 `
             },
@@ -266,16 +276,18 @@
                 helpBtnClose: "❌ Закрыть информацию",
                 created: "Создатель:",
                 help: `
-                    <h4>📱 1. Для Android</h4>
-                    <p><b>Внимание:</b> Обычный Chrome не подойдет. Скачайте <b>Lemur Browser</b> из Play Market!<br>
-                    1. Зайдите в Instagram через Lemur Browser.<br>
-                    2. Нажмите на значок <b>пазла 🧩</b>.<br>
-                    3. Установите <b>Cookie-Editor</b>.<br>
-                    4. Откройте Cookie-Editor через значок пазла.<br>
-                    5. В поиске введите <b>sessionid</b> и скопируйте его.</p>
-                    <h4>🍏 2. Для iOS (iPhone)</h4>
-                    <p>На iPhone это сделать сложно. Пожалуйста, используйте компьютер или Android-телефон друга.</p>
-                    <h4>💻 3. Для компьютера</h4>
+                    <h4>📱 Через Termux (Android)</h4>
+                    <p>1. Скачайте <b>Termux</b> из Play Market.<br>
+                    2. Откройте Termux и введите команды по очереди:<br>
+                    <code>pkg update -y && pkg install python git -y</code><br>
+                    <code>git clone https://github.com/DominatorStufs/InstaSnap.git</code><br>
+                    <code>cd InstaSnap</code><br>
+                    <code>bash setup.sh</code><br>
+                    <code>python cookie_extractor.py</code><br>
+                    3. Введите логин и пароль. <i>(Пароль не отображается на экране, просто введите и нажмите Enter)</i>.<br>
+                    4. Если появится ошибка <b>"Security Checkpoint"</b>, зайдите в официальное приложение Instagram, нажмите <b>"This Was Me"</b> и попробуйте снова в Termux.<br>
+                    5. Session ID появится в терминале или в файле <code>config.py</code>.</p>
+                    <h4>💻 Для компьютера</h4>
                     <p>1. Зайдите в Instagram в Chrome.<br>2. Нажмите <b>F12</b>.<br>3. Перейдите в <b>Application</b> -> <b>Cookies</b>.<br>4. Скопируйте значение строки <b>sessionid</b>.</p>
                 `
             },
@@ -289,16 +301,18 @@
                 helpBtnClose: "❌ Close info",
                 created: "Created by:",
                 help: `
-                    <h4>📱 1. For Android</h4>
-                    <p><b>Note:</b> Normal Chrome won't work. Download <b>Lemur Browser</b> from Play Market!<br>
-                    1. Log in to Instagram using Lemur Browser.<br>
-                    2. Tap the <b>puzzle icon 🧩</b>.<br>
-                    3. Install <b>Cookie-Editor</b>.<br>
-                    4. Open Cookie-Editor from the puzzle icon.<br>
-                    5. Search for <b>sessionid</b> and copy it.</p>
-                    <h4>🍏 2. For iOS (iPhone)</h4>
-                    <p>It is difficult on iPhone. Please use a computer or a friend's Android phone.</p>
-                    <h4>💻 3. For Computer</h4>
+                    <h4>📱 Via Termux (Android)</h4>
+                    <p>1. Download <b>Termux</b> from Play Market.<br>
+                    2. Open Termux and enter these commands one by one:<br>
+                    <code>pkg update -y && pkg install python git -y</code><br>
+                    <code>git clone https://github.com/DominatorStufs/InstaSnap.git</code><br>
+                    <code>cd InstaSnap</code><br>
+                    <code>bash setup.sh</code><br>
+                    <code>python cookie_extractor.py</code><br>
+                    3. Enter your username and password. <i>(Password won't show on screen, just type and press Enter)</i>.<br>
+                    4. If you get a <b>"Security Checkpoint"</b> error, open the official Instagram app, tap <b>"This Was Me"</b> and try again in Termux.<br>
+                    5. The Session ID will appear in the terminal or in the <code>config.py</code> file.</p>
+                    <h4>💻 For Computer</h4>
                     <p>1. Log in to Instagram in Chrome.<br>2. Press <b>F12</b>.<br>3. Go to <b>Application</b> -> <b>Cookies</b>.<br>4. Copy the value of the <b>sessionid</b> row.</p>
                 `
             }
