@@ -150,9 +150,9 @@
                     <b>2-qadam:</b> Kutubxonani o'rnatish uchun quyidagini nusxalab, Termux'ga yopishtiring va <b>Enter</b> bosing:<br>
                     <button class="copy-btn" onclick="copyCommand('pip install instagrapi', this)">📋 pip install instagrapi</button>
                     
-                    <b>3-qadam:</b> Dastur kodini avtomatik yaratish uchun pastdagi tugmani bosing:<br>
+                    <b>3-qadam:</b> Dastur kodini yaratish uchun pastdagi tugmani bosing. <b>(Bu bitta qatorli kod!)</b>:<br>
                     <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyPythonCode(this)">📋 Kodni Yaratish (Copy)</button>
-                    Termux'ga yopishtiring (Paste) va <b>Enter</b> bosing. Fayl avtomatik yaratiladi.<br>
+                    Termux'ga yopishtiring va <b>Enter</b> bosing.<br>
                     
                     <b>4-qadam:</b> Endi dasturni ishga tushirish uchun shu buyruqni bosing:<br>
                     <button class="copy-btn" onclick="copyCommand('python get_id.py', this)">📋 python get_id.py</button>
@@ -176,7 +176,7 @@
                     <b>Шаг 2:</b> Установите библиотеку:<br>
                     <button class="copy-btn" onclick="copyCommand('pip install instagrapi', this)">📋 pip install instagrapi</button>
                     
-                    <b>Шаг 3:</b> Скопируйте код для автосоздания файла:<br>
+                    <b>Шаг 3:</b> Нажмите для копирования кода создания файла:<br>
                     <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyPythonCode(this)">📋 Создать код (Copy)</button>
                     Вставьте в Termux и нажмите <b>Enter</b>.<br>
                     
@@ -202,7 +202,7 @@
                     <b>Step 2:</b> Install the library:<br>
                     <button class="copy-btn" onclick="copyCommand('pip install instagrapi', this)">📋 pip install instagrapi</button>
                     
-                    <b>Step 3:</b> Copy the code to create the file automatically:<br>
+                    <b>Step 3:</b> Copy the one-line code to create the file:<br>
                     <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyPythonCode(this)">📋 Copy Auto-Create Code</button>
                     Paste it into Termux and press <b>Enter</b>.<br>
                     
@@ -248,7 +248,6 @@
             }
         }
 
-        // Oddiy buyruqlarni nusxalash (pip install ...)
         function copyCommand(text, btn) {
             navigator.clipboard.writeText(text).then(() => {
                 if (window.Telegram) window.Telegram.WebApp.showAlert("✅ Nusxalandi! Termux'ga yopishtiring.");
@@ -262,38 +261,13 @@
             });
         }
 
-        // Python kodini yaratish buyrug'ini nusxalash
         function copyPythonCode(btn) {
-            // \` va ' belgilarini chalkashmasligi uchun JS ichida to'g'ridan-to'g'ri yozamiz
-            const pythonScript = [
-                "cat << 'EOF' > get_id.py",
-                "from instagrapi import Client",
-                "print('\\n--- Instagram Session ID Olish ---')",
-                "u = input('Username: ')",
-                "p = input('Parol: ')",
-                "c = Client()",
-                "try:",
-                "    c.login(u, p)",
-                "except Exception as e:",
-                "    if 'two_factor' in str(e).lower():",
-                "        code = input('2FA kod: ')",
-                "        try:",
-                "            c.login(u, p, verification_code=code)",
-                "        except Exception as e2:",
-                "            print('Xatolik:', e2)",
-                "            exit()",
-                "    else:",
-                "        print('Xatolik:', e)",
-                "        exit()",
-                "print('\\n✅ Muvaffaqiyatli kirdingiz!')",
-                "print('Sizning Session ID:')",
-                "print(c.sessionid)",
-                "print('\\n')",
-                "EOF"
-            ].join('\n');
+            // Base64 formatidagi bitta qatorli kod (xatosiz ishlaydi)
+            const b64Code = "ZnJvbSBpbnN0YWdyYXBpIGltcG9ydCBDbGllbnQKCnByaW50KCJcbi0tLSBJbnN0YWdyYW0gU2Vzc2lvbiBJRCBPbGlzaCAtLS0iKQp1ID0gaW5wdXQoIlVzZXJuYW1lOiAiKQpwID0gaW5wdXQoIlBhcm9sOiAiKQpjID0gQ2xpZW50KCkKdHJ5OgogICAgYy5sb2dpbih1LCBwKQpleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICBpZiAidHdvX2ZhY3RvciIgaW4gc3RyKGUpLmxvd2VyKCk6CiAgICAgICAgY29kZSA9IGlucHV0KCIyRkEga29kOiAiKQogICAgICAgIHRyeToKICAgICAgICAgICAgYy5sb2dpbih1LCBwLCB2ZXJpZmljYXRpb25fY29kZT1jb2RlKQogICAgICAgIGV4Y2VwdCBFeGNlcHRpb24gYXMgZTI6CiAgICAgICAgICAgIHByaW50KCJYYXRvbGlrOiIsIGUyKTsgZXhpdCgpCiAgICBlbHNlOgogICAgICAgIHByaW50KCJYYXRvbGlrOiIsIGUpOyBleGl0KCkKcHJpbnQoIlxu4pyFIE11dmFmZmFxaXlhdGxpIGtpcmRpbmdpeiEiKQpwcmludCgiU2l6bmluZyBTZXNzaW9uIElEOlxuIikKcHJpbnQoYy5zZXNzaW9uaWQpCnByaW50KCJcbiIp";
+            const command = `echo "${b64Code}" | base64 -d > get_id.py`;
 
-            navigator.clipboard.writeText(pythonScript).then(() => {
-                if (window.Telegram) window.Telegram.WebApp.showAlert("✅ Kod nusxalandi! Termux'ga yopishtiring.");
+            navigator.clipboard.writeText(command).then(() => {
+                if (window.Telegram) window.Telegram.WebApp.showAlert("✅ Kod nusxalandi! Endi Termux'ga yopishtiring va Enter bosing.");
                 else alert("✅ Kod nusxalandi!");
                 
                 const originalText = btn.innerHTML;
