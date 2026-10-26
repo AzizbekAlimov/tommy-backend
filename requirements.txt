@@ -5,3 +5,7 @@ Pillow
 httpx
 psycopg2-binary
 rlottie-python>=1.3.7
+fastapi
+uvicorn
+instagrapi
+python-multipart
