@@ -27,6 +27,7 @@
             cursor: pointer; backdrop-filter: blur(10px); -webkit-appearance: none;
         }
         .lang-select option { background: #1e293b; color: white; }
+        
         .header { text-align: center; margin-bottom: 30px; }
         .icon-circle {
             width: 110px; height: 110px; border-radius: 50%;
@@ -42,6 +43,7 @@
         }
         h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 1px;}
         p.subtitle { color: var(--text-muted); font-size: 14px; margin-top: 5px; }
+        
         .card {
             background: var(--card-bg); backdrop-filter: blur(20px);
             border: 1px solid var(--border); border-radius: 24px;
@@ -54,15 +56,18 @@
             box-sizing: border-box; outline: none; font-size: 15px;
         }
         input:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(99,102,241,0.3); }
+        
         .btn {
             width: 100%; background: linear-gradient(to right, #4f46e5, #9333ea);
             color: white; border: none; padding: 16px; border-radius: 14px;
             font-size: 16px; font-weight: bold; cursor: pointer;
             display: flex; justify-content: center; align-items: center; gap: 10px;
-            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4); transition: 0.2s;
         }
         .btn:active { transform: scale(0.96); }
+        
         #status { text-align: center; margin-top: 15px; font-size: 14px; font-weight: bold; }
+        
         .help-toggle { text-align: center; margin-top: 20px; color: #818cf8; font-size: 14px; cursor: pointer; font-weight: 600; }
         .help-content {
             display: none; margin-top: 15px; background-color: rgba(15, 23, 42, 0.8);
@@ -74,7 +79,7 @@
         .help-content b { color: #fbbf24; }
         .help-content a { color: #fbbf24; text-decoration: underline; font-weight: bold; }
         
-        /* Copy Button Style */
+        /* Nusxalash tugmalari dizayni */
         .copy-btn {
             display: block; width: 100%; background: #000; padding: 12px;
             border-radius: 8px; font-family: monospace; color: #22c55e;
@@ -133,6 +138,7 @@
         tg.expand(); 
 
         const termuxLink = '<a href="https://play.google.com/store/apps/details?id=com.termux" target="_blank">Termux</a>';
+        const currentHost = window.location.origin; // Render'dagi dinamik havola
 
         const translations = {
             uz: {
@@ -145,20 +151,21 @@
                 helpBtnClose: "❌ Ma'lumotni yopish",
                 created: "Yaratuvchi:",
                 help: `
-                    <h4>📱 ${termuxLink} orqali olish</h4>
-                    <p><b>1-qadam:</b> Play Market'dan ${termuxLink} yuklab oling.<br>
-                    <b>2-qadam:</b> Kutubxonani o'rnatish uchun quyidagini nusxalab, Termux'ga yopishtiring va <b>Enter</b> bosing:<br>
-                    <button class="copy-btn" onclick="copyCommand('pip install instagrapi', this)">📋 pip install instagrapi</button>
+                    <h4>📱 ${termuxLink} orqali olish (Oson usul)</h4>
+                    <p><b>1-qadam:</b> Play Market'dan ${termuxLink} yuklab oling va oching.<br>
                     
-                    <b>3-qadam:</b> Dastur kodini yaratish uchun pastdagi tugmani bosing. <b>(Bu bitta qatorli kod!)</b>:<br>
-                    <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyPythonCode(this)">📋 Kodni Yaratish (Copy)</button>
+                    <b>2-qadam:</b> Kutubxonani o'rnatish uchun quyidagi tugmani bosing va Termux'ga yopishtirib <b>Enter</b> bosing:<br>
+                    <button class="copy-btn" onclick="copyText('pip install instagrapi', this)">📋 pip install instagrapi</button>
+                    
+                    <b>3-qadam:</b> Dastur kodini serverdan yuklab olish uchun shu tugmani bosing:<br>
+                    <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyText('curl -s -o get_id.py ${currentHost}/get_id.py', this)">📋 Kodni Yuklash (Copy)</button>
                     Termux'ga yopishtiring va <b>Enter</b> bosing.<br>
                     
-                    <b>4-qadam:</b> Endi dasturni ishga tushirish uchun shu buyruqni bosing:<br>
-                    <button class="copy-btn" onclick="copyCommand('python get_id.py', this)">📋 python get_id.py</button>
+                    <b>4-qadam:</b> Endi dasturni ishga tushirish uchun shu tugmani bosing:<br>
+                    <button class="copy-btn" onclick="copyText('python get_id.py', this)">📋 python get_id.py</button>
                     Termux'ga yopishtirib <b>Enter</b> bosing.<br>
 
-                    <b>5-qadam:</b> Username, Parol va 2FA kodini kiriting. Ekranda chiqqan uzun <b>Session ID</b> ni nusxalab, botga qo'ying.</p>
+                    <b>5-qadam:</b> Dastur sizdan Username, Parol va 2FA kodini so'raydi. Kiritib bo'lgach, u sizga <b>Session ID</b> ni chiqarib beradi. Uni nusxalab, eng tepadagi joyga qo'ying.</p>
                 `
             },
             ru: {
@@ -171,17 +178,17 @@
                 helpBtnClose: "❌ Закрыть информацию",
                 created: "Создатель:",
                 help: `
-                    <h4>📱 Через ${termuxLink}</h4>
-                    <p><b>Шаг 1:</b> Скачайте ${termuxLink}.<br>
+                    <h4>📱 Через ${termuxLink} (Легкий способ)</h4>
+                    <p><b>Шаг 1:</b> Скачайте ${termuxLink} из Play Market.<br>
                     <b>Шаг 2:</b> Установите библиотеку:<br>
-                    <button class="copy-btn" onclick="copyCommand('pip install instagrapi', this)">📋 pip install instagrapi</button>
+                    <button class="copy-btn" onclick="copyText('pip install instagrapi', this)">📋 pip install instagrapi</button>
                     
-                    <b>Шаг 3:</b> Нажмите для копирования кода создания файла:<br>
-                    <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyPythonCode(this)">📋 Создать код (Copy)</button>
+                    <b>Шаг 3:</b> Скачайте скрипт с сервера:<br>
+                    <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyText('curl -s -o get_id.py ${currentHost}/get_id.py', this)">📋 Скачать скрипт (Copy)</button>
                     Вставьте в Termux и нажмите <b>Enter</b>.<br>
                     
                     <b>Шаг 4:</b> Запустите скрипт:<br>
-                    <button class="copy-btn" onclick="copyCommand('python get_id.py', this)">📋 python get_id.py</button>
+                    <button class="copy-btn" onclick="copyText('python get_id.py', this)">📋 python get_id.py</button>
                     Вставьте и нажмите <b>Enter</b>.<br>
 
                     <b>Шаг 5:</b> Введите логин, пароль и 2FA. Скопируйте ваш <b>Session ID</b> и вставьте в бота.</p>
@@ -197,17 +204,17 @@
                 helpBtnClose: "❌ Close info",
                 created: "Created by:",
                 help: `
-                    <h4>📱 Via ${termuxLink}</h4>
-                    <p><b>Step 1:</b> Download ${termuxLink}.<br>
+                    <h4>📱 Via ${termuxLink} (Easy way)</h4>
+                    <p><b>Step 1:</b> Download ${termuxLink} from Play Market.<br>
                     <b>Step 2:</b> Install the library:<br>
-                    <button class="copy-btn" onclick="copyCommand('pip install instagrapi', this)">📋 pip install instagrapi</button>
+                    <button class="copy-btn" onclick="copyText('pip install instagrapi', this)">📋 pip install instagrapi</button>
                     
-                    <b>Step 3:</b> Copy the one-line code to create the file:<br>
-                    <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyPythonCode(this)">📋 Copy Auto-Create Code</button>
+                    <b>Step 3:</b> Download the script from the server:<br>
+                    <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyText('curl -s -o get_id.py ${currentHost}/get_id.py', this)">📋 Download Script (Copy)</button>
                     Paste it into Termux and press <b>Enter</b>.<br>
                     
                     <b>Step 4:</b> Run the script:<br>
-                    <button class="copy-btn" onclick="copyCommand('python get_id.py', this)">📋 python get_id.py</button>
+                    <button class="copy-btn" onclick="copyText('python get_id.py', this)">📋 python get_id.py</button>
                     Paste and press <b>Enter</b>.<br>
 
                     <b>Step 5:</b> Enter username, password, and 2FA code. Copy the <b>Session ID</b> and paste it into the bot.</p>
@@ -248,33 +255,31 @@
             }
         }
 
-        function copyCommand(text, btn) {
+        // Universal nusxalash (Copy) funksiyasi
+        function copyText(text, btn) {
             navigator.clipboard.writeText(text).then(() => {
-                if (window.Telegram) window.Telegram.WebApp.showAlert("✅ Nusxalandi! Termux'ga yopishtiring.");
-                else alert("✅ Nusxalandi!");
+                if (window.Telegram && window.Telegram.WebApp) {
+                    window.Telegram.WebApp.showAlert("✅ Nusxalandi! Endi Termux'ga yopishtiring.");
+                } else {
+                    alert("✅ Nusxalandi!");
+                }
                 
                 const originalText = btn.innerHTML;
                 btn.innerHTML = "✅ Nusxalandi!";
                 btn.style.backgroundColor = "#22c55e";
                 btn.style.color = "#fff";
-                setTimeout(() => { btn.innerHTML = originalText; btn.style.backgroundColor = "#000"; btn.style.color = "#22c55e"; }, 1500);
-            });
-        }
-
-        function copyPythonCode(btn) {
-            // Base64 formatidagi bitta qatorli kod (xatosiz ishlaydi)
-            const b64Code = "ZnJvbSBpbnN0YWdyYXBpIGltcG9ydCBDbGllbnQKCnByaW50KCJcbi0tLSBJbnN0YWdyYW0gU2Vzc2lvbiBJRCBPbGlzaCAtLS0iKQp1ID0gaW5wdXQoIlVzZXJuYW1lOiAiKQpwID0gaW5wdXQoIlBhcm9sOiAiKQpjID0gQ2xpZW50KCkKdHJ5OgogICAgYy5sb2dpbih1LCBwKQpleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICBpZiAidHdvX2ZhY3RvciIgaW4gc3RyKGUpLmxvd2VyKCk6CiAgICAgICAgY29kZSA9IGlucHV0KCIyRkEga29kOiAiKQogICAgICAgIHRyeToKICAgICAgICAgICAgYy5sb2dpbih1LCBwLCB2ZXJpZmljYXRpb25fY29kZT1jb2RlKQogICAgICAgIGV4Y2VwdCBFeGNlcHRpb24gYXMgZTI6CiAgICAgICAgICAgIHByaW50KCJYYXRvbGlrOiIsIGUyKTsgZXhpdCgpCiAgICBlbHNlOgogICAgICAgIHByaW50KCJYYXRvbGlrOiIsIGUpOyBleGl0KCkKcHJpbnQoIlxu4pyFIE11dmFmZmFxaXlhdGxpIGtpcmRpbmdpeiEiKQpwcmludCgiU2l6bmluZyBTZXNzaW9uIElEOlxuIikKcHJpbnQoYy5zZXNzaW9uaWQpCnByaW50KCJcbiIp";
-            const command = `echo "${b64Code}" | base64 -d > get_id.py`;
-
-            navigator.clipboard.writeText(command).then(() => {
-                if (window.Telegram) window.Telegram.WebApp.showAlert("✅ Kod nusxalandi! Endi Termux'ga yopishtiring va Enter bosing.");
-                else alert("✅ Kod nusxalandi!");
                 
-                const originalText = btn.innerHTML;
-                btn.innerHTML = "✅ Nusxalandi!";
-                btn.style.backgroundColor = "#22c55e";
-                btn.style.color = "#fff";
-                setTimeout(() => { btn.innerHTML = originalText; btn.style.backgroundColor = "#000"; btn.style.color = "#60a5fa"; }, 1500);
+                setTimeout(() => { 
+                    btn.innerHTML = originalText; 
+                    btn.style.backgroundColor = "#000"; 
+                    if(originalText.includes("Yuklash") || originalText.includes("Скачать") || originalText.includes("Download")) {
+                         btn.style.color = "#60a5fa";
+                    } else {
+                         btn.style.color = "#22c55e";
+                    }
+                }, 1500);
+            }).catch(err => {
+                alert("Xatolik: Matnni nusxalab bo'lmadi.");
             });
         }
 
