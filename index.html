@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Instagram Bot</title>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background-color: #0e1012;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            margin-top: 20px;
+        }
+        .icon-circle {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 40px;
+            margin: 0 auto 15px;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+        h1 { margin: 0; font-size: 24px; color: #fff; }
+        p { color: #94a3b8; font-size: 14px; margin-top: 5px; }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        
+        input {
+            width: 100%;
+            background: #17212b;
+            border: 1px solid #2b3a4a;
+            color: white;
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            outline: none;
+        }
+        input:focus { border-color: #3b82f6; }
+
+        .btn {
+            width: 100%;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+        }
+        .btn:hover { background-color: #2563eb; }
+        .btn:active { transform: scale(0.98); }
+
+        #status {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="icon-circle">📸</div>
+        <h1>INSTAGRAM BOT</h1>
+        <p>Obunachilarni avtomatik tozalash</p>
+    </div>
+
+    <div class="card">
+        <label>Instagram Session ID (cookie)</label>
+        <input type="password" id="sessionid" placeholder="Session ID ni kiriting...">
+        
+        <label>Nechta odamni unfollow qilish? (1 - 10,000)</label>
+        <input type="number" id="count" min="1" max="10000" value="100">
+        
+        <button class="btn" onclick="sendData()">
+            🔄 Unfollow Boshlash
+        </button>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // Telegram WebApp ni to'liq ekranga ochish
+        let tg = window.Telegram.WebApp;
+        tg.expand(); 
+
+        async function sendData() {
+            const sessionId = document.getElementById('sessionid').value;
+            const count = parseInt(document.getElementById('count').value);
+            const statusDiv = document.getElementById('status');
+
+            if (!sessionId) {
+                statusDiv.style.color = "#ef4444";
+                statusDiv.innerText = "❌ Iltimos, Session ID ni kiriting!";
+                return;
+            }
+            if (count < 1 || count > 10000) {
+                statusDiv.style.color = "#ef4444";
+                statusDiv.innerText = "❌ Xato! Son 1 dan 10,000 gacha bo'lishi kerak.";
+                return;
+            }
+
+            statusDiv.style.color = "#f59e0b";
+            statusDiv.innerText = "⏳ Jarayon boshlandi, iltimos kuting...";
+
+            try {
+                // Backend'ga so'rov yuborish
+                const response = await fetch('/api/unfollow', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        session_id: sessionId, 
+                        count: count 
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusDiv.style.color = "#22c55e";
+                    statusDiv.innerText = "✅ " + result.message;
+                } else {
+                    statusDiv.style.color = "#ef4444";
+                    statusDiv.innerText = "❌ " + result.detail;
+                }
+            } catch (error) {
+                statusDiv.style.color = "#ef4444";
+                statusDiv.innerText = "❌ Server bilan aloqa yo'q!";
+            }
+        }
+    </script>
+</body>
+</html>
