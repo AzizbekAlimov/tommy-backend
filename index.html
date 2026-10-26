@@ -7,6 +7,7 @@
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* Asosiy sozlamalar */
         body {
             background-color: #0e1012;
             color: white;
@@ -88,6 +89,43 @@
             font-size: 14px;
             font-weight: bold;
         }
+
+        /* --- QO'LLANMA UCHUN YANGI CSS --- */
+        .help-toggle {
+            text-align: center;
+            margin-top: 20px;
+            color: #3b82f6;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+        .help-content {
+            display: none; /* Boshida yashirin turadi */
+            margin-top: 15px;
+            background-color: #17212b;
+            border: 1px solid #2b3a4a;
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #cbd5e1;
+            text-align: left;
+        }
+        .help-content h4 {
+            color: #ffffff;
+            margin: 15px 0 5px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 5px;
+        }
+        .help-content h4:first-child { margin-top: 0; }
+        .help-content p {
+            margin: 0 0 10px 0;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .help-content b { color: #e2e8f0; }
     </style>
 </head>
 <body>
@@ -109,6 +147,32 @@
             🔄 Unfollow Boshlash
         </button>
         <div id="status"></div>
+
+        <!-- QO'LLANMA QISMI -->
+        <div class="help-toggle" id="helpBtn" onclick="toggleHelp()">❓ Session ID qanday olinadi?</div>
+        
+        <div class="help-content" id="helpContent">
+            <h4>📱 1. Telefon uchun (Android)</h4>
+            <p>
+                1. Play Market'dan <b>Kiwi Browser</b> yuklab oling.<br>
+                2. Shu brauzer orqali Instagram'ga kiring.<br>
+                3. Yuqori o'ng burchakdagi 3 nuqtani bosib, <b>Extensions</b> ni tanlang.<br>
+                4. <b>Cookie-Editor</b> ni o'rnating va uni oching.<br>
+                5. Ro'yxatdan <b>sessionid</b> degan qatorni topib, yonidagi "Copy" belgisini bosing.
+            </p>
+
+            <h4>💻 2. Kompyuter uchun (Chrome / Edge)</h4>
+            <p>
+                1. Brauzerda Instagram'ga kiring.<br>
+                2. Klaviaturadan <b>F12</b> tugmasini bosing (yoki o'ng tugma -> Inspect).<br>
+                3. <b>Application</b> (Ilova) bo'limiga o'ting.<br>
+                4. Chap menyudan <b>Cookies</b> -> <b>https://www.instagram.com</b> ni tanlang.<br>
+                5. <b>sessionid</b> qatoridagi <b>Value</b> ustunidagi uzun matnni nusxalab oling.
+            </p>
+            <p style="color: #ef4444; font-size: 12px; margin-top: 10px;">
+                ⚠️ Diqqat: Session ID xuddi parolingiz kabi maxfiy! Uni hech kimga bermang.
+            </p>
+        </div>
     </div>
 
     <script>
@@ -116,6 +180,20 @@
         let tg = window.Telegram.WebApp;
         tg.expand(); 
 
+        // Qo'llanmani ochish/yopish funksiyasi
+        function toggleHelp() {
+            const content = document.getElementById('helpContent');
+            const btn = document.getElementById('helpBtn');
+            if (content.style.display === 'none' || content.style.display === '') {
+                content.style.display = 'block';
+                btn.innerHTML = '❌ Ma\'lumotni yopish';
+            } else {
+                content.style.display = 'none';
+                btn.innerHTML = '❓ Session ID qanday olinadi?';
+            }
+        }
+
+        // Unfollow yuborish funksiyasi
         async function sendData() {
             const sessionId = document.getElementById('sessionid').value;
             const count = parseInt(document.getElementById('count').value);
@@ -136,7 +214,6 @@
             statusDiv.innerText = "⏳ Jarayon boshlandi, iltimos kuting...";
 
             try {
-                // Backend'ga so'rov yuborish
                 const response = await fetch('/api/unfollow', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -157,7 +234,7 @@
                 }
             } catch (error) {
                 statusDiv.style.color = "#ef4444";
-                statusDiv.innerText = "❌ Server bilan aloqa yo'q!";
+                statusDiv.innerText = "❌ Server bilan aloqa yo'q yoki server uxlab qolgan. Iltimos qayta urinib ko'ring!";
             }
         }
     </script>
