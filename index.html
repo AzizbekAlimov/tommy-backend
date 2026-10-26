@@ -254,41 +254,35 @@
     </div>
 
     <script>
-        // Telegram WebApp ni ishga tushirish
         let tg = window.Telegram.WebApp;
         tg.expand(); 
 
-        // Termux uchun Play Market havolasi
         const termuxLink = '<a href="https://play.google.com/store/apps/details?id=com.termux" target="_blank">Termux</a>';
 
-        // To'liq Python kodi (nusxalash uchun)
-        const pythonCode = `from instagrapi import Client
-
+        // Nusxalab olinadigan avtomatik yaratish kodi (nano o'rniga)
+        const autoCreateCode = `cat << 'EOF' > get_id.py
+from instagrapi import Client
 print("\\n--- Instagram Session ID Olish ---")
-username = input("Username: ")
-password = input("Parol: ")
-
-cl = Client()
-
+u = input("Username: ")
+p = input("Parol: ")
+c = Client()
 try:
-    cl.login(username, password)
+    c.login(u, p)
 except Exception as e:
-    if "two_factor" in str(e).lower() or "challenge" in str(e).lower():
-        code = input("2FA kodini kiriting (SMS yoki Authenticator): ")
+    if "two_factor" in str(e).lower():
+        code = input("2FA kod: ")
         try:
-            cl.login(username, password, verification_code=code)
+            c.login(u, p, verification_code=code)
         except Exception as e2:
-            print(f"\\n❌ Xatolik: {e2}")
-            exit()
+            print("Xatolik:", e2); exit()
     else:
-        print(f"\\n❌ Kirishda xatolik: {e}")
-        exit()
-
+        print("Xatolik:", e); exit()
 print("\\n✅ Muvaffaqiyatli kirdingiz!")
-print("Sizning Session ID'ingiz (nusxalab oling):")
-print("\\n" + cl.sessionid + "\\n")`;
+print("Sizning Session ID'ingiz (nusxalab oling):\\n")
+print(c.sessionid)
+print("\\n")
+EOF`;
 
-        // Tillar lug'ati (To'liq Termux qo'llanmasi bilan)
         const translations = {
             uz: {
                 title: "INSTAGRAM BOT",
@@ -300,24 +294,21 @@ print("\\n" + cl.sessionid + "\\n")`;
                 helpBtnClose: "❌ Ma'lumotni yopish",
                 created: "Yaratuvchi:",
                 help: `
-                    <h4>📱 ${termuxLink} orqali olish (Android)</h4>
+                    <h4>📱 ${termuxLink} orqali olish (Eng oson yo'l)</h4>
                     <p><b>1-qadam:</b> Play Market'dan ${termuxLink} yuklab oling va oching.<br>
-                    <b>2-qadam:</b> Kerakli kutubxonani o'rnatish uchun quyidagi yozuvni ustiga bosib nusxalang va Termux'ga yopishtirib (Paste) Enter bosing:<br>
+                    <b>2-qadam:</b> Kerakli dasturni o'rnatish uchun shu yozuvni bosing:<br>
                     <span class="copy-code" onclick="copyToClipboard('pip install instagrapi', this)">📋 pip install instagrapi</span>
+                    Termux'ga yopishtirib (Paste) Enter bosing. (10-20 soniya kutadi).<br>
                     
-                    <b>3-qadam:</b> Yangi fayl yaratish uchun shu buyruqni nusxalab, Termux'ga yozing va Enter bosing:<br>
-                    <span class="copy-code" onclick="copyToClipboard('nano get_id.py', this)">📋 nano get_id.py</span>
+                    <b>3-qadam:</b> Kodni avtomatik yaratish uchun pastdagi uzun yashil blokni bosing va nusxalang:<br>
+                    <span class="copy-code" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyToClipboard(\`${autoCreateCode}\`, this)">📋 Kodni Avtomatik Yaratish (Copy)</span>
+                    Termux'ga yopishtiring (Paste) va Enter bosing. Hech narsa qilishingiz shart emas, fayl o'zi yaratiladi!<br>
                     
-                    <b>4-qadam:</b> Ochilgan qora ekranga quyidagi Python kodini nusxalab joylashtiring:<br>
-                    <span class="copy-code" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyToClipboard(\`${pythonCode}\`, this)">📋 Python Kodini Nusxalash (Copy)</span>
-                    
-                    <b>5-qadam:</b> Kodni qo'yib bo'lgach, klaviaturangizdagi <b>CTRL</b> ni bosib turib <b>O</b> harfini bosing (Saqlash), so'ngra <b>Enter</b> bosing. Chiqish uchun yana <b>CTRL</b> ni bosib turib <b>X</b> harfini bosing.
-                    
-                    <b>6-qadam:</b> Dasturni ishga tushirish uchun shu buyruqni bering:<br>
+                    <b>4-qadam:</b> Dasturni ishga tushirish uchun shu yozuvni bosing:<br>
                     <span class="copy-code" onclick="copyToClipboard('python get_id.py', this)">📋 python get_id.py</span>
-                    
-                    <b>7-qadam:</b> Dastur sizdan Username, Parol va agar yoqilgan bo'lsa 2FA kodini so'raydi. (Parol yozilganda ekranda ko'rinmaydi).<br>
-                    <b>8-qadam:</b> Dastur oxirida sizga uzun <b>Session ID</b> ni chiqaradi. Uni nusxalab, botning eng tepasidagi joyga qo'ying.</p>
+                    Enter bosing.<br>
+
+                    <b>5-qadam:</b> Dastur sizdan Username, Parol va 2FA kodini so'raydi. Ekranda chiqqan uzun <b>Session ID</b> ni nusxalab, eng tepadagi joyga qo'ying.</p>
                 `
             },
             ru: {
@@ -330,24 +321,19 @@ print("\\n" + cl.sessionid + "\\n")`;
                 helpBtnClose: "❌ Закрыть информацию",
                 created: "Создатель:",
                 help: `
-                    <h4>📱 Через ${termuxLink} (Android)</h4>
-                    <p><b>Шаг 1:</b> Скачайте ${termuxLink} из Play Market и откройте.<br>
-                    <b>Шаг 2:</b> Нажмите на команду ниже, чтобы скопировать, и вставьте в Termux:<br>
-                    <span class="copy-code" onclick="copyToClipboard('pip install instagrapi', this)">📋 pip install instagrapi</span>
+                    <h4>📱 Через ${termuxLink} (Самый простой способ)</h4>
+                    <p><b>Шаг 1:</b> Скачайте ${termuxLink} из Play Market.<br>
+                    <b>Шаг 2:</b> Установите библиотеку:<br>
+                    <span class="copy-code" onclick="copyToClipboard('pip install instagrapi', this)">📋 pip install instagrapi</span><br>
                     
-                    <b>Шаг 3:</b> Создайте файл:<br>
-                    <span class="copy-code" onclick="copyToClipboard('nano get_id.py', this)">📋 nano get_id.py</span>
+                    <b>Шаг 3:</b> Скопируйте этот блок (он сам создаст файл):<br>
+                    <span class="copy-code" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyToClipboard(\`${autoCreateCode}\`, this)">📋 Скопировать код для создания</span><br>
+                    Вставьте в Termux и нажмите Enter.<br>
                     
-                    <b>Шаг 4:</b> Вставьте этот код Python в открывшееся окно:<br>
-                    <span class="copy-code" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyToClipboard(\`${pythonCode}\`, this)">📋 Скопировать код Python</span>
-                    
-                    <b>Шаг 5:</b> Нажмите <b>CTRL + O</b> (Сохранить), затем <b>Enter</b>. Выйдите через <b>CTRL + X</b>.
-                    
-                    <b>Шаг 6:</b> Запустите скрипт:<br>
-                    <span class="copy-code" onclick="copyToClipboard('python get_id.py', this)">📋 python get_id.py</span>
-                    
-                    <b>Шаг 7:</b> Введите логин, пароль и код 2FA.<br>
-                    <b>Шаг 8:</b> Скопируйте ваш <b>Session ID</b> и вставьте в бота.</p>
+                    <b>Шаг 4:</b> Запустите скрипт:<br>
+                    <span class="copy-code" onclick="copyToClipboard('python get_id.py', this)">📋 python get_id.py</span><br>
+
+                    <b>Шаг 5:</b> Введите логин, пароль и 2FA. Скопируйте ваш <b>Session ID</b> и вставьте в бота.</p>
                 `
             },
             en: {
@@ -360,24 +346,19 @@ print("\\n" + cl.sessionid + "\\n")`;
                 helpBtnClose: "❌ Close info",
                 created: "Created by:",
                 help: `
-                    <h4>📱 Via ${termuxLink} (Android)</h4>
-                    <p><b>Step 1:</b> Download ${termuxLink} from Play Market and open it.<br>
-                    <b>Step 2:</b> Tap the command to copy and paste it into Termux:<br>
-                    <span class="copy-code" onclick="copyToClipboard('pip install instagrapi', this)">📋 pip install instagrapi</span>
+                    <h4>📱 Via ${termuxLink} (Easiest way)</h4>
+                    <p><b>Step 1:</b> Download ${termuxLink} from Play Market.<br>
+                    <b>Step 2:</b> Install the library:<br>
+                    <span class="copy-code" onclick="copyToClipboard('pip install instagrapi', this)">📋 pip install instagrapi</span><br>
                     
-                    <b>Step 3:</b> Create a file:<br>
-                    <span class="copy-code" onclick="copyToClipboard('nano get_id.py', this)">📋 nano get_id.py</span>
+                    <b>Step 3:</b> Copy this block to create the file automatically:<br>
+                    <span class="copy-code" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyToClipboard(\`${autoCreateCode}\`, this)">📋 Copy Auto-Create Code</span><br>
+                    Paste it into Termux and press Enter.<br>
                     
-                    <b>Step 4:</b> Paste this python code:<br>
-                    <span class="copy-code" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyToClipboard(\`${pythonCode}\`, this)">📋 Copy Python Code</span>
-                    
-                    <b>Step 5:</b> Press <b>CTRL + O</b> (Save) and <b>Enter</b>. Exit with <b>CTRL + X</b>.
-                    
-                    <b>Step 6:</b> Run the script:<br>
-                    <span class="copy-code" onclick="copyToClipboard('python get_id.py', this)">📋 python get_id.py</span>
-                    
-                    <b>Step 7:</b> Enter username, password, and 2FA code.<br>
-                    <b>Step 8:</b> Copy the <b>Session ID</b> and paste it into the bot.</p>
+                    <b>Step 4:</b> Run the script:<br>
+                    <span class="copy-code" onclick="copyToClipboard('python get_id.py', this)">📋 python get_id.py</span><br>
+
+                    <b>Step 5:</b> Enter username, password, and 2FA code. Copy the <b>Session ID</b> and paste it into the bot.</p>
                 `
             }
         };
@@ -415,7 +396,6 @@ print("\\n" + cl.sessionid + "\\n")`;
             }
         }
 
-        // Matnni nusxalash (Copy) funksiyasi
         function copyToClipboard(text, element) {
             navigator.clipboard.writeText(text).then(() => {
                 if (window.Telegram && window.Telegram.WebApp) {
@@ -432,7 +412,7 @@ print("\\n" + cl.sessionid + "\\n")`;
                 setTimeout(() => {
                     element.innerText = originalText;
                     element.style.backgroundColor = "#000";
-                    if(originalText.includes("Python")) {
+                    if(originalText.includes("Avtomatik") || originalText.includes("скопировать код") || originalText.includes("Auto-Create")) {
                          element.style.color = "#60a5fa";
                     } else {
                          element.style.color = "#22c55e";
