@@ -4,16 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Instagram Bot</title>
-    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --primary: #6366f1; 
-            --bg-dark: #0f172a; 
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --text-main: #f8fafc; 
-            --text-muted: #94a3b8; 
-            --border: rgba(255, 255, 255, 0.1);
+            --primary: #6366f1; --bg-dark: #0f172a; --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc; --text-muted: #94a3b8; --border: rgba(255, 255, 255, 0.1);
         }
         body {
             background: radial-gradient(circle at top left, #1e1b4b, #0f172a, #000000);
@@ -85,21 +80,14 @@
             display: block; width: 100%; background: #000; padding: 12px;
             border-radius: 8px; font-family: monospace; color: #22c55e;
             margin: 10px 0; cursor: pointer; border: 1px solid #22c55e;
-            text-align: center; font-size: 14px; font-weight: bold;
-            transition: 0.2s; box-sizing: border-box;
+            text-align: center; font-size: 14px; font-weight: bold; transition: 0.2s; box-sizing: border-box;
         }
         .copy-btn:active { transform: scale(0.98); background: #1e293b; }
         
-        /* Ogohlantirish dizayni */
         .warning-box {
-            background: rgba(239, 68, 68, 0.1);
-            border-left: 4px solid #ef4444;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            color: #fca5a5;
-            margin-bottom: 20px;
-            line-height: 1.4;
+            background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444;
+            padding: 12px; border-radius: 8px; font-size: 13px; color: #fca5a5;
+            margin-bottom: 20px; line-height: 1.4;
         }
         
         .footer { text-align: center; margin-top: auto; padding-top: 20px; font-size: 14px; color: var(--text-muted); }
@@ -155,6 +143,7 @@
         tg.expand(); 
 
         const termuxLink = '<a href="https://play.google.com/store/apps/details?id=com.termux" target="_blank">Termux</a>';
+        const authAppLink = '<a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank">Google Authenticator</a>';
         const currentHost = window.location.origin;
 
         const translations = {
@@ -168,21 +157,21 @@
                 helpBtnClose: "❌ Ma'lumotni yopish",
                 created: "Yaratuvchi:",
                 help: `
-                    <h4>📱 ${termuxLink} orqali olish</h4>
-                    <p><b>1-qadam:</b> Play Market'dan ${termuxLink} yuklab oling.<br>
-                    <b>2-qadam:</b> Kutubxonani o'rnatish:<br>
+                    <h4>📱 1-qadam: Dasturlarni o'rnatish</h4>
+                    <p>Play Market'dan <b>${termuxLink}</b> va <b>${authAppLink}</b> (2FA uchun) yuklab oling.</p>
+                    
+                    <h4>💻 2-qadam: Termux buyruqlari</h4>
+                    <p>Termux'ni ochib, quyidagi buyruqlarni ketma-ket nusxalab, yopishtiring va <b>Enter</b> bosing:<br>
                     <button class="copy-btn" onclick="copyText('pip install -U instagrapi', this)">📋 pip install -U instagrapi</button>
-                    
-                    <b>3-qadam:</b> Dastur kodini yuklash:<br>
                     <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyText('curl -s -o get_id.py ${currentHost}/get_id.py', this)">📋 Kodni Yuklash (Copy)</button>
-                    Termux'ga yopishtirib <b>Enter</b> bosing.<br>
-                    
-                    <b>4-qadam:</b> Dasturni ishga tushirish:<br>
-                    <button class="copy-btn" onclick="copyText('python get_id.py', this)">📋 python get_id.py</button>
-                    Termux'ga yopishtirib <b>Enter</b> bosing.<br>
+                    <button class="copy-btn" onclick="copyText('python get_id.py', this)">📋 python get_id.py</button></p>
 
-                    <b>5-qadam:</b> Username va Parolni kiriting. Agar 2FA yoqilgan bo'lsa, <b>Google Authenticator</b> ilovasidagi 6 xonali kodni kiriting.<br>
-                    <b>6-qadam:</b> Ekranda chiqqan uzun <b>Session ID</b> ni nusxalab, botning eng tepasidagi joyga qo'ying.</p>
+                    <h4>🔐 3-qadam: 2FA (Autentifikator)</h4>
+                    <p>Dastur ishga tushganda Username va Parolni so'raydi. Parolni kiritib Enter bosgach, u <b>2FA kodini</b> so'raydi. <br>
+                    Shu payt <b>Google Authenticator</b> ilovasini oching va Instagram uchun berilgan 6 xonali kodni Termux'ga kiriting.</p>
+                    
+                    <h4>✅ 4-qadam: Session ID</h4>
+                    <p>Hammasi to'g'ri bo'lsa, ekranda uzun <b>Session ID</b> chiqadi. Uni nusxalab, botning eng tepasidagi joyga qo'ying.</p>
                 `
             },
             ru: {
@@ -195,21 +184,20 @@
                 helpBtnClose: "❌ Закрыть информацию",
                 created: "Создатель:",
                 help: `
-                    <h4>📱 Через ${termuxLink}</h4>
-                    <p><b>Шаг 1:</b> Скачайте ${termuxLink}.<br>
-                    <b>Шаг 2:</b> Установите библиотеку:<br>
+                    <h4>📱 Шаг 1: Установка</h4>
+                    <p>Скачайте <b>${termuxLink}</b> и <b>${authAppLink}</b> из Play Market.</p>
+                    
+                    <h4>💻 Шаг 2: Команды Termux</h4>
+                    <p>Скопируйте и вставьте эти команды по очереди:<br>
                     <button class="copy-btn" onclick="copyText('pip install -U instagrapi', this)">📋 pip install -U instagrapi</button>
-                    
-                    <b>Шаг 3:</b> Скачайте скрипт:<br>
                     <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyText('curl -s -o get_id.py ${currentHost}/get_id.py', this)">📋 Скачать скрипт (Copy)</button>
-                    Вставьте в Termux и нажмите <b>Enter</b>.<br>
-                    
-                    <b>Шаг 4:</b> Запустите скрипт:<br>
-                    <button class="copy-btn" onclick="copyText('python get_id.py', this)">📋 python get_id.py</button>
-                    Вставьте и нажмите <b>Enter</b>.<br>
+                    <button class="copy-btn" onclick="copyText('python get_id.py', this)">📋 python get_id.py</button></p>
 
-                    <b>Шаг 5:</b> Введите логин и пароль. Если включена 2FA, введите 6-значный код из <b>Google Authenticator</b>.<br>
-                    <b>Шаг 6:</b> Скопируйте ваш <b>Session ID</b> и вставьте в бота.</p>
+                    <h4>🔐 Шаг 3: 2FA</h4>
+                    <p>Введите логин и пароль. Затем программа запросит код <b>2FA</b>. Откройте <b>Google Authenticator</b> и введите 6-значный код для Instagram.</p>
+                    
+                    <h4>✅ Шаг 4: Session ID</h4>
+                    <p>Скопируйте полученный <b>Session ID</b> и вставьте его в бота.</p>
                 `
             },
             en: {
@@ -222,21 +210,20 @@
                 helpBtnClose: "❌ Close info",
                 created: "Created by:",
                 help: `
-                    <h4>📱 Via ${termuxLink}</h4>
-                    <p><b>Step 1:</b> Download ${termuxLink}.<br>
-                    <b>Step 2:</b> Install the library:<br>
+                    <h4>📱 Step 1: Install Apps</h4>
+                    <p>Download <b>${termuxLink}</b> and <b>${authAppLink}</b> from Play Market.</p>
+                    
+                    <h4>💻 Step 2: Termux Commands</h4>
+                    <p>Copy and paste these commands one by one:<br>
                     <button class="copy-btn" onclick="copyText('pip install -U instagrapi', this)">📋 pip install -U instagrapi</button>
-                    
-                    <b>Step 3:</b> Download the script:<br>
                     <button class="copy-btn" style="color: #60a5fa; border-color: #60a5fa;" onclick="copyText('curl -s -o get_id.py ${currentHost}/get_id.py', this)">📋 Download Script (Copy)</button>
-                    Paste it into Termux and press <b>Enter</b>.<br>
-                    
-                    <b>Step 4:</b> Run the script:<br>
-                    <button class="copy-btn" onclick="copyText('python get_id.py', this)">📋 python get_id.py</button>
-                    Paste and press <b>Enter</b>.<br>
+                    <button class="copy-btn" onclick="copyText('python get_id.py', this)">📋 python get_id.py</button></p>
 
-                    <b>Step 5:</b> Enter username and password. If 2FA is enabled, enter the 6-digit code from <b>Google Authenticator</b>.<br>
-                    <b>Step 6:</b> Copy the <b>Session ID</b> and paste it into the bot.</p>
+                    <h4>🔐 Step 3: 2FA Code</h4>
+                    <p>Enter your username and password. The script will ask for a <b>2FA code</b>. Open <b>Google Authenticator</b>, find Instagram, and enter the 6-digit code.</p>
+                    
+                    <h4>✅ Step 4: Session ID</h4>
+                    <p>Copy the generated <b>Session ID</b> and paste it into the bot.</p>
                 `
             }
         };
