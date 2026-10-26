@@ -7,70 +7,119 @@
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Asosiy sozlamalar */
+        :root {
+            --primary: #6366f1; /* Indigo */
+            --primary-hover: #4f46e5;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
         body {
-            background-color: #0e1012;
-            color: white;
+            background: radial-gradient(circle at top left, #1e1b4b, #0f172a, #000000);
+            color: var(--text-main);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             box-sizing: border-box;
+            overflow-x: hidden;
         }
+
+        /* Tepa qism (Tillar va Logo) */
+        .top-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .lang-select {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        .lang-select option {
+            background: #1e293b;
+            color: white;
+        }
+
         .header {
             text-align: center;
             margin-bottom: 30px;
-            margin-top: 20px;
         }
         .icon-circle {
-            width: 100px; height: 100px;
+            width: 110px; height: 110px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            background: linear-gradient(135deg, #ec4899, #8b5cf6, #3b82f6);
             display: flex; justify-content: center; align-items: center;
-            font-size: 40px;
+            font-size: 45px;
             margin: 0 auto 15px;
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
+            animation: pulse 2s infinite;
         }
-        h1 { margin: 0; font-size: 24px; color: #fff; }
-        p { color: #94a3b8; font-size: 14px; margin-top: 5px; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); }
+            50% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.7); }
+            100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); }
+        }
+
+        h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 1px;}
+        p.subtitle { color: var(--text-muted); font-size: 14px; margin-top: 5px; }
         
         .card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 20px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 24px;
             margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
         
         label {
             display: block;
             margin-bottom: 8px;
             font-size: 13px;
-            color: #94a3b8;
+            color: var(--text-muted);
+            font-weight: 600;
         }
         
         input {
             width: 100%;
-            background: #17212b;
-            border: 1px solid #2b3a4a;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255,255,255,0.15);
             color: white;
-            padding: 14px;
-            border-radius: 12px;
-            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 14px;
+            margin-bottom: 18px;
             box-sizing: border-box;
             outline: none;
+            font-size: 15px;
+            transition: border 0.3s;
         }
-        input:focus { border-color: #3b82f6; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(99,102,241,0.3); }
 
         .btn {
             width: 100%;
-            background-color: #3b82f6;
+            background: linear-gradient(to right, #4f46e5, #9333ea);
             color: white;
             border: none;
             padding: 16px;
-            border-radius: 12px;
+            border-radius: 14px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
@@ -78,10 +127,10 @@
             justify-content: center;
             align-items: center;
             gap: 10px;
-            transition: 0.3s;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
         }
-        .btn:hover { background-color: #2563eb; }
-        .btn:active { transform: scale(0.98); }
+        .btn:active { transform: scale(0.96); }
 
         #status {
             text-align: center;
@@ -90,128 +139,206 @@
             font-weight: bold;
         }
 
-        /* --- QO'LLANMA UCHUN YANGI CSS --- */
+        /* Qo'llanma (Help) */
         .help-toggle {
             text-align: center;
             margin-top: 20px;
-            color: #3b82f6;
+            color: #818cf8;
             font-size: 14px;
             cursor: pointer;
-            text-decoration: underline;
-            font-weight: 500;
+            font-weight: 600;
         }
         .help-content {
-            display: none; /* Boshida yashirin turadi */
+            display: none;
             margin-top: 15px;
-            background-color: #17212b;
-            border: 1px solid #2b3a4a;
-            border-radius: 12px;
+            background-color: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 14px;
             padding: 15px;
             font-size: 13px;
             line-height: 1.6;
             color: #cbd5e1;
-            text-align: left;
         }
         .help-content h4 {
-            color: #ffffff;
+            color: #fff;
             margin: 15px 0 5px 0;
             font-size: 14px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid var(--border);
             padding-bottom: 5px;
         }
         .help-content h4:first-child { margin-top: 0; }
-        .help-content p {
-            margin: 0 0 10px 0;
-            color: #94a3b8;
-            font-size: 13px;
+        .help-content b { color: #fbbf24; }
+
+        /* Mualliflik (Footer) */
+        .footer {
+            text-align: center;
+            margin-top: auto;
+            padding-top: 20px;
+            font-size: 14px;
+            color: var(--text-muted);
         }
-        .help-content b { color: #e2e8f0; }
+        .footer a {
+            color: #60a5fa;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+        .footer a:active { color: #3b82f6; }
     </style>
 </head>
 <body>
 
+    <div class="top-bar">
+        <select class="lang-select" id="langSwitcher" onchange="changeLanguage(this.value)">
+            <option value="uz">🇺🇿 UZ</option>
+            <option value="ru">🇷🇺 RU</option>
+            <option value="en">🇬🇧 EN</option>
+        </select>
+    </div>
+
     <div class="header">
         <div class="icon-circle">📸</div>
-        <h1>INSTAGRAM BOT</h1>
-        <p>Obunachilarni avtomatik tozalash</p>
+        <h1 id="txt-title">INSTAGRAM BOT</h1>
+        <p class="subtitle" id="txt-subtitle">Obunachilarni avtomatik tozalash</p>
     </div>
 
     <div class="card">
-        <label>Instagram Session ID (cookie)</label>
-        <input type="password" id="sessionid" placeholder="Session ID ni kiriting...">
+        <label id="txt-label-session">Instagram Session ID (cookie)</label>
+        <input type="password" id="sessionid" placeholder="Session ID...">
         
-        <label>Nechta odamni unfollow qilish? (1 - 10,000)</label>
+        <label id="txt-label-count">Nechta odamni unfollow qilish? (1 - 10,000)</label>
         <input type="number" id="count" min="1" max="10000" value="100">
         
-        <button class="btn" onclick="sendData()">
+        <button class="btn" onclick="sendData()" id="txt-btn-unfollow">
             🔄 Unfollow Boshlash
         </button>
         <div id="status"></div>
 
-        <!-- QO'LLANMA QISMI -->
         <div class="help-toggle" id="helpBtn" onclick="toggleHelp()">❓ Session ID qanday olinadi?</div>
         
         <div class="help-content" id="helpContent">
-            <h4>📱 1. Telefon uchun (Android)</h4>
-            <p>
-                1. Play Market'dan <b>Kiwi Browser</b> yuklab oling.<br>
-                2. Shu brauzer orqali Instagram'ga kiring.<br>
-                3. Yuqori o'ng burchakdagi 3 nuqtani bosib, <b>Extensions</b> ni tanlang.<br>
-                4. <b>Cookie-Editor</b> ni o'rnating va uni oching.<br>
-                5. Ro'yxatdan <b>sessionid</b> degan qatorni topib, yonidagi "Copy" belgisini bosing.
-            </p>
-
-            <h4>💻 2. Kompyuter uchun (Chrome / Edge)</h4>
-            <p>
-                1. Brauzerda Instagram'ga kiring.<br>
-                2. Klaviaturadan <b>F12</b> tugmasini bosing (yoki o'ng tugma -> Inspect).<br>
-                3. <b>Application</b> (Ilova) bo'limiga o'ting.<br>
-                4. Chap menyudan <b>Cookies</b> -> <b>https://www.instagram.com</b> ni tanlang.<br>
-                5. <b>sessionid</b> qatoridagi <b>Value</b> ustunidagi uzun matnni nusxalab oling.
-            </p>
-            <p style="color: #ef4444; font-size: 12px; margin-top: 10px;">
-                ⚠️ Diqqat: Session ID xuddi parolingiz kabi maxfiy! Uni hech kimga bermang.
-            </p>
+            <div id="help-text"></div>
         </div>
     </div>
 
+    <div class="footer">
+        <span id="txt-created">Yaratuvchi:</span> 
+        <a href="https://t.me/Tommy_1727" target="_blank">@Tommy_1727</a>
+    </div>
+
     <script>
-        // Telegram WebApp ni to'liq ekranga ochish
+        // Telegram WebApp ni ishga tushirish
         let tg = window.Telegram.WebApp;
         tg.expand(); 
 
-        // Qo'llanmani ochish/yopish funksiyasi
+        // Tillar lug'ati (Tarjimalar)
+        const translations = {
+            uz: {
+                title: "INSTAGRAM BOT",
+                subtitle: "Obunachilarni avtomatik tozalash",
+                labelSession: "Instagram Session ID (cookie)",
+                labelCount: "Nechta odamni unfollow qilish? (1 - 10,000)",
+                btn: "🔄 Unfollow Boshlash",
+                helpBtnOpen: "❓ Session ID qanday olinadi?",
+                helpBtnClose: "❌ Ma'lumotni yopish",
+                created: "Yaratuvchi:",
+                help: `
+                    <h4>📱 1. Telefon uchun (Android)</h4>
+                    <p>1. Play Market'dan <b>Kiwi Browser</b> yuklab oling.<br>2. Shu brauzer orqali Instagram'ga kiring.<br>3. Yuqori o'ng burchakdagi 3 nuqtani bosib, <b>Extensions</b> ni tanlang.<br>4. <b>Cookie-Editor</b> ni o'rnating va uni oching.<br>5. Ro'yxatdan <b>sessionid</b> degan qatorni topib, "Copy" qiling.</p>
+                    <h4>💻 2. Kompyuter uchun (Chrome / Edge)</h4>
+                    <p>1. Brauzerda Instagram'ga kiring.<br>2. Klaviaturadan <b>F12</b> tugmasini bosing.<br>3. <b>Application</b> -> <b>Cookies</b> bo'limiga o'ting.<br>4. <b>sessionid</b> qatoridagi <b>Value</b> ustunidagi uzun matnni nusxalab oling.</p>
+                `
+            },
+            ru: {
+                title: "INSTAGRAM BOT",
+                subtitle: "Автоматическая очистка подписок",
+                labelSession: "Instagram Session ID (cookie)",
+                labelCount: "Сколько отписаться? (1 - 10,000)",
+                btn: "🔄 Начать отписку",
+                helpBtnOpen: "❓ Как получить Session ID?",
+                helpBtnClose: "❌ Закрыть информацию",
+                created: "Создатель:",
+                help: `
+                    <h4>📱 1. Для телефона (Android)</h4>
+                    <p>1. Скачайте <b>Kiwi Browser</b> из Play Market.<br>2. Зайдите в Instagram через этот браузер.<br>3. Нажмите 3 точки и выберите <b>Extensions</b>.<br>4. Установите и откройте <b>Cookie-Editor</b>.<br>5. Найдите строку <b>sessionid</b> и скопируйте её.</p>
+                    <h4>💻 2. Для компьютера (Chrome / Edge)</h4>
+                    <p>1. Зайдите в Instagram в браузере.<br>2. Нажмите <b>F12</b> на клавиатуре.<br>3. Перейдите в <b>Application</b> -> <b>Cookies</b>.<br>4. Скопируйте значение строки <b>sessionid</b> из столбца <b>Value</b>.</p>
+                `
+            },
+            en: {
+                title: "INSTAGRAM BOT",
+                subtitle: "Automatic follower cleanup",
+                labelSession: "Instagram Session ID (cookie)",
+                labelCount: "How many to unfollow? (1 - 10,000)",
+                btn: "🔄 Start Unfollow",
+                helpBtnOpen: "❓ How to get Session ID?",
+                helpBtnClose: "❌ Close info",
+                created: "Created by:",
+                help: `
+                    <h4>📱 1. For Phone (Android)</h4>
+                    <p>1. Download <b>Kiwi Browser</b> from Play Market.<br>2. Log in to Instagram using this browser.<br>3. Tap the 3 dots and select <b>Extensions</b>.<br>4. Install and open <b>Cookie-Editor</b>.<br>5. Find the <b>sessionid</b> row and copy it.</p>
+                    <h4>💻 2. For Computer (Chrome / Edge)</h4>
+                    <p>1. Log in to Instagram in your browser.<br>2. Press <b>F12</b> on your keyboard.<br>3. Go to <b>Application</b> -> <b>Cookies</b>.<br>4. Copy the value of the <b>sessionid</b> row from the <b>Value</b> column.</p>
+                `
+            }
+        };
+
+        let currentLang = 'uz';
+        let helpOpen = false;
+
+        // Tilni o'zgartirish funksiyasi
+        function changeLanguage(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+            
+            document.getElementById('txt-title').innerText = t.title;
+            document.getElementById('txt-subtitle').innerText = t.subtitle;
+            document.getElementById('txt-label-session').innerText = t.labelSession;
+            document.getElementById('txt-label-count').innerText = t.labelCount;
+            document.getElementById('txt-btn-unfollow').innerText = t.btn;
+            document.getElementById('txt-created').innerText = t.created;
+            document.getElementById('help-text').innerHTML = t.help;
+            
+            // Qo'llanma ochiq bo'lsa, tugma yozuvini ham o'zgartiramiz
+            const helpBtn = document.getElementById('helpBtn');
+            helpBtn.innerText = helpOpen ? t.helpBtnClose : t.helpBtnOpen;
+        }
+
+        // Qo'llanmani ochish/yopish
         function toggleHelp() {
             const content = document.getElementById('helpContent');
             const btn = document.getElementById('helpBtn');
-            if (content.style.display === 'none' || content.style.display === '') {
+            helpOpen = !helpOpen;
+            
+            if (helpOpen) {
                 content.style.display = 'block';
-                btn.innerHTML = '❌ Ma\'lumotni yopish';
+                btn.innerText = translations[currentLang].helpBtnClose;
             } else {
                 content.style.display = 'none';
-                btn.innerHTML = '❓ Session ID qanday olinadi?';
+                btn.innerText = translations[currentLang].helpBtnOpen;
             }
         }
 
-        // Unfollow yuborish funksiyasi
+        // Unfollow yuborish (Asosiy funksiya)
         async function sendData() {
             const sessionId = document.getElementById('sessionid').value;
             const count = parseInt(document.getElementById('count').value);
             const statusDiv = document.getElementById('status');
+            const t = translations[currentLang];
 
             if (!sessionId) {
                 statusDiv.style.color = "#ef4444";
-                statusDiv.innerText = "❌ Iltimos, Session ID ni kiriting!";
+                statusDiv.innerText = currentLang === 'uz' ? "❌ Session ID ni kiriting!" : (currentLang === 'ru' ? "❌ Введите Session ID!" : "❌ Enter Session ID!");
                 return;
             }
             if (count < 1 || count > 10000) {
                 statusDiv.style.color = "#ef4444";
-                statusDiv.innerText = "❌ Xato! Son 1 dan 10,000 gacha bo'lishi kerak.";
+                statusDiv.innerText = currentLang === 'uz' ? "❌ Xato! Son 1 dan 10,000 gacha bo'lishi kerak." : (currentLang === 'ru' ? "❌ Ошибка! Число от 1 до 10,000." : "❌ Error! Number must be 1 - 10,000.");
                 return;
             }
 
             statusDiv.style.color = "#f59e0b";
-            statusDiv.innerText = "⏳ Jarayon boshlandi, iltimos kuting...";
+            statusDiv.innerText = currentLang === 'uz' ? "⏳ Jarayon boshlandi..." : (currentLang === 'ru' ? "⏳ Процесс начался..." : "⏳ Process started...");
 
             try {
                 const response = await fetch('/api/unfollow', {
@@ -234,9 +361,12 @@
                 }
             } catch (error) {
                 statusDiv.style.color = "#ef4444";
-                statusDiv.innerText = "❌ Server bilan aloqa yo'q yoki server uxlab qolgan. Iltimos qayta urinib ko'ring!";
+                statusDiv.innerText = currentLang === 'uz' ? "❌ Server bilan aloqa yo'q!" : (currentLang === 'ru' ? "❌ Нет связи с сервером!" : "❌ No connection to server!");
             }
         }
+        
+        // Sahifa yuklanganda default tilni o'rnatish
+        changeLanguage('uz');
     </script>
 </body>
 </html>
