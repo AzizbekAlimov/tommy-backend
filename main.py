@@ -4,77 +4,113 @@ from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from instagrapi import Client
+from instagrapi.exceptions import LoginRequired, BadPassword, TwoFactorRequired
 
-# Aiogram (Telegram Bot) uchun kutubxonalar
+# Aiogram (Telegram Bot) libraries
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 
 # ==========================================
-# 1. SOZLAMALAR (SHU YERLARNI O'ZGARTIRING)
+# 1. SETTINGS (Read from Render Environment)
 # ==========================================
-BOT_TOKEN = "8929742650:AAEV2jougRIdxCAWsnw4w4JNDYGFS1-_4Yo" 
-# Masalan: "7123456789:AAH..."
-WEBHOOK_HOST = "https://tommy-backend-1.onrender.com" # Render'dagi havolangiz
+BOT_TOKEN = os.getenv("BOT_TOKEN") 
+WEBHOOK_HOST = os.getenv("WEBHOOK_HOST") 
 
-# Bot va FastAPI ob'ektlarini yaratish
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 app = FastAPI()
 
 # ==========================================
-# 2. TELEGRAM BOT QISMI (/start va Webhook)
+# 2. TELEGRAM BOT SECTION
 # ==========================================
 @dp.message(CommandStart())
 async def start_cmd(message: types.Message):
-    """Foydalanuvchi /start bosganda ishlaydigan qism"""
-    
-    # WebApp'ni ochuvchi tugma
+    """Handles the /start command from users"""
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
-            text="📸 INSTAGRAM Ochish", 
+            text="📸 OPEN INSTAGRAM", 
             web_app=WebAppInfo(url=WEBHOOK_HOST)
         )]
     ])
     
     await message.answer(
-        f"Salom, {message.from_user.first_name}!\n\n"
-        "Instagram obunachilarini tozalash uchun pastdagi tugmani bosing yoki chap pastdagi menyudan foydalaning.",
+        f"Hello, {message.from_user.first_name}!\n\n"
+        "Click the button below to clean up your Instagram following.",
         reply_markup=kb
     )
 
 @app.post("/webhook")
 async def telegram_webhook(request: Request):
-    """Telegram'dan kelayotgan xabarlarni qabul qilish"""
+    """Receive incoming messages from Telegram"""
     update = types.Update.model_validate(await request.json(), context={"bot": bot})
     await dp.feed_update(bot, update)
     return {"ok": True}
 
 @app.on_event("startup")
 async def on_startup():
-    """Render ishga tushganda Telegram'ga Webhook o'rnatadi"""
-    webhook_url = f"{WEBHOOK_HOST}/webhook"
-    await bot.set_webhook(webhook_url)
-    print(f"Webhook muvaffaqiyatli o'rnatildi: {webhook_url}")
+    """Set Telegram Webhook when Render starts"""
+    if BOT_TOKEN:
+        webhook_url = f"{WEBHOOK_HOST}/webhook"
+        await bot.set_webhook(webhook_url)
+        print(f"Webhook successfully set to: {webhook_url}")
 
 # ==========================================
-# 3. WEBAPP VA API QISMI (O'ZGARTIRILMAYDI)
+# 3. WEBAPP AND API SECTION
 # ==========================================
 @app.get("/", response_class=HTMLResponse)
 async def read_index():
-    """HTML faylni ochish"""
-    with open("index.html", "r", encoding="utf-8") as file:
-        return file.read()
+    """Serve the HTML file"""
+    try:
+        with open("index.html", "r", encoding="utf-8") as file:
+            return file.read()
+    except FileNotFoundError:
+        return "Error: index.html file not found!"
+
+# --- Models (Data coming from Frontend) ---
+class LoginRequest(BaseModel):
+    username: str
+    password: str
 
 class UnfollowRequest(BaseModel):
     session_id: str
     count: int
 
-def process_unfollow(session_id: str, count: int):
-    """Orqa fonda Instagram'da ishlaydigan qism"""
+# --- 1-API: Login to Instagram via Password ---
+@app.post("/api/login")
+async def login_instagram(request: LoginRequest):
+    """Validates the username and password and gets the session"""
     try:
         cl = Client()
+        # Attempt to log in to Instagram
+        cl.login(request.username, request.password)
+        
+        # If successful, get the sessionid
+        session_id = cl.sessionid
+        
+        return {
+            "status": "success", 
+            "session_id": session_id, 
+            "message": "Successfully logged into the account!"
+        }
+    except BadPassword:
+        raise HTTPException(status_code=400, detail="Incorrect password or username!")
+    except TwoFactorRequired:
+        raise HTTPException(status_code=400, detail="Two-factor authentication (2FA) is enabled on your account. Please disable it temporarily.")
+    except Exception as e:
+        # If Instagram blocks the login attempt or throws another error
+        print(f"Login error: {e}")
+        raise HTTPException(status_code=400, detail="Login error. Instagram might have blocked the login attempt.")
+
+# --- 2-API: Unfollow in the background ---
+def process_unfollow(session_id: str, count: int):
+    """Function that runs in the background and unfollows users"""
+    try:
+        cl = Client()
+        # Reconnect to Instagram using the obtained session_id
         cl.login_by_sessionid(session_id)
+        
+        # Get following list
         following = cl.user_following(cl.user_id)
         unfollowed_count = 0
 
@@ -84,21 +120,26 @@ def process_unfollow(session_id: str, count: int):
             try:
                 cl.user_unfollow(user_id)
                 unfollowed_count += 1
-                time.sleep(2) # 2 soniya kutish
+                time.sleep(3) # Wait 3 seconds for safety
             except Exception as e:
-                print(f"Xatolik: {e}")
+                print(f"Error unfollowing a user: {e}")
                 continue
-        print(f"Jami {unfollowed_count} ta obuna bekor qilindi.")
+                
+        print(f"Total {unfollowed_count} accounts unfollowed.")
+    except LoginRequired:
+        print("Session expired. Need to log in again.")
     except Exception as e:
-        print(f"Instagram'ga ulanishda xatolik: {e}")
+        print(f"Error during unfollow process: {e}")
 
 @app.post("/api/unfollow")
 async def start_unfollow(request: UnfollowRequest, background_tasks: BackgroundTasks):
-    """WebApp'dagi tugma bosilganda ishlaydigan API"""
+    """API to start the unfollow process"""
     if request.count < 1 or request.count > 10000:
-        raise HTTPException(status_code=400, detail="Xato! Son 1 dan 10,000 gacha bo'lishi kerak.")
+        raise HTTPException(status_code=400, detail="Error! Number must be between 1 and 10,000.")
     if not request.session_id:
-        raise HTTPException(status_code=400, detail="Session ID kiritilmadi!")
+        raise HTTPException(status_code=400, detail="Session not found, please log in again!")
 
+    # Send the process to background (to prevent API from freezing)
     background_tasks.add_task(process_unfollow, request.session_id, request.count)
-    return {"status": "success", "message": f"{request.count} ta obunani bekor qilish boshlandi."}
+    
+    return {"status": "success", "message": f"Process to unfollow {request.count} accounts has started."}
