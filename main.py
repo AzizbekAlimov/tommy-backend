@@ -13,7 +13,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 # ==========================================
 # 1. SOZLAMALAR (SHU YERLARNI O'ZGARTIRING)
 # ==========================================
-BOT_TOKEN = "8929742650:AAEGS3uTD515ucmLdCAAP8NeiJ-hz6VfgBQ" 
+BOT_TOKEN = "8929742650:AAEV2jougRIdxCAWsnw4w4JNDYGFS1-_4Yo" 
 # Masalan: "7123456789:AAH..."
 WEBHOOK_HOST = "https://tommy-backend-1.onrender.com" # Render'dagi havolangiz
 
