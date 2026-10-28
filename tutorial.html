@@ -3,73 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Termux To'liq Qo'llanma</title>
+    <title>TOMMY BOT - Termux Tutorial</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            background-color: #0d1117;
-            color: #c9d1d9;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            line-height: 1.6;
+            background: radial-gradient(circle at top, #1a1a3a 0%, #0a0a14 100%);
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            min-height: 100vh;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .container { max-width: 800px; margin: 0 auto; }
-        h1 { color: #58a6ff; text-align: center; }
-        h2 { color: #3fb950; border-bottom: 1px solid #30363d; padding-bottom: 5px; margin-top: 30px; }
-        code { background-color: #161b22; padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #ff7b72; }
-        pre { background-color: #161b22; padding: 15px; border-radius: 8px; overflow-x: auto; border: 1px solid #30363d; }
-        .card { background-color: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+
+        /* Orqa fondagi yorug'lik effektlari */
+        .bg-glow-1, .bg-glow-2 {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+        }
+        .bg-glow-1 { width: 300px; height: 300px; background: rgba(46, 213, 115, 0.2); top: 5%; left: -100px; }
+        .bg-glow-2 { width: 300px; height: 300px; background: rgba(52, 152, 219, 0.2); bottom: 10%; right: -100px; }
+
+        /* Tepa qism (Logo) */
+        .logo-container {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            animation: spin 4s linear infinite;
+        }
+        .ring-1 { width: 100%; height: 100%; border-top-color: #2ed573; border-right-color: #2ed573; box-shadow: 0 0 15px #2ed573; }
+        .ring-2 { width: 85%; height: 85%; border-bottom-color: #3498db; border-left-color: #3498db; animation-direction: reverse; box-shadow: 0 0 15px #3498db; }
+        .ring-3 { width: 70%; height: 70%; border-top-color: #f1c40f; border-right-color: #f1c40f; box-shadow: 0 0 15px #f1c40f; }
+        
+        .center-icon {
+            width: 50%; height: 50%;
+            background: radial-gradient(circle, #2ed573 0%, #1e8449 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 20px #2ed573;
+            z-index: 2;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Sarlavha */
+        .title {
+            font-size: 28px;
+            font-weight: 800;
+            color: #2ed573;
+            margin-top: 20px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(46, 213, 115, 0.5);
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #a0a0a0;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        /* Kartochkalar (Glassmorphism) */
+        .card {
+            background: rgba(30, 30, 50, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            width: 100%;
+            max-width: 450px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #2ed573;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        .card-header span { margin-right: 10px; font-size: 20px; }
+
+        /* Ma'lumot qatorlari */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        .info-label { color: #a0a0a0; }
+        .info-value { font-weight: 600; color: #fff; text-align: right; }
+
+        /* Kod bloklari */
+        .code-box {
+            background: #0f0f1a;
+            border-radius: 10px;
+            padding: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            color: #3498db;
+            margin-top: 10px;
+            border-left: 3px solid #2ed573;
+            overflow-x: auto;
+        }
+
+        .status-badge {
+            background: rgba(46, 213, 115, 0.2);
+            color: #2ed573;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid #2ed573;
+        }
+
+        ul { padding-left: 20px; font-size: 14px; color: #ccc; line-height: 1.8; }
+        li { margin-bottom: 5px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>💻 Termux To'liq Qo'llanma</h1>
+    <!-- Fon effektlari -->
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+
+    <!-- Logotip -->
+    <div class="logo-container">
+        <div class="ring ring-1"></div>
+        <div class="ring ring-2"></div>
+        <div class="ring ring-3"></div>
+        <div class="center-icon">💻</div>
+    </div>
+
+    <!-- Sarlavha -->
+    <div class="title">TERMUX TUTORIAL</div>
+    <div class="subtitle">To'liq va 100% Aniq Qo'llanma</div>
+
+    <!-- 1. Termux Asoslari -->
+    <div class="card">
+        <div class="card-header"><span>📱</span> TERMUX ASOSLARI</div>
+        <div class="info-row">
+            <span class="info-label">O'rnatish manbasi:</span>
+            <span class="info-value">F-Droid</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Holat:</span>
+            <span class="status-badge">✅ FAOL</span>
+        </div>
+        <p style="font-size: 13px; color: #ccc; margin-top: 10px;">Termux — bu Android uchun to'liq Linux muhiti. Kod yozish va dasturlar yaratish uchun eng zo'r vosita.</p>
         
-        <div class="card">
-            <h2>📱 1. Termux Asoslari</h2>
-            <p>Termux — Android uchun Linux muhiti. O'rnatish uchun F-Droid'dan foydalaning.</p>
-            <ul>
-                <li><b>Yangilash:</b> <code>pkg update && pkg upgrade</code></li>
-                <li><b>Xotiraga ulanish:</b> <code>termux-setup-storage</code></li>
-            </ul>
-        </div>
-
-        <div class="card">
-            <h2>🐍 2. Python va Termux</h2>
-            <pre><code>pkg install python
-nano test.py
-python test.py</code></pre>
-        </div>
-
-        <div class="card">
-            <h2>📂 3. MT Manager Integratsiyasi</h2>
-            <p>MT Manager yordamida Termux fayllarini boshqarish:</p>
-            <ol>
-                <li>Termuxda <code>termux-setup-storage</code> buyrug'ini bering.</li>
-                <li>MT Managerda <b>"Add local storage"</b> tugmasini bosing.</li>
-                <li>Termux papkasini topib, ruxsat bering.</li>
-            </ol>
-        </div>
-
-        <div class="card">
-            <h2>☕ 4. Java O'rnatish</h2>
-            <pre><code>pkg install openjdk-17
-java -version</code></pre>
-        </div>
-
-        <div class="card">
-            <h2>🌙 5. Lua bilan ishlash</h2>
-            <pre><code>pkg install lua
-nano test.lua
-lua test.lua</code></pre>
-        </div>
-
-        <div class="card">
-            <h2>🤖 6. Termuxda Bot Yasash</h2>
-            <pre><code>pkg install python
-pip install python-telegram-bot</code></pre>
-            <p>So'ngra BotFather'dan token olib, kod yozishingiz mumkin.</p>
+        <div style="margin-top: 15px; font-weight: 600; color: #fff; font-size: 14px;">Asosiy buyruqlar:</div>
+        <div class="code-box">
+            pkg update && pkg upgrade<br>
+            termux-setup-storage
         </div>
     </div>
+
+    <!-- 2. Python -->
+    <div class="card">
+        <div class="card-header"><span>🐍</span> PYTHON O'RNATISH</div>
+        <p style="font-size: 13px; color: #ccc;">Termuxda Python tilida dastur yozishni boshlang.</p>
+        
+        <div class="code-box">
+            pkg install python<br>
+            pkg install python-pip<br>
+            pip install requests
+        </div>
+        <p style="font-size: 12px; color: #888; margin-top: 10px;">* Kodni ishga tushirish: <b>python fayl_nomi.py</b></p>
+    </div>
+
+    <!-- 3. MT Manager -->
+    <div class="card">
+        <div class="card-header"><span>📂</span> MT MANAGER ULANISHI</div>
+        <ul>
+            <li>Termuxda: <b>termux-setup-storage</b> yozing va ruxsat bering.</li>
+            <li>MT Managerda: <b>"Add local storage"</b> ni bosing.</li>
+            <li>Termux papkasini topib, "Use this folder" qiling.</li>
+            <li>Endi Termux fayllarini MT Manager orqali boshqarasiz.</li>
+        </ul>
+    </div>
+
+    <!-- 4. Java -->
+    <div class="card">
+        <div class="card-header"><span>☕</span> JAVA O'RNATISH</div>
+        <p style="font-size: 13px; color: #ccc;">Java dasturlari va skriptlar uchun kerakli muhit.</p>
+        <div class="code-box">
+            pkg install openjdk-17<br>
+            java -version
+        </div>
+    </div>
+
 </body>
 </html>
