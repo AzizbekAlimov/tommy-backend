@@ -30,7 +30,8 @@
             color: var(--text-main);
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
-            padding: 110px 16px 120px 16px; 
+            /* MUHIM: Tepa va pastdagi qotib turuvchi qismlar ostida matn qolib ketmasligi uchun joy ajratildi */
+            padding: 110px 16px 130px 16px; 
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -47,14 +48,12 @@
             z-index: -1;
             pointer-events: none;
             background-color: #050505;
-            /* Nozik terminal to'ri (grid) */
             background-image: 
                 linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
             background-size: 40px 40px;
         }
 
-        /* Burchaklardagi neon yorug'lik (Lag qilmaydigan gradientlar) */
         .modern-bg::before {
             content: '';
             position: absolute;
@@ -69,7 +68,7 @@
         }
 
         /* ========================================= */
-        /* TEPADAGI QOTIB TURUVCHI MENYU */
+        /* 1. TEPADAGI QOTIB TURUVCHI MENYU */
         /* ========================================= */
         .top-fixed-wrapper {
             position: fixed;
@@ -77,7 +76,8 @@
             left: 0;
             width: 100%;
             padding: 15px 16px 25px 16px;
-            z-index: 1000;
+            z-index: 1000; /* Eng tepada turishi uchun */
+            /* Orqadagi matnlarni chiroyli yopishi uchun gradient */
             background: linear-gradient(to bottom, rgba(5,5,5,1) 70%, rgba(5,5,5,0) 100%);
             display: flex;
             justify-content: center;
@@ -273,16 +273,16 @@
         .copy-btn.success { background: var(--primary); color: #000; border-color: var(--primary); }
 
         /* ========================================= */
-        /* PASTKI QOTIB TURUVCHI TUGMA */
+        /* 2. PASTKI QOTIB TURUVCHI TUGMA */
         /* ========================================= */
         .creator-footer {
             position: fixed;
             bottom: 24px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 1000;
+            z-index: 1000; /* Eng pastda turishi uchun */
             width: max-content;
-            margin-bottom: env(safe-area-inset-bottom);
+            margin-bottom: env(safe-area-inset-bottom); /* Telefon ekranining eng pastki qismiga xavfsiz joylashish */
         }
 
         .creator-link {
@@ -314,7 +314,7 @@
 </head>
 <body>
 
-    <!-- YANGI ZAMONAVIY ORQA FON -->
+    <!-- ORQA FON -->
     <div class="modern-bg"></div>
 
     <!-- TEPADAGI QOTIB TURUVCHI MENYU -->
@@ -361,7 +361,7 @@ termux-setup-storage</div>
         </ol>
     </div>
 
-    <!-- 3. Python (To'liq va Ideal) -->
+    <!-- 3. Python (To'liq) -->
     <div class="card">
         <div class="card-header"><span>🐍</span> <span data-uz="3. PYTHON VA KUTUBXONALAR" data-ru="3. PYTHON И БИБЛИОТЕКИ" data-en="3. PYTHON & LIBRARIES" data-ar="3. Python والمكتبات">3. PYTHON VA KUTUBXONALAR</span></div>
         
@@ -383,7 +383,7 @@ cd name</div>
         </div>
 
         <p><b data-uz="3. Kod yozish uchun fayl ochish va kod yozish:" data-ru="3. Открытие файла для написания кода:" data-en="3. Open a file to write code:" data-ar="3. فتح ملف لكتابة الكود:">3. Kod yozish uchun fayl ochish va kod yozish:</b></p>
-        <p style="font-size:13px; color:#888;" data-uz="* 'nano' matn muharriri. U orqali .py faylini ochib, ichiga kod yozamiz. Kodni yozib bo'lgach, saqlash uchun CTRL+X, keyin Y, keyin Enter ni bosing." data-ru="* 'nano' — это текстовый редактор. Через него мы открываем файл .py и пишем код. После написания кода нажмите CTRL+X, затем Y, затем Enter, чтобы сохранить." data-en="* 'nano' is a text editor. We use it to open a .py file and write code. After writing the code, press CTRL+X, then Y, then Enter to save." data-ar="* 'nano' هو محرر نصوص. نستخدمه لفتح ملف .py وكتابة الكود. بعد كتابة الكود، اضغط على CTRL+X، ثم Y، ثم Enter للحفظ.">* <code>nano</code> matn muharriri. U orqali <code>.py</code> faylini ochib, ichiga kod yozamiz. Kodni yozib bo'lgach, saqlash uchun <b>CTRL+X</b>, keyin <b>Y</b>, keyin <b>Enter</b> ni bosing.</p>
+        <p style="font-size:13px; color:#888;" data-uz="* 'nano' matn muharriri. U orqali .py faylini ochib, ichiga kod yozamiz. Saqlash uchun CTRL+X, keyin Y, keyin Enter ni bosing." data-ru="* 'nano' — это текстовый редактор. Через него мы открываем файл .py и пишем код. Нажмите CTRL+X, затем Y, затем Enter, чтобы сохранить." data-en="* 'nano' is a text editor. We use it to open a .py file and write code. Press CTRL+X, then Y, then Enter to save." data-ar="* 'nano' هو محرر نصوص. نستخدمه لفتح ملف .py وكتابة الكود. اضغط على CTRL+X، ثم Y، ثم Enter للحفظ.">* <code>nano</code> matn muharriri. U orqali <code>.py</code> faylini ochib, ichiga kod yozamiz. Saqlash uchun <b>CTRL+X</b>, keyin <b>Y</b>, keyin <b>Enter</b> ni bosing.</p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
             <div class="code-box">nano name.py
