@@ -103,7 +103,7 @@
             <div class="code-box">pkg update && pkg upgrade -y
 termux-setup-storage</div>
         </div>
-        <p style="font-size:12px; color:#888;" data-uz="* termux-setup-storage telefoningiz xotirasiga (Rasm, Yuklamalar) kirishga ruxsat beradi." data-ru="* termux-setup-storage разрешает доступ к памяти телефона." data-en="* termux-setup-storage allows access to your phone's storage." data-ar="* يسمح termux-setup-storage بالوصول إلى ذاكرة هاتفك.">* termux-setup-storage telefoningiz xotirasiga kirishga ruxsat beradi.</p>
+        <p style="font-size:12px; color:#888;" data-uz="* termux-setup-storage telefoningiz xotirasiga kirishga ruxsat beradi." data-ru="* termux-setup-storage разрешает доступ к памяти телефона." data-en="* termux-setup-storage allows access to your phone's storage." data-ar="* يسمح termux-setup-storage بالوصول إلى ذاكرة هاتفك.">* termux-setup-storage telefoningiz xotirasiga kirishga ruxsat beradi.</p>
     </div>
 
     <!-- 2. MT Manager va Fayllar -->
@@ -156,41 +156,69 @@ pip install python-telegram-bot</div>
         </div>
     </div>
 
-    <!-- 4. Telegram Bot Yasash -->
+    <!-- 4. Muhim Buyruqlar -->
     <div class="card">
-        <div class="card-header"><span>🤖</span> <span data-uz="4. TELEGRAM BOT YASASH" data-ru="4. СОЗДАНИЕ TELEGRAM БОТА" data-en="4. CREATING TELEGRAM BOT" data-ar="4. صنع بوت تيليجرام">4. TELEGRAM BOT YASASH</span></div>
-        <p data-uz="Termuxda Telegram bot yasash juda oson. Buning uchun @BotFather'dan token olish kerak." data-ru="Создать Telegram-бота в Termux очень просто. Для этого нужно получить токен у @BotFather." data-en="Creating a Telegram bot in Termux is very easy. You need to get a token from @BotFather." data-ar="إنشاء بوت Telegram في Termux سهل للغاية. تحتاج إلى الحصول على رمز منBotFather@.">Termuxda Telegram bot yasash juda oson. Buning uchun @BotFather'dan token olish kerak.</p>
-        <ol>
-            <li data-uz="Telegramda @BotFather ga kirib, /newbot buyrug'i bilan bot yarating va TOKEN oling." data-ru="Зайдите в @BotFather в Telegram, создайте бота командой /newbot и получите TOKEN." data-en="Go to @BotFather in Telegram, create a bot with /newbot and get the TOKEN." data-ar="انتقل إلىBotFather@ في Telegram، وأنشئ بوتًا باستخدام /newbot واحصل على TOKEN.">Telegramda <b>@BotFather</b> ga kirib, <b>/newbot</b> buyrug'i bilan bot yarating va <b>TOKEN</b> oling.</li>
-            <li data-uz="Kutubxonani o'rnating: pip install python-telegram-bot" data-ru="Установите библиотеку: pip install python-telegram-bot" data-en="Install the library: pip install python-telegram-bot" data-ar="قم بتثبيت المكتبة: pip install python-telegram-bot">Kutubxonani o'rnating: <code>pip install python-telegram-bot</code></li>
-            <li data-uz="Quyidagi kodni bot.py fayliga yozing va ishga tushiring." data-ru="Напишите следующий код в файл bot.py и запустите его." data-en="Write the following code into bot.py file and run it." data-ar="اكتب الكود التالي في ملف bot.py وقم بتشغيله.">Quyidagi kodni <b>bot.py</b> fayliga yozing va ishga tushiring.</li>
-        </ol>
-        <div class="code-container">
-            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
-            <div class="code-box">from telegram.ext import Application, CommandHandler
-
-async def start(update, context):
-    await update.message.reply_text("Salom! Men Termuxda ishlayapman.")
-
-app = Application.builder().token("SIZNING_TOKENINGIZ").build()
-app.add_handler(CommandHandler("start", start))
-app.run_polling()</div>
-        </div>
+        <div class="card-header"><span>💡</span> <span data-uz="4. Muhim Buyruqlar" data-ru="4. Важные команды" data-en="4. Important Commands" data-ar="4. أوامر مهمة">4. Muhim Buyruqlar</span></div>
+        <ul>
+            <li><b>cd papka_nomi</b> - <span data-uz="papkaga kirish" data-ru="войти в папку" data-en="enter folder" data-ar="الدخول إلى المجلد">papkaga kirish</span></li>
+            <li><b>cd ..</b> - <span data-uz="bir papka orqaga qaytish" data-ru="вернуться на одну папку назад" data-en="go back one folder" data-ar="الرجوع مجلد واحد للخلف">bir papka orqaga qaytish</span></li>
+            <li><b>ls</b> - <span data-uz="papkadagi fayllarni ko'rish" data-ru="просмотр файлов в папке" data-en="list files in folder" data-ar="عرض الملفات في المجلد">papkadagi fayllarni ko'rish</span></li>
+            <li><b>clear</b> - <span data-uz="ekranni tozalash" data-ru="очистить экран" data-en="clear screen" data-ar="مسح الشاشة">ekranni tozalash</span></li>
+        </ul>
     </div>
 
-    <!-- 5. Java O'rnatish -->
+    <!-- 5. Java O'rnatish va Dasturlash -->
     <div class="card">
-        <div class="card-header"><span>☕</span> <span data-uz="5. JAVA O'RNATISH" data-ru="5. УСТАНОВКА JAVA" data-en="5. INSTALL JAVA" data-ar="5. تثبيت Java">5. JAVA O'RNATISH</span></div>
-        <p data-uz="Java dasturlash tili uchun Termuxda maxsus muhit o'rnatamiz." data-ru="Установим специальную среду для языка программирования Java в Termux." data-en="We will install a special environment for the Java programming language in Termux." data-ar="سنقوم بتثبيت بيئة خاصة للغة برمجة Java في Termux.">Java dasturlash tili uchun Termuxda maxsus muhit o'rnatamiz.</p>
+        <div class="card-header"><span>☕</span> <span data-uz="5. JAVA O'RNATISH VA DASTURLASH" data-ru="5. УСТАНОВКА JAVA И ПРОГРАММИРОВАНИЕ" data-en="5. INSTALL JAVA & PROGRAMMING" data-ar="5. تثبيت Java والبرمجة">5. JAVA O'RNATISH VA DASTURLASH</span></div>
+        
+        <p data-uz="Java — bu kuchli dasturlash tili bo'lib, u orqali Android ilovalar, o'yinlar va server dasturlarini yozish mumkin. Termux orqali telefoningizda Java kodlarini yozib, ularni ishga tushirishingiz mumkin." data-ru="Java — это мощный язык программирования, на котором можно писать приложения для Android, игры и серверные программы. Через Termux вы можете писать и запускать код Java на своем телефоне." data-en="Java is a powerful programming language used to write Android apps, games, and server programs. Through Termux, you can write and run Java code on your phone." data-ar="Java هي لغة برمجة قوية تُستخدم لكتابة تطبيقات Android والألعاب وبرامج الخادم. من خلال Termux، يمكنك كتابة وتشغيل كود Java على هاتفك.">Java — bu kuchli dasturlash tili bo'lib, u orqali Android ilovalar, o'yinlar va server dasturlarini yozish mumkin. Termux orqali telefoningizda Java kodlarini yozib, ularni ishga tushirishingiz mumkin.</p>
+
+        <p><b data-uz="1. Java (JDK) ni o'rnatish:" data-ru="1. Установка Java (JDK):" data-en="1. Install Java (JDK):" data-ar="1. تثبيت Java (JDK):">1. Java (JDK) ni o'rnatish:</b></p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
-            <div class="code-box"># Java (OpenJDK) o'rnatish
-pkg install openjdk-17 -y
-
-# Tekshirish
-java -version
+            <div class="code-box">pkg install openjdk-17 -y</div>
+        </div>
+        <p style="font-size:12px; color:#888;" data-uz="* O'rnatish tugagach, tekshirib ko'ring. Agar versiya chiqsa, hammasi joyida." data-ru="* После установки проверьте. Если появилась версия, все в порядке." data-en="* After installation, check it. If the version appears, everything is fine." data-ar="* بعد التثبيت، تحقق منه. إذا ظهر الإصدار، فكل شيء على ما يرام.">* O'rnatish tugagach, tekshirib ko'ring. Agar versiya chiqsa, hammasi joyida.</p>
+        <div class="code-container">
+            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+            <div class="code-box">java -version
 javac -version</div>
         </div>
+
+        <p><b data-uz="2. Java'da kod yozish va ishga tushirish:" data-ru="2. Написание и запуск кода на Java:" data-en="2. Write and run Java code:" data-ar="2. كتابة وتشغيل كود Java:">2. Java'da kod yozish va ishga tushirish:</b></p>
+        <p data-uz="Java'da kod yozish uchun avval .java faylini yaratamiz. Fayl nomi albatta katta harf bilan boshlanishi va kod ichidagi class nomi bilan bir xil bo'lishi kerak (masalan: Salom.java)." data-ru="Для написания кода на Java сначала создадим файл .java. Имя файла должно начинаться с заглавной буквы и совпадать с именем класса в коде (например: Salom.java)." data-en="To write code in Java, we first create a .java file. The file name must start with a capital letter and match the class name in the code (e.g., Salom.java)." data-ar="لكتابة كود في Java، نقوم أولاً بإنشاء ملف .java. يجب أن يبدأ اسم الملف بحرف كبير وأن يتطابق مع اسم الفئة في الكود (مثل: Salom.java).">Java'da kod yozish uchun avval <b>.java</b> faylini yaratamiz. Fayl nomi albatta katta harf bilan boshlanishi va kod ichidagi class nomi bilan bir xil bo'lishi kerak (masalan: <b>Salom.java</b>).</p>
+        
+        <div class="code-container">
+            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+            <div class="code-box">nano Salom.java</div>
+        </div>
+
+        <p data-uz="Ichiga quyidagi oddiy kodni yozing:" data-ru="Напишите внутри следующий простой код:" data-en="Write the following simple code inside:" data-ar="اكتب الكود البسيط التالي بالداخل:">Ichiga quyidagi oddiy kodni yozing:</p>
+        <div class="code-container">
+            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+            <div class="code-box">public class Salom {
+    public static void main(String[] args) {
+        System.out.println("Salom, Termux!");
+    }
+}</div>
+        </div>
+        <p style="font-size:12px; color:#f1c40f;" data-uz="* Saqlash uchun CTRL + X, keyin Y, keyin Enter bosing." data-ru="* Для сохранения нажмите CTRL + X, затем Y, затем Enter." data-en="* To save, press CTRL + X, then Y, then Enter." data-ar="* للحفظ، اضغط على CTRL + X، ثم Y، ثم Enter.">* Saqlash uchun <b>CTRL + X</b>, keyin <b>Y</b>, keyin <b>Enter</b> bosing.</p>
+
+        <p><b data-uz="3. Kodni kompilyatsiya qilish (Tekshirish):" data-ru="3. Компиляция кода (Проверка):" data-en="3. Compile the code (Check):" data-ar="3. تجميع الكود (فحص):">3. Kodni kompilyatsiya qilish (Tekshirish):</b></p>
+        <p data-uz="Java kodni to'g'ridan-to'g'ri ishlata olmaydi, avval uni kompilyator orqali .class fayliga aylantirish kerak." data-ru="Java не может запускать код напрямую, сначала его нужно преобразовать в файл .class с помощью компилятора." data-en="Java cannot run code directly; it must first be converted into a .class file by a compiler." data-ar="لا يمكن لـ Java تشغيل الكود مباشرة؛ يجب أولاً تحويله إلى ملف .class بواسطة مترجم.">Java kodni to'g'ridan-to'g'ri ishlata olmaydi, avval uni kompilyator orqali <b>.class</b> fayliga aylantirish kerak.</p>
+        <div class="code-container">
+            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+            <div class="code-box">javac Salom.java</div>
+        </div>
+        <p style="font-size:12px; color:#888;" data-uz="* Agar hech qanday xatolik chiqmasa, papkada Salom.class fayli paydo bo'ladi." data-ru="* Если ошибок нет, в папке появится файл Salom.class." data-en="* If no errors appear, a Salom.class file will appear in the folder." data-ar="* إذا لم تظهر أي أخطاء، فسيظهر ملف Salom.class في المجلد.">* Agar hech qanday xatolik chiqmasa, papkada <b>Salom.class</b> fayli paydo bo'ladi.</p>
+
+        <p><b data-uz="4. Kodni ishga tushirish:" data-ru="4. Запуск кода:" data-en="4. Run the code:" data-ar="4. تشغيل الكود:">4. Kodni ishga tushirish:</b></p>
+        <p data-uz="Endi kompilyatsiya qilingan faylni ishga tushiramiz. (Diqqat: ishga tushirishda oxiriga .java yoki .class qo'shilmaydi)." data-ru="Теперь запустим скомпилированный файл. (Внимание: при запуске не добавляется .java или .class)." data-en="Now we run the compiled file. (Note: do not add .java or .class when running)." data-ar="الآن نقوم بتشغيل الملف المترجم. (ملاحظة: لا تضف .java أو .class عند التشغيل).">Endi kompilyatsiya qilingan faylni ishga tushiramiz. <br><i>(Diqqat: ishga tushirishda oxiriga .java yoki .class qo'shilmaydi).</i></p>
+        <div class="code-container">
+            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+            <div class="code-box">java Salom</div>
+        </div>
+        <p data-uz="Ekranda 'Salom, Termux!' degan yozuv chiqadi. Tabriklaymiz, siz Java'da birinchi dasturingizni yozdingiz!" data-ru="На экране появится надпись 'Salom, Termux!'. Поздравляем, вы написали свою первую программу на Java!" data-en="The text 'Salom, Termux!' will appear on the screen. Congratulations, you have written your first Java program!" data-ar="ستظهر العبارة 'Salom, Termux!' على الشاشة. تهانينا، لقد كتبت أول برنامج Java لك!">Ekranda <b>'Salom, Termux!'</b> degan yozuv chiqadi. Tabriklaymiz, siz Java'da birinchi dasturingizni yozdingiz!</p>
     </div>
 
     <script>
