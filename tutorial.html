@@ -9,12 +9,11 @@
 
         :root {
             --primary: #00ff88;
-            --primary-dark: #00cc6a;
             --bg-main: #050505;
-            --bg-card: rgba(25, 25, 30, 0.6);
+            --bg-card: #121217; 
             --text-main: #ffffff;
             --text-muted: #a1a1aa;
-            --border-color: rgba(255, 255, 255, 0.1);
+            --border-color: rgba(255, 255, 255, 0.08);
         }
 
         * { 
@@ -31,7 +30,7 @@
             color: var(--text-main);
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
-            padding: 20px 16px 110px 16px; /* Pastdagi havola uchun joy */
+            padding: 110px 16px 120px 16px; 
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -39,39 +38,62 @@
             position: relative;
         }
 
-        /* Fon nurlari (Telefon qotmasligi uchun blur ishlatilmadi) */
-        .ambient-light, .ambient-light-2 {
+        /* ========================================= */
+        /* ZAMONAVIY ORQA FON (LAGSIZ) */
+        /* ========================================= */
+        .modern-bg {
             position: fixed;
-            width: 100vw;
-            height: 100vh;
+            top: 0; left: 0; width: 100vw; height: 100vh;
             z-index: -1;
             pointer-events: none;
-        }
-        .ambient-light {
-            background: radial-gradient(circle at 10% 10%, rgba(0, 255, 136, 0.08) 0%, transparent 50%);
-        }
-        .ambient-light-2 {
-            background: radial-gradient(circle at 90% 90%, rgba(0, 150, 255, 0.08) 0%, transparent 50%);
+            background-color: #050505;
+            /* Nozik terminal to'ri (grid) */
+            background-image: 
+                linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
         }
 
-        /* Tepa panel */
+        /* Burchaklardagi neon yorug'lik (Lag qilmaydigan gradientlar) */
+        .modern-bg::before {
+            content: '';
+            position: absolute;
+            top: -10%; left: -10%; width: 50%; height: 50%;
+            background: radial-gradient(circle, rgba(0, 255, 136, 0.1) 0%, transparent 70%);
+        }
+        .modern-bg::after {
+            content: '';
+            position: absolute;
+            bottom: -10%; right: -10%; width: 50%; height: 50%;
+            background: radial-gradient(circle, rgba(0, 191, 255, 0.08) 0%, transparent 70%);
+        }
+
+        /* ========================================= */
+        /* TEPADAGI QOTIB TURUVCHI MENYU */
+        /* ========================================= */
+        .top-fixed-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px 16px 25px 16px;
+            z-index: 1000;
+            background: linear-gradient(to bottom, rgba(5,5,5,1) 70%, rgba(5,5,5,0) 100%);
+            display: flex;
+            justify-content: center;
+        }
+
         .top-bar {
             width: 100%;
             max-width: 600px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
             padding: 12px 20px;
-            background: rgba(15, 15, 20, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: #121217;
             border-radius: 20px;
             border: 1px solid var(--border-color);
-            position: sticky;
-            top: env(safe-area-inset-top, 10px);
-            z-index: 100;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
 
         .logo-text {
@@ -81,6 +103,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: 1px;
+            white-space: nowrap;
         }
 
         .lang-group {
@@ -97,16 +120,16 @@
             color: var(--text-muted);
             font-size: 12px;
             font-weight: 700;
-            padding: 6px 12px;
+            padding: 6px 10px;
             border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
         .lang-btn.active {
             background: var(--primary);
             color: #000;
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
         }
 
         /* Logotip */
@@ -138,7 +161,7 @@
             justify-content: center;
             align-items: center;
             font-size: 22px;
-            box-shadow: 0 0 30px rgba(0, 255, 136, 0.4);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
             z-index: 2;
         }
 
@@ -164,19 +187,17 @@
         /* Kartochkalar */
         .card {
             background: var(--bg-card);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             border: 1px solid var(--border-color);
             border-radius: 24px;
             padding: 24px;
             width: 100%;
             max-width: 600px;
             margin-bottom: 24px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             
             opacity: 0;
             transform: translateY(30px);
-            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
             will-change: opacity, transform;
         }
 
@@ -245,60 +266,67 @@
             font-weight: 700;
             font-size: 12px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
         .copy-btn:active { transform: scale(0.92); }
         .copy-btn.success { background: var(--primary); color: #000; border-color: var(--primary); }
 
-        /* Mualliflik qismi */
+        /* ========================================= */
+        /* PASTKI QOTIB TURUVCHI TUGMA */
+        /* ========================================= */
         .creator-footer {
             position: fixed;
-            bottom: env(safe-area-inset-bottom, 20px);
+            bottom: 24px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
+            width: max-content;
+            margin-bottom: env(safe-area-inset-bottom);
         }
 
         .creator-link {
             display: flex;
             align-items: center;
-            gap: 8px;
-            background: rgba(15, 15, 20, 0.9);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            color: #fff;
+            justify-content: center;
+            gap: 10px;
+            background: #0a0a0f;
+            color: #ffffff;
             text-decoration: none;
-            padding: 10px 20px;
+            padding: 12px 30px;
             border-radius: 50px;
-            font-size: 14px;
-            font-weight: 600;
-            border: 1px solid rgba(0, 255, 136, 0.3);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            transition: all 0.3s ease;
+            font-size: 18px;
+            font-weight: 800;
+            border: 2px solid #2ed573;
+            box-shadow: 0 5px 25px rgba(46, 213, 115, 0.3);
+            transition: all 0.2s ease;
+            letter-spacing: 0.5px;
         }
 
         .creator-link:active {
-            background: rgba(0, 255, 136, 0.15);
-            border-color: var(--primary);
-            transform: translateX(-50%) scale(0.95);
+            transform: scale(0.95);
+            background: rgba(46, 213, 115, 0.2);
         }
 
-        .creator-icon { font-size: 18px; }
+        .creator-icon { font-size: 22px; }
+        
     </style>
 </head>
 <body>
 
-    <div class="ambient-light"></div>
-    <div class="ambient-light-2"></div>
+    <!-- YANGI ZAMONAVIY ORQA FON -->
+    <div class="modern-bg"></div>
 
-    <div class="top-bar">
-        <div class="logo-text">TERMUX PRO</div>
-        <div class="lang-group">
-            <button class="lang-btn active" onclick="changeLang('uz', this)">UZ</button>
-            <button class="lang-btn" onclick="changeLang('ru', this)">RU</button>
-            <button class="lang-btn" onclick="changeLang('en', this)">EN</button>
-            <button class="lang-btn" onclick="changeLang('ar', this)">AR</button>
+    <!-- TEPADAGI QOTIB TURUVCHI MENYU -->
+    <div class="top-fixed-wrapper">
+        <div class="top-bar">
+            <div class="logo-text">TERMUX PRO</div>
+            <div class="lang-group">
+                <button class="lang-btn active" onclick="changeLang('uz', this)">UZ</button>
+                <button class="lang-btn" onclick="changeLang('ru', this)">RU</button>
+                <button class="lang-btn" onclick="changeLang('en', this)">EN</button>
+                <button class="lang-btn" onclick="changeLang('ar', this)">AR</button>
+            </div>
         </div>
     </div>
 
@@ -333,26 +361,63 @@ termux-setup-storage</div>
         </ol>
     </div>
 
-    <!-- 3. Python -->
+    <!-- 3. Python (To'liq va Ideal) -->
     <div class="card">
         <div class="card-header"><span>🐍</span> <span data-uz="3. PYTHON VA KUTUBXONALAR" data-ru="3. PYTHON И БИБЛИОТЕКИ" data-en="3. PYTHON & LIBRARIES" data-ar="3. Python والمكتبات">3. PYTHON VA KUTUBXONALAR</span></div>
-        <p><b data-uz="1. Python va Pip o'rnatish:" data-ru="1. Установка Python и Pip:" data-en="1. Install Python & Pip:" data-ar="1. تثبيت Python و Pip:">1. Python va Pip o'rnatish:</b></p>
+        
+        <p data-uz="Python — bu eng oson va ommabop dasturlash tili. Termux yordamida telefoningizda to'liq dasturlar va botlar yozishingiz mumkin. Keling, uni 0 dan o'rganamiz." data-ru="Python — это самый простой и популярный язык программирования. С помощью Termux вы можете писать полноценные программы и ботов на телефоне. Давайте изучим его с нуля." data-en="Python is the easiest and most popular programming language. Using Termux, you can write full-fledged programs and bots on your phone. Let's learn it from scratch." data-ar="Python هي لغة البرمجة الأسهل والأكثر شيوعًا. باستخدام Termux، يمكنك كتابة برامج وبوتات كاملة على هاتفك. دعنا نتعلمها من الصفر.">Python — bu eng oson va ommabop dasturlash tili. Termux yordamida telefoningizda to'liq dasturlar va botlar yozishingiz mumkin. Keling, uni 0 dan o'rganamiz.</p>
+        
+        <p><b data-uz="1. Python va Pip (Kutubxona menejerini) o'rnatish:" data-ru="1. Установка Python и Pip (менеджера библиотек):" data-en="1. Install Python & Pip (Library manager):" data-ar="1. تثبيت Python و Pip (مدير المكتبات):">1. Python va Pip (Kutubxona menejerini) o'rnatish:</b></p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
             <div class="code-box">pkg install python -y</div>
         </div>
-        <p><b data-uz="2. Papka va fayl yaratish:" data-ru="2. Создание папки и файла:" data-en="2. Create folder and file:" data-ar="2. إنشاء مجلد وملف:">2. Papka va fayl yaratish:</b></p>
+        <p style="font-size:13px; color:#888;" data-uz="* '-y' qismi o'rnatish vaqtida avtomatik 'Ha' deb javob berish uchun kerak." data-ru="* '-y' нужен для автоматического ответа 'Да' во время установки." data-en="* '-y' is needed to automatically answer 'Yes' during installation." data-ar="* '-y' مطلوب للإجابة تلقائيًا بـ 'نعم' أثناء التثبيت.">* <code>-y</code> qismi o'rnatish vaqtida avtomatik "Ha" deb javob berish uchun kerak.</p>
+
+        <p><b data-uz="2. Papka yaratish va uning ichiga kirish:" data-ru="2. Создание папки и вход в нее:" data-en="2. Create a folder and enter it:" data-ar="2. إنشاء مجلد والدخول إليه:">2. Papka yaratish va uning ichiga kirish:</b></p>
+        <p style="font-size:13px; color:#888;" data-uz="* 'mkdir' (Make Directory) yangi papka ochadi, 'cd' (Change Directory) esa o'sha papkaga kiradi." data-ru="* 'mkdir' создает новую папку, а 'cd' входит в нее." data-en="* 'mkdir' creates a new folder, and 'cd' enters it." data-ar="* 'mkdir' ينشئ مجلدًا جديدًا، و 'cd' يدخله.">* <code>mkdir</code> (Make Directory) yangi papka ochadi, <code>cd</code> (Change Directory) esa o'sha papkaga kiradi.</p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
             <div class="code-box">mkdir name
-cd name
-nano name.py</div>
+cd name</div>
         </div>
-        <p><b data-uz="3. Kutubxonalar o'rnatish (Pip):" data-ru="3. Установка библиотек (Pip):" data-en="3. Install Libraries (Pip):" data-ar="3. تثبيت المكتبات (Pip):">3. Kutubxonalar o'rnatish (Pip):</b></p>
+
+        <p><b data-uz="3. Kod yozish uchun fayl ochish va kod yozish:" data-ru="3. Открытие файла для написания кода:" data-en="3. Open a file to write code:" data-ar="3. فتح ملف لكتابة الكود:">3. Kod yozish uchun fayl ochish va kod yozish:</b></p>
+        <p style="font-size:13px; color:#888;" data-uz="* 'nano' matn muharriri. U orqali .py faylini ochib, ichiga kod yozamiz. Kodni yozib bo'lgach, saqlash uchun CTRL+X, keyin Y, keyin Enter ni bosing." data-ru="* 'nano' — это текстовый редактор. Через него мы открываем файл .py и пишем код. После написания кода нажмите CTRL+X, затем Y, затем Enter, чтобы сохранить." data-en="* 'nano' is a text editor. We use it to open a .py file and write code. After writing the code, press CTRL+X, then Y, then Enter to save." data-ar="* 'nano' هو محرر نصوص. نستخدمه لفتح ملف .py وكتابة الكود. بعد كتابة الكود، اضغط على CTRL+X، ثم Y، ثم Enter للحفظ.">* <code>nano</code> matn muharriri. U orqali <code>.py</code> faylini ochib, ichiga kod yozamiz. Kodni yozib bo'lgach, saqlash uchun <b>CTRL+X</b>, keyin <b>Y</b>, keyin <b>Enter</b> ni bosing.</p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
-            <div class="code-box">pip install requests
-pip install beautifulsoup4</div>
+            <div class="code-box">nano name.py
+
+# Ichiga shu kodni yozing:
+print("Salom, Termux!")</div>
+        </div>
+
+        <p><b data-uz="4. Kodni ishga tushirish (3 xil usul):" data-ru="4. Запуск кода (3 способа):" data-en="4. Run the code (3 ways):" data-ar="4. تشغيل الكود (3 طرق):">4. Kodni ishga tushirish (3 xil usul):</b></p>
+        <p style="font-size:13px; color:#888;" data-uz="* Qaysi papkada turganingizga qarab, kodni chaqirish usuli o'zgaradi." data-ru="* В зависимости от того, в какой папке вы находитесь, способ вызова кода меняется." data-en="* Depending on which folder you are in, the way you call the code changes." data-ar="* اعتمادًا على المجلد الذي تتواجد فيه، تتغير طريقة استدعاء الكود.">* Qaysi papkada turganingizga qarab, kodni chaqirish usuli o'zgaradi.</p>
+        <div class="code-container">
+            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+            <div class="code-box"># 1-usul: Papka ichida turganda (eng ko'p ishlatiladigani)
+python name.py
+
+# 2-usul: Papkadan chiqib (cd ..), tashqaridan chaqirish
+python name/name.py
+
+# 3-usul: Telefon xotirasidagi faylni chaqirish (masalan, MT Manager orqali)
+python /sdcard/name/name.py</div>
+        </div>
+
+        <p><b data-uz="5. Kutubxonalar o'rnatish (Pip):" data-ru="5. Установка библиотек (Pip):" data-en="5. Install Libraries (Pip):" data-ar="5. تثبيت المكتبات (Pip):">5. Kutubxonalar o'rnatish (Pip):</b></p>
+        <p data-uz="Pip — bu tayyor kodlar to'plami. Masalan, internetga ulanish yoki Telegram bot yasash uchun tayyor kodlarni yuklab olish uchun ishlatiladi." data-ru="Pip — это набор готового кода. Например, используется для загрузки готового кода для подключения к интернету или создания Telegram-бота." data-en="Pip is a collection of ready-made code. For example, it is used to download ready code to connect to the internet or build a Telegram bot." data-ar="Pip عبارة عن مجموعة من الأكواد الجاهزة. على سبيل المثال، يتم استخدامه لتنزيل الكود الجاهز للاتصال بالإنترنت أو إنشاء بوت تيليجرام.">Pip — bu tayyor kodlar to'plami. Masalan, internetga ulanish yoki Telegram bot yasash uchun tayyor kodlarni yuklab olish uchun ishlatiladi.</p>
+        <div class="code-container">
+            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+            <div class="code-box"># Internetdan ma'lumot olish uchun:
+pip install requests
+
+# Veb-saytlarni tahlil qilish (parsing) uchun:
+pip install beautifulsoup4
+
+# Telegram bot yasash uchun:
+pip install python-telegram-bot</div>
         </div>
     </div>
 
@@ -370,12 +435,20 @@ pip install beautifulsoup4</div>
     <!-- 5. Java -->
     <div class="card">
         <div class="card-header"><span>☕</span> <span data-uz="5. JAVA DASTURLASH" data-ru="5. ПРОГРАММИРОВАНИЕ JAVA" data-en="5. JAVA PROGRAMMING" data-ar="5. برمجة Java">5. JAVA DASTURLASH</span></div>
-        <p><b data-uz="1. Java (JDK) ni o'rnatish:" data-ru="1. Установка Java (JDK):" data-en="1. Install Java (JDK):" data-ar="1. تثبيت Java (JDK):">1. Java (JDK) ni o'rnatish:</b></p>
+        
+        <p data-uz="Java — bu kuchli dasturlash tili bo'lib, u orqali Android ilovalar va o'yinlar yozish mumkin." data-ru="Java — это мощный язык программирования, на котором можно писать приложения для Android и игры." data-en="Java is a powerful programming language used to write Android apps and games." data-ar="Java هي لغة برمجة قوية تُستخدم لكتابة تطبيقات Android والألعاب.">Java — bu kuchli dasturlash tili bo'lib, u orqali Android ilovalar va o'yinlar yozish mumkin.</p>
+
+        <p><b data-uz="1. Java (JDK) ni o'rnatish va tekshirish:" data-ru="1. Установка и проверка Java (JDK):" data-en="1. Install and check Java (JDK):" data-ar="1. تثبيت والتحقق من Java (JDK):">1. Java (JDK) ni o'rnatish va tekshirish:</b></p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
-            <div class="code-box">pkg install openjdk-17 -y</div>
+            <div class="code-box">pkg install openjdk-17 -y
+
+# Tekshirish:
+java -version
+javac -version</div>
         </div>
-        <p><b data-uz="2. Kod yozish:" data-ru="2. Написание кода:" data-en="2. Write code:" data-ar="2. كتابة الكود:">2. Kod yozish:</b></p>
+
+        <p><b data-uz="2. Kod yozish (Fayl nomi katta harf bilan boshlanadi):" data-ru="2. Написание кода (Имя файла с заглавной буквы):" data-en="2. Write code (File name starts with capital):" data-ar="2. كتابة الكود (يبدأ اسم الملف بحرف كبير):">2. Kod yozish (Fayl nomi katta harf bilan boshlanadi):</b></p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
             <div class="code-box">nano Salom.java
@@ -387,7 +460,9 @@ public class Salom {
     }
 }</div>
         </div>
+
         <p><b data-uz="3. Kompilyatsiya qilish va ishga tushirish:" data-ru="3. Компиляция и запуск:" data-en="3. Compile and run:" data-ar="3. تجميع وتشغيل:">3. Kompilyatsiya qilish va ishga tushirish:</b></p>
+        <p style="font-size:13px; color:#888;" data-uz="* javac - kodni tekshiradi va .class fayl yaratadi. java - kodni ishga tushiradi." data-ru="* javac - проверяет код и создает файл .class. java - запускает код." data-en="* javac - checks code and creates .class file. java - runs the code." data-ar="* javac - يتحقق من الكود وينشئ ملف .class. java - يشغل الكود.">* <code>javac</code> - kodni tekshiradi va <code>.class</code> fayl yaratadi. <code>java</code> - kodni ishga tushiradi.</p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
             <div class="code-box">javac Salom.java
@@ -395,6 +470,7 @@ java Salom</div>
         </div>
     </div>
 
+    <!-- PASTKI QOTIB TURUVCHI QISM -->
     <div class="creator-footer">
         <a href="https://t.me/Tommy_1727" target="_blank" class="creator-link">
             <span class="creator-icon">👨‍💻</span> Yaratuvchi: @Tommy_1727
@@ -402,15 +478,13 @@ java Salom</div>
     </div>
 
     <script>
-        // 1. Kodlarni nusxalash (Xatosiz va zaxira usul bilan)
+        // 1. Kodlarni nusxalash (Zaxira usul bilan, xatosiz)
         function copyCode(btn) {
             const codeText = btn.nextElementSibling.innerText;
             
-            // Zamonaviy usul
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(codeText).then(() => showSuccess(btn));
             } else {
-                // Eski brauzerlar uchun zaxira usul
                 const textArea = document.createElement("textarea");
                 textArea.value = codeText;
                 textArea.style.position = "absolute";
@@ -439,18 +513,16 @@ java Salom</div>
             }, 2000);
         }
 
-        // 2. Tilni o'zgartirish (innerHTML orqali xatosiz)
+        // 2. Tilni o'zgartirish (innerHTML orqali)
         function changeLang(lang, btn) {
             document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
             const elements = document.querySelectorAll('[data-' + lang + ']');
             elements.forEach(el => {
-                // innerText emas, innerHTML ishlatiladi. Shunda <b> teglari o'chib ketmaydi.
                 el.innerHTML = el.getAttribute('data-' + lang);
             });
 
-            // Arab tili uchun RTL
             if (lang === 'ar') {
                 document.body.style.direction = 'rtl';
             } else {
@@ -458,14 +530,14 @@ java Salom</div>
             }
         }
 
-        // 3. Scroll Animatsiyasi (Intersection Observer)
+        // 3. Scroll Animatsiyasi (Laglarsiz)
         const cards = document.querySelectorAll('.card');
         
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('show');
-                    observer.unobserve(entry.target); // Animatsiya 1 marta ishlaydi, ortiqcha yuklama bo'lmaydi
+                    observer.unobserve(entry.target); 
                 }
             });
         }, {
