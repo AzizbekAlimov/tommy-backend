@@ -2,10 +2,10 @@ import os
 import logging
 import threading
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes
 from aiohttp import web
 
-# Tokenni Render'dagi Environment Variables'dan oladi
+# Render'dagi Environment Variables'dan tokenni oladi
 TOKEN = os.environ.get("TOKEN", "SIZNING_TOKENINGIZNI_SHU_YERGA_YOZING")
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -13,47 +13,40 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 # --- BOT QISMI ---
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Botning o'zi haqida to'liq ma'lumot beruvchi matn
+    info_text = (
+        "👋 **Assalomu alaykum!**\n\n"
+        "Men **Termux va Dasturlash** bo'yicha yordamchi botman.\n\n"
+        "🤖 **Men nima qila olaman?**\n"
+        "Men sizga quyidagi mavzularni 100% o'rgataman:\n"
+        "📱 **Termux** - Androidda Linux muhitini sozlash\n"
+        "🐍 **Python** - Dasturlash tili va bot yasash\n"
+        "📂 **MT Manager** - Termux fayllari bilan ishlash\n"
+        "☕ **Java** - Dasturlash muhitini o'rnatish\n\n"
+        "📚 Barcha darsliklar bitta qulay **Web sahifada** jamlangan. "
+        "Quyidagi tugma orqali to'liq qo'llanmani ochishingiz mumkin:"
+    )
+    
+    # Faqatgina HTML darslikka olib o'tuvchi bitta tugma
     keyboard = [
-        # BU YERGA O'ZINGIZNING RENDER HAVOLANGIZNI YOZING
-        [InlineKeyboardButton("📚 Termux Tutorial (Web)", url="https://termux-bot-89xq.onrender.com/tutorial")], 
-        [InlineKeyboardButton("📱 Termux haqida", callback_data='termux')],
-        [InlineKeyboardButton("🐍 Python haqida", callback_data='python')],
-        [InlineKeyboardButton("📂 MT Manager haqida", callback_data='mtmanager')],
-        [InlineKeyboardButton("☕ Java haqida", callback_data='java')],
-        [InlineKeyboardButton("🌙 Lua haqida", callback_data='lua')]
+        [InlineKeyboardButton("📚 Termux Tutorial (Web)", url="https://termux-bot-89xq.onrender.com/tutorial")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
+    
     await update.message.reply_text(
-        "Assalomu alaykum! Men Termux va Dasturlash o'quv botiman.\n"
-        "Kerakli bo'limni tanlang:", 
-        reply_markup=reply_markup
+        info_text, 
+        reply_markup=reply_markup,
+        parse_mode='Markdown'
     )
 
-async def button_tap(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    
-    if query.data == 'termux':
-        text = "📱 **Termux** - Android uchun Linux.\n\n`pkg update`\n`pkg install python`\n`termux-setup-storage`"
-    elif query.data == 'python':
-        text = "🐍 **Python**\n\nO'rnatish: `pkg install python`\nKutubxona: `pip install python-telegram-bot`"
-    elif query.data == 'mtmanager':
-        text = "📂 **MT Manager**\n\nTermux fayllarini ko'rish uchun MT Managerda 'Add local storage' ni bosib, Termux papkasini tanlang."
-    elif query.data == 'java':
-        text = "☕ **Java**\n\n`pkg install openjdk-17`\nTekshirish: `java -version`"
-    elif query.data == 'lua':
-        text = "🌙 **Lua**\n\n`pkg install lua`\nKod yozish: `nano test.lua`\nIshga tushirish: `lua test.lua`"
-    
-    await query.edit_message_text(text=text, parse_mode='Markdown')
-
-# --- VEB SERVER QISMI (HTML fayllarni o'qiydi) ---
+# --- VEB SERVER QISMI (HTML faylni ochish uchun) ---
 
 async def handle_index(request):
     try:
         with open('index.html', 'r', encoding='utf-8') as f:
             return web.Response(text=f.read(), content_type='text/html')
     except FileNotFoundError:
-        return web.Response(text="Bot ishlayapti! (index.html topilmadi)")
+        return web.Response(text="Bot ishlayapti!")
 
 async def handle_tutorial(request):
     try:
@@ -76,8 +69,9 @@ def main():
     threading.Thread(target=run_web_server, daemon=True).start()
 
     application = Application.builder().token(TOKEN).build()
+    
+    # Faqat /start buyrug'ini tinglaydi
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CallbackQueryHandler(button_tap))
 
     print("Bot ishga tushdi...")
     application.run_polling()
