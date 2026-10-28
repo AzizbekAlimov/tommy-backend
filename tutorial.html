@@ -2,79 +2,298 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Termux Master Guide</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap');
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+
+        :root {
+            --primary: #00ff88;
+            --primary-dark: #00cc6a;
+            --bg-main: #050505;
+            --bg-card: rgba(25, 25, 30, 0.6);
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html { scroll-behavior: smooth; }
+
         body {
-            background: radial-gradient(circle at top right, #1a1a3a 0%, #0a0a14 100%);
-            color: #ffffff; font-family: 'Montserrat', sans-serif;
-            min-height: 100vh; padding: 20px 15px;
-            display: flex; flex-direction: column; align-items: center;
-            transition: direction 0.3s;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            padding: 20px 16px 110px 16px; /* Pastdagi havola uchun joy */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
         }
-        
-        /* Tepa panel (Tillar uchun) */
+
+        /* Fon nurlari (Telefon qotmasligi uchun blur ishlatilmadi) */
+        .ambient-light, .ambient-light-2 {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .ambient-light {
+            background: radial-gradient(circle at 10% 10%, rgba(0, 255, 136, 0.08) 0%, transparent 50%);
+        }
+        .ambient-light-2 {
+            background: radial-gradient(circle at 90% 90%, rgba(0, 150, 255, 0.08) 0%, transparent 50%);
+        }
+
+        /* Tepa panel */
         .top-bar {
-            width: 100%; max-width: 500px;
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 20px; padding: 10px 15px;
-            background: rgba(30, 30, 50, 0.6);
-            backdrop-filter: blur(10px);
-            border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            position: sticky; top: 10px; z-index: 100;
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 12px 20px;
+            background: rgba(15, 15, 20, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            position: sticky;
+            top: env(safe-area-inset-top, 10px);
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
         }
-        .lang-group { display: flex; gap: 5px; }
+
+        .logo-text {
+            font-weight: 900;
+            font-size: 16px;
+            background: linear-gradient(90deg, #00ff88, #00bfff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .lang-group {
+            display: flex;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 12px;
+        }
+
         .lang-btn {
-            background: transparent; border: none; color: #a0a0a0;
-            font-size: 14px; font-weight: 600; cursor: pointer; padding: 6px 10px;
-            border-radius: 8px; transition: 0.3s;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
-        .lang-btn:hover, .lang-btn.active { background: #2ed573; color: #000; }
 
-        .bg-glow { position: fixed; border-radius: 50%; filter: blur(120px); z-index: -1; opacity: 0.4; }
-        .bg-glow-1 { width: 300px; height: 300px; background: #2ed573; top: -50px; left: -100px; }
-        .bg-glow-2 { width: 300px; height: 300px; background: #3498db; bottom: 10%; right: -100px; }
-        
+        .lang-btn.active {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+        }
+
         /* Logotip */
-        .logo-container { position: relative; width: 120px; height: 120px; margin-top: 10px; display: flex; justify-content: center; align-items: center; }
-        .ring { position: absolute; border-radius: 50%; border: 3px solid transparent; animation: spin 4s linear infinite; }
-        .ring-1 { width: 100%; height: 100%; border-top-color: #2ed573; border-right-color: #2ed573; box-shadow: 0 0 20px #2ed573; }
-        .ring-2 { width: 85%; height: 85%; border-bottom-color: #3498db; border-left-color: #3498db; animation-direction: reverse; box-shadow: 0 0 20px #3498db; }
-        .ring-3 { width: 70%; height: 70%; border-top-color: #f1c40f; border-right-color: #f1c40f; box-shadow: 0 0 20px #f1c40f; }
-        .center-icon { width: 50%; height: 50%; background: radial-gradient(circle, #2ed573 0%, #1e8449 100%); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 0 25px #2ed573; z-index: 2; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .logo-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-        .title { font-size: 24px; font-weight: 800; color: #fff; margin-top: 20px; letter-spacing: 1px; text-align: center; text-shadow: 0 0 15px rgba(255,255,255,0.3); }
-        .subtitle { font-size: 13px; color: #2ed573; margin-bottom: 25px; text-align: center; font-weight: 600; letter-spacing: 1px; }
+        .ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            animation: spin 6s linear infinite;
+            will-change: transform;
+        }
+        .ring-1 { width: 100%; height: 100%; border-top-color: var(--primary); border-right-color: var(--primary); }
+        .ring-2 { width: 80%; height: 80%; border-bottom-color: #00bfff; border-left-color: #00bfff; animation-direction: reverse; }
+        .center-icon {
+            width: 50%;
+            height: 50%;
+            background: linear-gradient(135deg, #00ff88, #00bfff);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.4);
+            z-index: 2;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .title {
+            font-size: 26px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: var(--primary);
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
 
         /* Kartochkalar */
-        .card { background: rgba(20, 20, 35, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 20px; width: 100%; max-width: 500px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); transition: transform 0.3s; }
-        .card:hover { transform: translateY(-2px); border-color: rgba(46, 213, 115, 0.3); }
-        .card-header { display: flex; align-items: center; font-size: 16px; font-weight: 700; color: #2ed573; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px; }
-        .card-header span { margin-right: 10px; font-size: 22px; }
-        
-        p, ul, ol { font-size: 14px; color: #b0b0c0; line-height: 1.7; margin-bottom: 12px; }
-        ul, ol { padding-left: 20px; }
-        li { margin-bottom: 8px; }
-        b { color: #fff; }
-        code { color: #f1c40f; background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; font-family: monospace; }
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform;
+        }
 
-        /* Kod bloklari va Copy tugmasi */
-        .code-container { position: relative; margin-top: 15px; margin-bottom: 15px; }
-        .code-box { background: #0a0a10; border-radius: 12px; padding: 40px 15px 15px 15px; font-family: 'Courier New', Courier, monospace; font-size: 13px; color: #64b5f6; border-left: 4px solid #2ed573; overflow-x: auto; white-space: pre; line-height: 1.5; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); }
-        .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(46, 213, 115, 0.2); color: #2ed573; border: 1px solid #2ed573; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer; transition: 0.3s; letter-spacing: 1px; }
-        .copy-btn:hover { background: #2ed573; color: #000; }
-        .copy-btn:active { transform: scale(0.95); }
+        .card.show { opacity: 1; transform: translateY(0); }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .card-header span:first-child { margin-right: 12px; font-size: 24px; }
+
+        p, ul, ol {
+            font-size: 15px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        ul, ol { padding-left: 20px; }
+        li { margin-bottom: 10px; }
+        b { color: var(--text-main); font-weight: 700; }
+        
+        code {
+            background: rgba(255, 255, 255, 0.1);
+            color: #facc15;
+            padding: 3px 6px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        /* Kod bloklari */
+        .code-container {
+            position: relative;
+            margin: 16px 0;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #000000;
+            border: 1px solid #222;
+        }
+
+        .code-box {
+            padding: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            color: #a78bfa;
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.5;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--primary);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:active { transform: scale(0.92); }
+        .copy-btn.success { background: var(--primary); color: #000; border-color: var(--primary); }
+
+        /* Mualliflik qismi */
+        .creator-footer {
+            position: fixed;
+            bottom: env(safe-area-inset-bottom, 20px);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+
+        .creator-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(15, 15, 20, 0.9);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .creator-link:active {
+            background: rgba(0, 255, 136, 0.15);
+            border-color: var(--primary);
+            transform: translateX(-50%) scale(0.95);
+        }
+
+        .creator-icon { font-size: 18px; }
     </style>
 </head>
 <body>
 
-    <!-- Til tanlash paneli -->
+    <div class="ambient-light"></div>
+    <div class="ambient-light-2"></div>
+
     <div class="top-bar">
-        <div style="font-weight:800; color:#2ed573;">TERMUX PRO</div>
+        <div class="logo-text">TERMUX PRO</div>
         <div class="lang-group">
             <button class="lang-btn active" onclick="changeLang('uz', this)">UZ</button>
             <button class="lang-btn" onclick="changeLang('ru', this)">RU</button>
@@ -83,11 +302,9 @@
         </div>
     </div>
 
-    <div class="bg-glow bg-glow-1"></div>
-    <div class="bg-glow bg-glow-2"></div>
-
     <div class="logo-container">
-        <div class="ring ring-1"></div><div class="ring ring-2"></div><div class="ring ring-3"></div>
+        <div class="ring ring-1"></div>
+        <div class="ring ring-2"></div>
         <div class="center-icon">💻</div>
     </div>
 
@@ -103,56 +320,39 @@
             <div class="code-box">pkg update && pkg upgrade -y
 termux-setup-storage</div>
         </div>
-        <p style="font-size:12px; color:#888;" data-uz="* termux-setup-storage telefoningiz xotirasiga kirishga ruxsat beradi." data-ru="* termux-setup-storage разрешает доступ к памяти телефона." data-en="* termux-setup-storage allows access to your phone's storage." data-ar="* يسمح termux-setup-storage بالوصول إلى ذاكرة هاتفك.">* termux-setup-storage telefoningiz xotirasiga kirishga ruxsat beradi.</p>
+        <p style="font-size:13px; color:#888;" data-uz="* termux-setup-storage telefoningiz xotirasiga kirishga ruxsat beradi." data-ru="* termux-setup-storage разрешает доступ к памяти телефона." data-en="* termux-setup-storage allows access to your phone's storage." data-ar="* يسمح termux-setup-storage بالوصول إلى ذاكرة هاتفك.">* termux-setup-storage telefoningiz xotirasiga kirishga ruxsat beradi.</p>
     </div>
 
-    <!-- 2. MT Manager va Fayllar -->
+    <!-- 2. MT Manager -->
     <div class="card">
-        <div class="card-header"><span>📂</span> <span data-uz="2. MT MANAGER BILAN ISHLASH" data-ru="2. РАБОТА С MT MANAGER" data-en="2. WORKING WITH MT MANAGER" data-ar="2. العمل مع MT Manager">2. MT MANAGER BILAN ISHLASH</span></div>
-        <p data-uz="MT Manager orqali Termux ichidagi fayllarni ko'rish, o'zgartirish va tahrirlash juda oson." data-ru="Просматривать и редактировать файлы внутри Termux через MT Manager очень легко." data-en="Viewing and editing files inside Termux via MT Manager is very easy." data-ar="عرض وتحرير الملفات داخل Termux عبر MT Manager أمر سهل للغاية.">MT Manager orqali Termux ichidagi fayllarni ko'rish, o'zgartirish va tahrirlash juda oson.</p>
+        <div class="card-header"><span>📂</span> <span data-uz="2. MT MANAGER" data-ru="2. MT MANAGER" data-en="2. MT MANAGER" data-ar="2. MT Manager">2. MT MANAGER</span></div>
+        <p data-uz="MT Manager orqali Termux ichidagi fayllarni ko'rish va tahrirlash juda oson." data-ru="Просматривать и редактировать файлы внутри Termux через MT Manager очень легко." data-en="Viewing and editing files inside Termux via MT Manager is very easy." data-ar="عرض وتحرير الملفات داخل Termux عبر MT Manager أمر سهل للغاية.">MT Manager orqali Termux ichidagi fayllarni ko'rish va tahrirlash juda oson.</p>
         <ol>
-            <li data-uz="MT Manager'ni oching. Chap menyudan 'Add local storage' ni bosing." data-ru="Откройте MT Manager. В левом меню нажмите 'Add local storage'." data-en="Open MT Manager. Click 'Add local storage' from the left menu." data-ar="افتح MT Manager. انقر على 'Add local storage' من القائمة اليسرى.">MT Manager'ni oching. Chap menyudan <b>Add local storage</b> ni bosing.</li>
-            <li data-uz="Ichki xotiradan 'Termux' papkasini topib, 'Use this folder' ni bosing." data-ru="Найдите папку 'Termux' во внутренней памяти и нажмите 'Use this folder'." data-en="Find the 'Termux' folder from internal storage and click 'Use this folder'." data-ar="ابحث عن مجلد 'Termux' من التخزين الداخلي وانقر على 'Use this folder'.">Ichki xotiradan <b>Termux</b> papkasini topib, <b>Use this folder</b> ni bosing.</li>
-            <li data-uz="Endi Termuxdagi barcha kodlarni MT Manager orqali ochib, xuddi kompyuterdagidek tahrirlashingiz mumkin." data-ru="Теперь вы можете открывать все коды в Termux через MT Manager и редактировать их, как на компьютере." data-en="Now you can open all codes in Termux via MT Manager and edit them like on a computer." data-ar="الآن يمكنك فتح جميع الأكواد في Termux عبر MT Manager وتحريرها كما لو كنت على جهاز كمبيوتر.">Endi Termuxdagi barcha kodlarni MT Manager orqali ochib, xuddi kompyuterdagidek tahrirlashingiz mumkin.</li>
+            <li data-uz="MT Manager'ni ochib, <b>Add local storage</b> ni bosing." data-ru="Откройте MT Manager и нажмите <b>Add local storage</b>." data-en="Open MT Manager and click <b>Add local storage</b>." data-ar="افتح MT Manager وانقر على <b>Add local storage</b>.">MT Manager'ni ochib, <b>Add local storage</b> ni bosing.</li>
+            <li data-uz="Ichki xotiradan <b>Termux</b> papkasini topib, <b>Use this folder</b> ni bosing." data-ru="Найдите папку <b>Termux</b> во внутренней памяти и нажмите <b>Use this folder</b>." data-en="Find the <b>Termux</b> folder from internal storage and click <b>Use this folder</b>." data-ar="ابحث عن مجلد <b>Termux</b> من التخزين الداخلي وانقر على <b>Use this folder</b>.">Ichki xotiradan <b>Termux</b> papkasini topib, <b>Use this folder</b> ni bosing.</li>
         </ol>
     </div>
 
-    <!-- 3. Python, Papkalar va Kutubxonalar -->
+    <!-- 3. Python -->
     <div class="card">
         <div class="card-header"><span>🐍</span> <span data-uz="3. PYTHON VA KUTUBXONALAR" data-ru="3. PYTHON И БИБЛИОТЕКИ" data-en="3. PYTHON & LIBRARIES" data-ar="3. Python والمكتبات">3. PYTHON VA KUTUBXONALAR</span></div>
-        <p data-uz="Python o'rnatamiz, papka yaratamiz va kerakli kutubxonalarni o'rnatishni o'rganamiz." data-ru="Установим Python, создадим папку и научимся устанавливать необходимые библиотеки." data-en="Install Python, create a folder, and learn to install necessary libraries." data-ar="قم بتثبيت Python وإنشاء مجلد وتعلم تثبيت المكتبات اللازمة.">Python o'rnatamiz, papka yaratamiz va kerakli kutubxonalarni o'rnatishni o'rganamiz.</p>
-        
         <p><b data-uz="1. Python va Pip o'rnatish:" data-ru="1. Установка Python и Pip:" data-en="1. Install Python & Pip:" data-ar="1. تثبيت Python و Pip:">1. Python va Pip o'rnatish:</b></p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
             <div class="code-box">pkg install python -y</div>
         </div>
-
-        <p><b data-uz="2. Papka yaratish va fayl ochish (name/name.py):" data-ru="2. Создание папки и файла (name/name.py):" data-en="2. Create folder and file (name/name.py):" data-ar="2. إنشاء مجلد وملف (name/name.py):">2. Papka yaratish va fayl ochish (name/name.py):</b></p>
+        <p><b data-uz="2. Papka va fayl yaratish:" data-ru="2. Создание папки и файла:" data-en="2. Create folder and file:" data-ar="2. إنشاء مجلد وملف:">2. Papka va fayl yaratish:</b></p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
             <div class="code-box">mkdir name
 cd name
 nano name.py</div>
         </div>
-        <p style="font-size:12px; color:#888;" data-uz="* Ichiga print('Salom') deb yozib, CTRL+X, Y, Enter bilan saqlang." data-ru="* Внутри напишите print('Salom') и сохраните с помощью CTRL+X, Y, Enter." data-en="* Inside, write print('Salom') and save with CTRL+X, Y, Enter." data-ar="* بالداخل، اكتب print('Salom') واحفظ باستخدام CTRL+X, Y, Enter.">* Ichiga <code>print('Salom')</code> deb yozib, CTRL+X, Y, Enter bilan saqlang.</p>
-
-        <p><b data-uz="3. Kodni ishga tushirish usullari:" data-ru="3. Способы запуска кода:" data-en="3. Ways to run code:" data-ar="3. طرق تشغيل الكود:">3. Kodni ishga tushirish usullari:</b></p>
-        <div class="code-container">
-            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
-            <div class="code-box"># 1. Papka ichida:
-python name.py
-
-# 2. Papkadan tashqarida:
-python name/name.py</div>
-        </div>
-
-        <p><b data-uz="4. Kutubxonalar o'rnatish (Pip):" data-ru="4. Установка библиотек (Pip):" data-en="4. Install Libraries (Pip):" data-ar="4. تثبيت المكتبات (Pip):">4. Kutubxonalar o'rnatish (Pip):</b></p>
+        <p><b data-uz="3. Kutubxonalar o'rnatish (Pip):" data-ru="3. Установка библиотек (Pip):" data-en="3. Install Libraries (Pip):" data-ar="3. تثبيت المكتبات (Pip):">3. Kutubxonalar o'rnatish (Pip):</b></p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
             <div class="code-box">pip install requests
-pip install beautifulsoup4
-pip install python-telegram-bot</div>
+pip install beautifulsoup4</div>
         </div>
     </div>
 
@@ -161,99 +361,119 @@ pip install python-telegram-bot</div>
         <div class="card-header"><span>💡</span> <span data-uz="4. Muhim Buyruqlar" data-ru="4. Важные команды" data-en="4. Important Commands" data-ar="4. أوامر مهمة">4. Muhim Buyruqlar</span></div>
         <ul>
             <li><b>cd papka_nomi</b> - <span data-uz="papkaga kirish" data-ru="войти в папку" data-en="enter folder" data-ar="الدخول إلى المجلد">papkaga kirish</span></li>
-            <li><b>cd ..</b> - <span data-uz="bir papka orqaga qaytish" data-ru="вернуться на одну папку назад" data-en="go back one folder" data-ar="الرجوع مجلد واحد للخلف">bir papka orqaga qaytish</span></li>
-            <li><b>ls</b> - <span data-uz="papkadagi fayllarni ko'rish" data-ru="просмотр файлов в папке" data-en="list files in folder" data-ar="عرض الملفات في المجلد">papkadagi fayllarni ko'rish</span></li>
+            <li><b>cd ..</b> - <span data-uz="orqaga qaytish" data-ru="назад" data-en="go back" data-ar="رجوع">orqaga qaytish</span></li>
+            <li><b>ls</b> - <span data-uz="fayllarni ko'rish" data-ru="список файлов" data-en="list files" data-ar="عرض الملفات">fayllarni ko'rish</span></li>
             <li><b>clear</b> - <span data-uz="ekranni tozalash" data-ru="очистить экран" data-en="clear screen" data-ar="مسح الشاشة">ekranni tozalash</span></li>
         </ul>
     </div>
 
-    <!-- 5. Java O'rnatish va Dasturlash -->
+    <!-- 5. Java -->
     <div class="card">
-        <div class="card-header"><span>☕</span> <span data-uz="5. JAVA O'RNATISH VA DASTURLASH" data-ru="5. УСТАНОВКА JAVA И ПРОГРАММИРОВАНИЕ" data-en="5. INSTALL JAVA & PROGRAMMING" data-ar="5. تثبيت Java والبرمجة">5. JAVA O'RNATISH VA DASTURLASH</span></div>
-        
-        <p data-uz="Java — bu kuchli dasturlash tili bo'lib, u orqali Android ilovalar, o'yinlar va server dasturlarini yozish mumkin. Termux orqali telefoningizda Java kodlarini yozib, ularni ishga tushirishingiz mumkin." data-ru="Java — это мощный язык программирования, на котором можно писать приложения для Android, игры и серверные программы. Через Termux вы можете писать и запускать код Java на своем телефоне." data-en="Java is a powerful programming language used to write Android apps, games, and server programs. Through Termux, you can write and run Java code on your phone." data-ar="Java هي لغة برمجة قوية تُستخدم لكتابة تطبيقات Android والألعاب وبرامج الخادم. من خلال Termux، يمكنك كتابة وتشغيل كود Java على هاتفك.">Java — bu kuchli dasturlash tili bo'lib, u orqali Android ilovalar, o'yinlar va server dasturlarini yozish mumkin. Termux orqali telefoningizda Java kodlarini yozib, ularni ishga tushirishingiz mumkin.</p>
-
+        <div class="card-header"><span>☕</span> <span data-uz="5. JAVA DASTURLASH" data-ru="5. ПРОГРАММИРОВАНИЕ JAVA" data-en="5. JAVA PROGRAMMING" data-ar="5. برمجة Java">5. JAVA DASTURLASH</span></div>
         <p><b data-uz="1. Java (JDK) ni o'rnatish:" data-ru="1. Установка Java (JDK):" data-en="1. Install Java (JDK):" data-ar="1. تثبيت Java (JDK):">1. Java (JDK) ni o'rnatish:</b></p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
             <div class="code-box">pkg install openjdk-17 -y</div>
         </div>
-        <p style="font-size:12px; color:#888;" data-uz="* O'rnatish tugagach, tekshirib ko'ring. Agar versiya chiqsa, hammasi joyida." data-ru="* После установки проверьте. Если появилась версия, все в порядке." data-en="* After installation, check it. If the version appears, everything is fine." data-ar="* بعد التثبيت، تحقق منه. إذا ظهر الإصدار، فكل شيء على ما يرام.">* O'rnatish tugagach, tekshirib ko'ring. Agar versiya chiqsa, hammasi joyida.</p>
+        <p><b data-uz="2. Kod yozish:" data-ru="2. Написание кода:" data-en="2. Write code:" data-ar="2. كتابة الكود:">2. Kod yozish:</b></p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
-            <div class="code-box">java -version
-javac -version</div>
-        </div>
+            <div class="code-box">nano Salom.java
 
-        <p><b data-uz="2. Java'da kod yozish va ishga tushirish:" data-ru="2. Написание и запуск кода на Java:" data-en="2. Write and run Java code:" data-ar="2. كتابة وتشغيل كود Java:">2. Java'da kod yozish va ishga tushirish:</b></p>
-        <p data-uz="Java'da kod yozish uchun avval .java faylini yaratamiz. Fayl nomi albatta katta harf bilan boshlanishi va kod ichidagi class nomi bilan bir xil bo'lishi kerak (masalan: Salom.java)." data-ru="Для написания кода на Java сначала создадим файл .java. Имя файла должно начинаться с заглавной буквы и совпадать с именем класса в коде (например: Salom.java)." data-en="To write code in Java, we first create a .java file. The file name must start with a capital letter and match the class name in the code (e.g., Salom.java)." data-ar="لكتابة كود في Java، نقوم أولاً بإنشاء ملف .java. يجب أن يبدأ اسم الملف بحرف كبير وأن يتطابق مع اسم الفئة في الكود (مثل: Salom.java).">Java'da kod yozish uchun avval <b>.java</b> faylini yaratamiz. Fayl nomi albatta katta harf bilan boshlanishi va kod ichidagi class nomi bilan bir xil bo'lishi kerak (masalan: <b>Salom.java</b>).</p>
-        
-        <div class="code-container">
-            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
-            <div class="code-box">nano Salom.java</div>
-        </div>
-
-        <p data-uz="Ichiga quyidagi oddiy kodni yozing:" data-ru="Напишите внутри следующий простой код:" data-en="Write the following simple code inside:" data-ar="اكتب الكود البسيط التالي بالداخل:">Ichiga quyidagi oddiy kodni yozing:</p>
-        <div class="code-container">
-            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
-            <div class="code-box">public class Salom {
+// Ichiga yozing:
+public class Salom {
     public static void main(String[] args) {
         System.out.println("Salom, Termux!");
     }
 }</div>
         </div>
-        <p style="font-size:12px; color:#f1c40f;" data-uz="* Saqlash uchun CTRL + X, keyin Y, keyin Enter bosing." data-ru="* Для сохранения нажмите CTRL + X, затем Y, затем Enter." data-en="* To save, press CTRL + X, then Y, then Enter." data-ar="* للحفظ، اضغط على CTRL + X، ثم Y، ثم Enter.">* Saqlash uchun <b>CTRL + X</b>, keyin <b>Y</b>, keyin <b>Enter</b> bosing.</p>
-
-        <p><b data-uz="3. Kodni kompilyatsiya qilish (Tekshirish):" data-ru="3. Компиляция кода (Проверка):" data-en="3. Compile the code (Check):" data-ar="3. تجميع الكود (فحص):">3. Kodni kompilyatsiya qilish (Tekshirish):</b></p>
-        <p data-uz="Java kodni to'g'ridan-to'g'ri ishlata olmaydi, avval uni kompilyator orqali .class fayliga aylantirish kerak." data-ru="Java не может запускать код напрямую, сначала его нужно преобразовать в файл .class с помощью компилятора." data-en="Java cannot run code directly; it must first be converted into a .class file by a compiler." data-ar="لا يمكن لـ Java تشغيل الكود مباشرة؛ يجب أولاً تحويله إلى ملف .class بواسطة مترجم.">Java kodni to'g'ridan-to'g'ri ishlata olmaydi, avval uni kompilyator orqali <b>.class</b> fayliga aylantirish kerak.</p>
+        <p><b data-uz="3. Kompilyatsiya qilish va ishga tushirish:" data-ru="3. Компиляция и запуск:" data-en="3. Compile and run:" data-ar="3. تجميع وتشغيل:">3. Kompilyatsiya qilish va ishga tushirish:</b></p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
-            <div class="code-box">javac Salom.java</div>
+            <div class="code-box">javac Salom.java
+java Salom</div>
         </div>
-        <p style="font-size:12px; color:#888;" data-uz="* Agar hech qanday xatolik chiqmasa, papkada Salom.class fayli paydo bo'ladi." data-ru="* Если ошибок нет, в папке появится файл Salom.class." data-en="* If no errors appear, a Salom.class file will appear in the folder." data-ar="* إذا لم تظهر أي أخطاء، فسيظهر ملف Salom.class في المجلد.">* Agar hech qanday xatolik chiqmasa, papkada <b>Salom.class</b> fayli paydo bo'ladi.</p>
+    </div>
 
-        <p><b data-uz="4. Kodni ishga tushirish:" data-ru="4. Запуск кода:" data-en="4. Run the code:" data-ar="4. تشغيل الكود:">4. Kodni ishga tushirish:</b></p>
-        <p data-uz="Endi kompilyatsiya qilingan faylni ishga tushiramiz. (Diqqat: ishga tushirishda oxiriga .java yoki .class qo'shilmaydi)." data-ru="Теперь запустим скомпилированный файл. (Внимание: при запуске не добавляется .java или .class)." data-en="Now we run the compiled file. (Note: do not add .java or .class when running)." data-ar="الآن نقوم بتشغيل الملف المترجم. (ملاحظة: لا تضف .java أو .class عند التشغيل).">Endi kompilyatsiya qilingan faylni ishga tushiramiz. <br><i>(Diqqat: ishga tushirishda oxiriga .java yoki .class qo'shilmaydi).</i></p>
-        <div class="code-container">
-            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
-            <div class="code-box">java Salom</div>
-        </div>
-        <p data-uz="Ekranda 'Salom, Termux!' degan yozuv chiqadi. Tabriklaymiz, siz Java'da birinchi dasturingizni yozdingiz!" data-ru="На экране появится надпись 'Salom, Termux!'. Поздравляем, вы написали свою первую программу на Java!" data-en="The text 'Salom, Termux!' will appear on the screen. Congratulations, you have written your first Java program!" data-ar="ستظهر العبارة 'Salom, Termux!' على الشاشة. تهانينا، لقد كتبت أول برنامج Java لك!">Ekranda <b>'Salom, Termux!'</b> degan yozuv chiqadi. Tabriklaymiz, siz Java'da birinchi dasturingizni yozdingiz!</p>
+    <div class="creator-footer">
+        <a href="https://t.me/Tommy_1727" target="_blank" class="creator-link">
+            <span class="creator-icon">👨‍💻</span> Yaratuvchi: @Tommy_1727
+        </a>
     </div>
 
     <script>
-        // Kodlarni nusxalash funksiyasi
+        // 1. Kodlarni nusxalash (Xatosiz va zaxira usul bilan)
         function copyCode(btn) {
             const codeText = btn.nextElementSibling.innerText;
-            navigator.clipboard.writeText(codeText).then(() => {
-                const originalText = btn.innerText;
-                btn.innerText = "COPIED! ✅";
-                btn.style.background = "#2ed573";
-                btn.style.color = "#000";
-                setTimeout(() => {
-                    btn.innerText = originalText;
-                    btn.style.background = "rgba(46, 213, 115, 0.2)";
-                    btn.style.color = "#2ed573";
-                }, 2000);
-            });
+            
+            // Zamonaviy usul
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(codeText).then(() => showSuccess(btn));
+            } else {
+                // Eski brauzerlar uchun zaxira usul
+                const textArea = document.createElement("textarea");
+                textArea.value = codeText;
+                textArea.style.position = "absolute";
+                textArea.style.left = "-999999px";
+                document.body.prepend(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showSuccess(btn);
+                } catch (error) {
+                    console.error('Nusxalashda xatolik:', error);
+                } finally {
+                    textArea.remove();
+                }
+            }
         }
 
-        // Tilni o'zgartirish funksiyasi
+        function showSuccess(btn) {
+            const originalText = btn.innerText;
+            btn.innerText = "COPIED! ✅";
+            btn.classList.add('success');
+            
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.remove('success');
+            }, 2000);
+        }
+
+        // 2. Tilni o'zgartirish (innerHTML orqali xatosiz)
         function changeLang(lang, btn) {
             document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
             const elements = document.querySelectorAll('[data-' + lang + ']');
             elements.forEach(el => {
-                el.innerText = el.getAttribute('data-' + lang);
+                // innerText emas, innerHTML ishlatiladi. Shunda <b> teglari o'chib ketmaydi.
+                el.innerHTML = el.getAttribute('data-' + lang);
             });
 
+            // Arab tili uchun RTL
             if (lang === 'ar') {
                 document.body.style.direction = 'rtl';
             } else {
                 document.body.style.direction = 'ltr';
             }
         }
+
+        // 3. Scroll Animatsiyasi (Intersection Observer)
+        const cards = document.querySelectorAll('.card');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('show');
+                    observer.unobserve(entry.target); // Animatsiya 1 marta ishlaydi, ortiqcha yuklama bo'lmaydi
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: "0px 0px -20px 0px"
+        });
+
+        cards.forEach(card => observer.observe(card));
     </script>
 </body>
 </html>
