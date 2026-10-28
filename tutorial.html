@@ -35,7 +35,7 @@
             color: var(--text-main);
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
-            /* Tepa va pastdagi qotib turuvchi qismlar uchun katta xavfsiz masofa */
+            /* Tepa va pastdagi qotib turuvchi qismlar ostida matn qolib ketmasligi uchun xavfsiz masofa */
             padding: 120px 16px 160px 16px; 
             display: flex;
             flex-direction: column;
@@ -62,22 +62,21 @@
         }
 
         /* ========================================= */
-        /* 1. TEPADAGI QOTIB TURUVCHI MENYU (Silliq parda bilan) */
+        /* 1. TEPADAGI QOTIB TURUVCHI MENYU */
         /* ========================================= */
         .top-fixed-wrapper {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            /* Balandlik oshirildi, shunda parda uzunroq bo'ladi */
             padding: 15px 16px 50px 16px; 
             z-index: 9999;
-            /* Matnlarni silliq yashiruvchi qora parda (gradient) */
             background: linear-gradient(to bottom, rgba(5,5,8,1) 40%, rgba(5,5,8,0) 100%);
             display: flex;
             justify-content: center;
             -webkit-transform: translateZ(0);
             transform: translateZ(0);
+            pointer-events: none; /* Orqa fon matnlarni to'sib qo'ymasligi uchun */
         }
 
         .top-bar {
@@ -91,6 +90,7 @@
             border-radius: 16px;
             border: 1px solid var(--border-color);
             box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            pointer-events: auto; /* Tugmalar bosilishi uchun */
         }
 
         .logo-text {
@@ -226,18 +226,31 @@
         ul, ol { padding-left: 20px; }
         li { margin-bottom: 10px; }
         b { color: var(--text-main); font-weight: 700; }
-        
-        code {
-            background: rgba(255, 255, 255, 0.08);
+
+        /* ========================================= */
+        /* MATN ICHIDAGI KICHIK KODLAR (Bosganda nusxalanadi) */
+        /* ========================================= */
+        code.copyable {
+            background: rgba(255, 255, 255, 0.1);
             color: #facc15;
-            padding: 2px 6px;
+            padding: 4px 8px;
             border-radius: 6px;
             font-family: 'Fira Code', monospace;
             font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-block;
+            border: 1px solid transparent;
+        }
+        
+        code.copyable:active {
+            background: var(--primary);
+            color: #000;
+            border-color: var(--primary);
         }
 
         /* ========================================= */
-        /* KOD BLOKLARI VA COPY */
+        /* KATTA KOD BLOKLARI */
         /* ========================================= */
         .code-container {
             position: relative;
@@ -278,23 +291,22 @@
         .copy-btn.success { background: var(--primary); color: #000; border-color: var(--primary); }
 
         /* ========================================= */
-        /* 2. PASTKI QOTIB TURUVCHI TUGMA (Silliq parda bilan) */
+        /* 2. PASTKI QOTIB TURUVCHI TUGMA */
         /* ========================================= */
         .creator-footer {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            /* Tepaga qarab uzunroq parda */
             padding: 50px 16px 30px 16px; 
             z-index: 9999;
-            /* Matnlarni pastdan silliq yashiruvchi qora parda */
             background: linear-gradient(to top, rgba(5,5,8,1) 40%, rgba(5,5,8,0) 100%);
             display: flex;
             justify-content: center;
             -webkit-transform: translateZ(0);
             transform: translateZ(0);
             margin-bottom: env(safe-area-inset-bottom);
+            pointer-events: none; /* Orqa fon matnlarni to'sib qo'ymasligi uchun */
         }
 
         .creator-link {
@@ -312,6 +324,7 @@
             border: 2px solid #2ed573;
             box-shadow: 0 4px 20px rgba(46, 213, 115, 0.2);
             transition: all 0.2s ease;
+            pointer-events: auto; /* Tugma bosilishi uchun */
         }
 
         .creator-link:active {
@@ -359,7 +372,7 @@
             <div class="code-box">pkg update && pkg upgrade -y
 termux-setup-storage</div>
         </div>
-        <p style="font-size:13px; color:#888;" data-uz="* termux-setup-storage telefoningiz xotirasiga kirishga ruxsat beradi." data-ru="* termux-setup-storage разрешает доступ к памяти телефона." data-en="* termux-setup-storage allows access to your phone's storage." data-ar="* يسمح termux-setup-storage بالوصول إلى ذاكرة هاتفك.">* termux-setup-storage telefoningiz xotirasiga kirishga ruxsat beradi.</p>
+        <p style="font-size:13px; color:#888;" data-uz="* termux-setup-storage telefoningiz xotirasiga kirishga ruxsat beradi." data-ru="* termux-setup-storage разрешает доступ к памяти телефона." data-en="* termux-setup-storage allows access to your phone's storage." data-ar="* يسمح termux-setup-storage بالوصول إلى ذاكرة هاتفك.">* <code class="copyable" onclick="copyInline(this)">termux-setup-storage</code> telefoningiz xotirasiga kirishga ruxsat beradi.</p>
     </div>
 
     <!-- 2. MT Manager -->
@@ -392,7 +405,7 @@ cd name</div>
         </div>
 
         <p><b data-uz="3. Fayl ochish va kod yozish:" data-ru="3. Открытие файла и написание кода:" data-en="3. Open file and write code:" data-ar="3. فتح الملف وكتابة الكود:">3. Fayl ochish va kod yozish:</b></p>
-        <p style="font-size:13px; color:#888;" data-uz="* Saqlash uchun CTRL+X, keyin Y, keyin Enter ni bosing." data-ru="* Для сохранения нажмите CTRL+X, затем Y, затем Enter." data-en="* To save, press CTRL+X, then Y, then Enter." data-ar="* للحفظ، اضغط على CTRL+X، ثم Y، ثم Enter.">* Saqlash uchun <b>CTRL+X</b>, keyin <b>Y</b>, keyin <b>Enter</b> ni bosing.</p>
+        <p style="font-size:13px; color:#888;" data-uz="* Saqlash uchun <b>CTRL+X</b>, keyin <b>Y</b>, keyin <b>Enter</b> ni bosing." data-ru="* Для сохранения нажмите <b>CTRL+X</b>, затем <b>Y</b>, затем <b>Enter</b>." data-en="* To save, press <b>CTRL+X</b>, then <b>Y</b>, then <b>Enter</b>." data-ar="* للحفظ، اضغط على <b>CTRL+X</b>، ثم <b>Y</b>، ثم <b>Enter</b>.">* Saqlash uchun <b>CTRL+X</b>, keyin <b>Y</b>, keyin <b>Enter</b> ni bosing.</p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
             <div class="code-box">nano name.py
@@ -420,14 +433,15 @@ pip install python-telegram-bot</div>
         </div>
     </div>
 
-    <!-- 4. Muhim Buyruqlar -->
+    <!-- 4. Muhim Buyruqlar (Kichik kodlar bilan) -->
     <div class="card">
         <div class="card-header"><span>💡</span> <span data-uz="4. Muhim Buyruqlar" data-ru="4. Важные команды" data-en="4. Important Commands" data-ar="4. أوامر مهمة">4. Muhim Buyruqlar</span></div>
         <ul>
-            <li><b>cd papka_nomi</b> - <span data-uz="papkaga kirish" data-ru="войти в папку" data-en="enter folder" data-ar="الدخول إلى المجلد">papkaga kirish</span></li>
-            <li><b>cd ..</b> - <span data-uz="orqaga qaytish" data-ru="назад" data-en="go back" data-ar="رجوع">orqaga qaytish</span></li>
-            <li><b>ls</b> - <span data-uz="fayllarni ko'rish" data-ru="список файлов" data-en="list files" data-ar="عرض الملفات">fayllarni ko'rish</span></li>
-            <li><b>clear</b> - <span data-uz="ekranni tozalash" data-ru="очистить экран" data-en="clear screen" data-ar="مسح الشاشة">ekranni tozalash</span></li>
+            <li><code class="copyable" onclick="copyInline(this)">cd papka_nomi</code> - <span data-uz="papkaga kirish" data-ru="войти в папку" data-en="enter folder" data-ar="الدخول إلى المجلد">papkaga kirish</span></li>
+            <li><code class="copyable" onclick="copyInline(this)">cd ..</code> - <span data-uz="orqaga qaytish" data-ru="назад" data-en="go back" data-ar="رجوع">orqaga qaytish</span></li>
+            <li><code class="copyable" onclick="copyInline(this)">ls</code> - <span data-uz="fayllarni ko'rish" data-ru="список файлов" data-en="list files" data-ar="عرض الملفات">fayllarni ko'rish</span></li>
+            <li><code class="copyable" onclick="copyInline(this)">clear</code> - <span data-uz="ekranni tozalash" data-ru="очистить экран" data-en="clear screen" data-ar="مسح الشاشة">ekranni tozalash</span></li>
+            <li><code class="copyable" onclick="copyInline(this)">pkg install nom</code> - <span data-uz="dastur o'rnatish" data-ru="установить программу" data-en="install package" data-ar="تثبيت الحزمة">dastur o'rnatish</span></li>
         </ul>
     </div>
 
@@ -474,22 +488,29 @@ java Salom</div>
     </div>
 
     <script>
-        // 1. Kodlarni nusxalash
+        // 1. Katta kod bloklarini nusxalash (Xavfsiz va zaxira usul bilan)
         function copyCode(btn) {
-            const codeText = btn.nextElementSibling.innerText;
+            const codeText = btn.nextElementSibling.innerText.trim();
+            copyTextToClipboard(codeText, btn, "COPY", "COPIED! ✅");
+        }
+
+        // 2. Kichik (matn ichidagi) kodlarni nusxalash
+        function copyInline(element) {
+            const text = element.innerText.trim();
             
+            // Nusxalash funksiyasini chaqirish
             if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(codeText).then(() => showSuccess(btn));
+                navigator.clipboard.writeText(text).then(() => showInlineSuccess(element));
             } else {
                 const textArea = document.createElement("textarea");
-                textArea.value = codeText;
+                textArea.value = text;
                 textArea.style.position = "absolute";
                 textArea.style.left = "-999999px";
                 document.body.prepend(textArea);
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    showSuccess(btn);
+                    showInlineSuccess(element);
                 } catch (error) {
                     console.error('Nusxalashda xatolik:', error);
                 } finally {
@@ -498,9 +519,33 @@ java Salom</div>
             }
         }
 
-        function showSuccess(btn) {
-            const originalText = btn.innerText;
-            btn.innerText = "COPIED! ✅";
+        // Universal nusxalash funksiyasi
+        function copyTextToClipboard(text, btn, originalText, successText) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showBtnSuccess(btn, originalText, successText);
+                });
+            } else {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "absolute";
+                textArea.style.left = "-999999px";
+                document.body.prepend(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showBtnSuccess(btn, originalText, successText);
+                } catch (error) {
+                    console.error('Nusxalashda xatolik:', error);
+                } finally {
+                    textArea.remove();
+                }
+            }
+        }
+
+        // Tugma uchun effekt
+        function showBtnSuccess(btn, originalText, successText) {
+            btn.innerText = successText;
             btn.classList.add('success');
             
             setTimeout(() => {
@@ -509,7 +554,22 @@ java Salom</div>
             }, 2000);
         }
 
-        // 2. Tilni o'zgartirish
+        // Kichik kod uchun effekt
+        function showInlineSuccess(element) {
+            const originalBg = element.style.background;
+            const originalColor = element.style.color;
+            
+            // Rangni yashilga o'zgartirish
+            element.style.background = "var(--primary)";
+            element.style.color = "#000";
+            
+            setTimeout(() => {
+                element.style.background = originalBg;
+                element.style.color = originalColor;
+            }, 1000);
+        }
+
+        // 3. Tilni o'zgartirish (Tarjima)
         function changeLang(lang, btn) {
             document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -526,7 +586,7 @@ java Salom</div>
             }
         }
 
-        // 3. Scroll Animatsiyasi
+        // 4. Scroll Animatsiyasi
         const cards = document.querySelectorAll('.card');
         
         const observer = new IntersectionObserver((entries) => {
