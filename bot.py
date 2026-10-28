@@ -6,15 +6,17 @@ import socketserver
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-# Render'dagi Environment Variables'dan yangi tokenni oladi
-TOKEN = os.environ.get("TOKEN", "8872275906:AAEoOfscxqWv1ckizOb2z9P7T6MgPGfY6ng")
+# Render'dagi Environment Variables'dan tokenni oladi
+TOKEN = os.environ.get("TOKEN", "SIZNING_TOKENINGIZNI_SHU_YERGA_YOZING")
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Kutilmagan xatoliklarni ushlab qolish
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     logger.error(msg="Xatolik yuz berdi:", exc_info=context.error)
 
+# /start buyrug'i bosilganda ishlaydigan qism
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     info_text = (
         "👋 **Assalomu alaykum!**\n\n"
@@ -28,15 +30,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Quyidagi tugma orqali to'liq qo'llanmani ochishingiz mumkin:"
     )
     
-    # DIQQAT: Render'dan olgan havolangizni shu yerga qo'ying
+    # DIQQAT: Havolani o'zingizning Render havolangizga moslang!
+    # Oxirida /tutorial bo'lishi shart!
     keyboard = [
-        [InlineKeyboardButton("📚 Termux Tutorial (Web)", url="https://sizning-havolangiz.onrender.com/tutorial")]
+        [InlineKeyboardButton("📚 Termux Tutorial (Web)", url="https://tommy-backend-2.onrender.com/tutorial")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text(info_text, reply_markup=reply_markup, parse_mode='Markdown')
 
-# --- VEB SERVER QISMI (Python'ning o'zidagi server) ---
+# --- VEB SERVER QISMI (HTML fayllarni ochish uchun) ---
 def run_web_server():
     PORT = int(os.environ.get("PORT", 8080))
     
@@ -62,7 +65,7 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_error_handler(error_handler)
     
-    print("Bot ishga tushdi...")
+    print("Bot muvaffaqiyatli ishga tushdi...")
     application.run_polling()
 
 if __name__ == "__main__":
