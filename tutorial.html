@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Termux Master Guide</title>
     
-    <!-- Zamonaviy va tezkor shriftlar -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -20,7 +19,6 @@
             --text-main: #ffffff;
             --text-muted: #9ca3af;
             --border-color: rgba(255, 255, 255, 0.08);
-            --header-height: 80px;
         }
 
         * { 
@@ -37,8 +35,8 @@
             color: var(--text-main);
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
-            /* Tepa va pastdagi menyular ostida matn qolib ketmasligi uchun aniq masofa */
-            padding: calc(var(--header-height) + 20px) 16px 130px 16px; 
+            /* Tepa va pastdagi qotib turuvchi qismlar uchun katta xavfsiz masofa */
+            padding: 120px 16px 160px 16px; 
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -47,7 +45,7 @@
         }
 
         /* ========================================= */
-        /* ZAMONAVIY ORQA FON (LAGSIZ) */
+        /* ZAMONAVIY ORQA FON */
         /* ========================================= */
         .modern-bg {
             position: fixed;
@@ -64,25 +62,22 @@
         }
 
         /* ========================================= */
-        /* 1. TEPADAGI QOTIB TURUVCHI MENYU */
+        /* 1. TEPADAGI QOTIB TURUVCHI MENYU (Silliq parda bilan) */
         /* ========================================= */
         .top-fixed-wrapper {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: var(--header-height);
-            padding: 15px 16px;
-            z-index: 9999; /* Eng tepada turishi kafolatlangan */
-            background: linear-gradient(to bottom, rgba(5,5,8,1) 80%, rgba(5,5,8,0) 100%);
+            /* Balandlik oshirildi, shunda parda uzunroq bo'ladi */
+            padding: 15px 16px 50px 16px; 
+            z-index: 9999;
+            /* Matnlarni silliq yashiruvchi qora parda (gradient) */
+            background: linear-gradient(to bottom, rgba(5,5,8,1) 40%, rgba(5,5,8,0) 100%);
             display: flex;
             justify-content: center;
-            align-items: flex-start;
-            
-            /* Telefonlarda qotib qolishi va siljib ketmasligi uchun maxsus sozlama */
             -webkit-transform: translateZ(0);
             transform: translateZ(0);
-            will-change: transform;
         }
 
         .top-bar {
@@ -283,20 +278,23 @@
         .copy-btn.success { background: var(--primary); color: #000; border-color: var(--primary); }
 
         /* ========================================= */
-        /* 2. PASTKI QOTIB TURUVCHI TUGMA */
+        /* 2. PASTKI QOTIB TURUVCHI TUGMA (Silliq parda bilan) */
         /* ========================================= */
         .creator-footer {
             position: fixed;
-            bottom: 20px;
-            left: 50%;
-            z-index: 9999; /* Eng pastda turishi kafolatlangan */
-            width: max-content;
-            margin-bottom: env(safe-area-inset-bottom); /* Telefon ekranining eng pastki qismiga xavfsiz joylashish */
-            
-            /* Telefonlarda qotib qolishi va siljib ketmasligi uchun maxsus sozlama */
-            -webkit-transform: translateX(-50%) translateZ(0);
-            transform: translateX(-50%) translateZ(0);
-            will-change: transform;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            /* Tepaga qarab uzunroq parda */
+            padding: 50px 16px 30px 16px; 
+            z-index: 9999;
+            /* Matnlarni pastdan silliq yashiruvchi qora parda */
+            background: linear-gradient(to top, rgba(5,5,8,1) 40%, rgba(5,5,8,0) 100%);
+            display: flex;
+            justify-content: center;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            margin-bottom: env(safe-area-inset-bottom);
         }
 
         .creator-link {
@@ -307,7 +305,7 @@
             background: #0a0a0f;
             color: #ffffff;
             text-decoration: none;
-            padding: 12px 24px;
+            padding: 12px 30px;
             border-radius: 50px;
             font-size: 16px;
             font-weight: 800;
@@ -476,7 +474,7 @@ java Salom</div>
     </div>
 
     <script>
-        // 1. Kodlarni nusxalash (Xavfsiz va zaxira usul bilan)
+        // 1. Kodlarni nusxalash
         function copyCode(btn) {
             const codeText = btn.nextElementSibling.innerText;
             
@@ -511,7 +509,7 @@ java Salom</div>
             }, 2000);
         }
 
-        // 2. Tilni o'zgartirish (Tarjima xatosiz ishlashi uchun innerHTML)
+        // 2. Tilni o'zgartirish
         function changeLang(lang, btn) {
             document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -528,7 +526,7 @@ java Salom</div>
             }
         }
 
-        // 3. Scroll Animatsiyasi (Ekranda ko'ringanda silliq chiqish)
+        // 3. Scroll Animatsiyasi
         const cards = document.querySelectorAll('.card');
         
         const observer = new IntersectionObserver((entries) => {
