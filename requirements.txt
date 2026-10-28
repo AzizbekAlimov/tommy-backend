@@ -10,3 +10,5 @@ uvicorn
 instagrapi
 python-multipart
 aiogram
+python-telegram-bot
+aiohttp
