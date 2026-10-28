@@ -35,8 +35,8 @@
             color: var(--text-main);
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
-            /* Tepa va pastdagi qotib turuvchi qismlar ostida matn qolib ketmasligi uchun xavfsiz masofa */
-            padding: 120px 16px 160px 16px; 
+            /* Tepa va pastdagi menyular ostida matn qolib ketmasligi uchun aniq masofa */
+            padding: 110px 16px 120px 16px; 
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -45,7 +45,7 @@
         }
 
         /* ========================================= */
-        /* ZAMONAVIY ORQA FON */
+        /* ORQA FON */
         /* ========================================= */
         .modern-bg {
             position: fixed;
@@ -57,26 +57,23 @@
                 linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
             background-size: 30px 30px;
-            mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
         }
 
         /* ========================================= */
-        /* 1. TEPADAGI QOTIB TURUVCHI MENYU */
+        /* 1. TEPADAGI MENYU (QOTIB TURADI) */
         /* ========================================= */
         .top-fixed-wrapper {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            padding: 15px 16px 50px 16px; 
-            z-index: 9999;
-            background: linear-gradient(to bottom, rgba(5,5,8,1) 40%, rgba(5,5,8,0) 100%);
+            /* Tepa qismi balandroq qilindi va gradient qo'shildi */
+            padding: 15px 16px 40px 16px;
+            z-index: 99999; /* Eng tepada turishi kafolatlangan */
+            background: linear-gradient(to bottom, #050508 60%, rgba(5,5,8,0) 100%);
             display: flex;
             justify-content: center;
-            -webkit-transform: translateZ(0);
-            transform: translateZ(0);
-            pointer-events: none; /* Orqa fon matnlarni to'sib qo'ymasligi uchun */
+            pointer-events: none; /* Matnlar ustidan scroll qilish uchun */
         }
 
         .top-bar {
@@ -200,10 +197,7 @@
             will-change: opacity, transform;
         }
 
-        .card.show { 
-            opacity: 1; 
-            transform: translateY(0); 
-        }
+        .card.show { opacity: 1; transform: translateY(0); }
 
         .card-header {
             display: flex;
@@ -227,9 +221,7 @@
         li { margin-bottom: 10px; }
         b { color: var(--text-main); font-weight: 700; }
 
-        /* ========================================= */
-        /* MATN ICHIDAGI KICHIK KODLAR (Bosganda nusxalanadi) */
-        /* ========================================= */
+        /* Kichik kodlar */
         code.copyable {
             background: rgba(255, 255, 255, 0.1);
             color: #facc15;
@@ -242,16 +234,13 @@
             display: inline-block;
             border: 1px solid transparent;
         }
-        
         code.copyable:active {
             background: var(--primary);
             color: #000;
             border-color: var(--primary);
         }
 
-        /* ========================================= */
-        /* KATTA KOD BLOKLARI */
-        /* ========================================= */
+        /* Katta kod bloklari */
         .code-container {
             position: relative;
             margin: 16px 0;
@@ -284,29 +273,27 @@
             font-size: 11px;
             cursor: pointer;
             transition: all 0.2s ease;
-            font-family: 'Inter', sans-serif;
         }
 
         .copy-btn:active { transform: scale(0.92); }
         .copy-btn.success { background: var(--primary); color: #000; border-color: var(--primary); }
 
         /* ========================================= */
-        /* 2. PASTKI QOTIB TURUVCHI TUGMA */
+        /* 2. PASTKI TUGMA (QOTIB TURADI) */
         /* ========================================= */
         .creator-footer {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            padding: 50px 16px 30px 16px; 
-            z-index: 9999;
-            background: linear-gradient(to top, rgba(5,5,8,1) 40%, rgba(5,5,8,0) 100%);
+            /* Pastdan tepaga qarab gradient (qora parda) */
+            padding: 40px 16px 25px 16px;
+            z-index: 99999; /* Eng pastda turishi kafolatlangan */
+            background: linear-gradient(to top, #050508 60%, rgba(5,5,8,0) 100%);
             display: flex;
             justify-content: center;
-            -webkit-transform: translateZ(0);
-            transform: translateZ(0);
-            margin-bottom: env(safe-area-inset-bottom);
-            pointer-events: none; /* Orqa fon matnlarni to'sib qo'ymasligi uchun */
+            pointer-events: none; /* Matnlar ustidan scroll qilish uchun */
+            padding-bottom: calc(25px + env(safe-area-inset-bottom)); /* Xavfsiz hudud */
         }
 
         .creator-link {
@@ -324,6 +311,8 @@
             border: 2px solid #2ed573;
             box-shadow: 0 4px 20px rgba(46, 213, 115, 0.2);
             transition: all 0.2s ease;
+            width: 100%;
+            max-width: 400px;
             pointer-events: auto; /* Tugma bosilishi uchun */
         }
 
@@ -338,10 +327,9 @@
 </head>
 <body>
 
-    <!-- ORQA FON -->
     <div class="modern-bg"></div>
 
-    <!-- TEPADAGI QOTIB TURUVCHI MENYU -->
+    <!-- 1. TEPADAGI QOTIB TURUVCHI MENYU -->
     <div class="top-fixed-wrapper">
         <div class="top-bar">
             <div class="logo-text">TERMUX PRO</div>
@@ -433,7 +421,7 @@ pip install python-telegram-bot</div>
         </div>
     </div>
 
-    <!-- 4. Muhim Buyruqlar (Kichik kodlar bilan) -->
+    <!-- 4. Muhim Buyruqlar -->
     <div class="card">
         <div class="card-header"><span>💡</span> <span data-uz="4. Muhim Buyruqlar" data-ru="4. Важные команды" data-en="4. Important Commands" data-ar="4. أوامر مهمة">4. Muhim Buyruqlar</span></div>
         <ul>
@@ -480,7 +468,7 @@ java Salom</div>
         </div>
     </div>
 
-    <!-- PASTKI QOTIB TURUVCHI QISM -->
+    <!-- 2. PASTKI QOTIB TURUVCHI QISM -->
     <div class="creator-footer">
         <a href="https://t.me/Tommy_1727" target="_blank" class="creator-link">
             <span class="creator-icon">👨‍💻</span> Yaratuvchi: @Tommy_1727
@@ -488,7 +476,7 @@ java Salom</div>
     </div>
 
     <script>
-        // 1. Katta kod bloklarini nusxalash (Xavfsiz va zaxira usul bilan)
+        // 1. Katta kod bloklarini nusxalash
         function copyCode(btn) {
             const codeText = btn.nextElementSibling.innerText.trim();
             copyTextToClipboard(codeText, btn, "COPY", "COPIED! ✅");
@@ -497,8 +485,6 @@ java Salom</div>
         // 2. Kichik (matn ichidagi) kodlarni nusxalash
         function copyInline(element) {
             const text = element.innerText.trim();
-            
-            // Nusxalash funksiyasini chaqirish
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(text).then(() => showInlineSuccess(element));
             } else {
@@ -547,7 +533,6 @@ java Salom</div>
         function showBtnSuccess(btn, originalText, successText) {
             btn.innerText = successText;
             btn.classList.add('success');
-            
             setTimeout(() => {
                 btn.innerText = originalText;
                 btn.classList.remove('success');
@@ -558,18 +543,15 @@ java Salom</div>
         function showInlineSuccess(element) {
             const originalBg = element.style.background;
             const originalColor = element.style.color;
-            
-            // Rangni yashilga o'zgartirish
             element.style.background = "var(--primary)";
             element.style.color = "#000";
-            
             setTimeout(() => {
                 element.style.background = originalBg;
                 element.style.color = originalColor;
             }, 1000);
         }
 
-        // 3. Tilni o'zgartirish (Tarjima)
+        // 3. Tilni o'zgartirish
         function changeLang(lang, btn) {
             document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -604,4 +586,4 @@ java Salom</div>
         cards.forEach(card => observer.observe(card));
     </script>
 </body>
-</html>
+</html> 
