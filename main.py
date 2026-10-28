@@ -10,6 +10,7 @@ from instagrapi.exceptions import LoginRequired, RateLimitError, TwoFactorRequir
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+import uvicorn
 
 # ==========================================
 # 1. SOZLAMALAR (Render Environment'dan o'qiydi)
@@ -43,7 +44,7 @@ async def telegram_webhook(request: Request):
 
 @app.on_event("startup")
 async def on_startup():
-    if BOT_TOKEN:
+    if BOT_TOKEN and WEBHOOK_HOST:
         await bot.set_webhook(f"{WEBHOOK_HOST}/webhook")
 
 # ==========================================
@@ -148,3 +149,11 @@ async def start_unfollow(request: UnfollowRequest, background_tasks: BackgroundT
     # 3. Hamma narsa to'g'ri bo'lsa, orqa fonga yuboramiz
     background_tasks.add_task(process_unfollow, request.session_id, request.count)
     return {"status": "success", "message": f"{request.count} ta obunani bekor qilish boshlandi."}
+
+# ==========================================
+# 4. RENDER PORT BINDING (Status 3 xatosini oldini oladi)
+# ==========================================
+if __name__ == "__main__":
+    # Render avtomatik beradigan portni ushlab olish
+    port = int(os.environ.get("PORT", 10000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
