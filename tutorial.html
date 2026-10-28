@@ -12,34 +12,70 @@
             color: #ffffff; font-family: 'Montserrat', sans-serif;
             min-height: 100vh; padding: 20px 15px;
             display: flex; flex-direction: column; align-items: center;
+            transition: direction 0.3s;
         }
+        
+        /* Tepa panel (Tillar uchun) */
+        .top-bar {
+            width: 100%; max-width: 600px;
+            display: flex; justify-content: flex-end; gap: 8px;
+            margin-bottom: 20px; padding: 10px;
+            background: rgba(30, 30, 50, 0.5);
+            border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .lang-btn {
+            background: transparent; border: none; color: #fff;
+            font-size: 18px; cursor: pointer; padding: 5px 10px;
+            border-radius: 8px; transition: 0.2s;
+        }
+        .lang-btn:hover, .lang-btn.active { background: #2ed573; color: #000; }
+
         .bg-glow-1, .bg-glow-2 { position: fixed; border-radius: 50%; filter: blur(100px); z-index: -1; }
         .bg-glow-1 { width: 300px; height: 300px; background: rgba(46, 213, 115, 0.15); top: 5%; left: -100px; }
         .bg-glow-2 { width: 300px; height: 300px; background: rgba(52, 152, 219, 0.15); bottom: 10%; right: -100px; }
         
-        .logo-container { position: relative; width: 160px; height: 160px; margin-top: 20px; display: flex; justify-content: center; align-items: center; }
+        /* Logotip */
+        .logo-container { position: relative; width: 130px; height: 130px; margin-top: 10px; display: flex; justify-content: center; align-items: center; }
         .ring { position: absolute; border-radius: 50%; border: 3px solid transparent; animation: spin 4s linear infinite; }
         .ring-1 { width: 100%; height: 100%; border-top-color: #2ed573; border-right-color: #2ed573; box-shadow: 0 0 15px #2ed573; }
         .ring-2 { width: 85%; height: 85%; border-bottom-color: #3498db; border-left-color: #3498db; animation-direction: reverse; box-shadow: 0 0 15px #3498db; }
         .ring-3 { width: 70%; height: 70%; border-top-color: #f1c40f; border-right-color: #f1c40f; box-shadow: 0 0 15px #f1c40f; }
-        .center-icon { width: 50%; height: 50%; background: radial-gradient(circle, #2ed573 0%, #1e8449 100%); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 20px #2ed573; z-index: 2; }
+        .center-icon { width: 50%; height: 50%; background: radial-gradient(circle, #2ed573 0%, #1e8449 100%); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 20px #2ed573; z-index: 2; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .title { font-size: 26px; font-weight: 800; color: #2ed573; margin-top: 25px; letter-spacing: 1px; text-shadow: 0 0 10px rgba(46, 213, 115, 0.5); text-align: center; }
-        .subtitle { font-size: 13px; color: #a0a0a0; margin-bottom: 30px; text-align: center; }
+        .title { font-size: 24px; font-weight: 800; color: #2ed573; margin-top: 20px; letter-spacing: 1px; text-shadow: 0 0 10px rgba(46, 213, 115, 0.5); text-align: center; }
+        .subtitle { font-size: 13px; color: #a0a0a0; margin-bottom: 25px; text-align: center; }
 
-        .card { background: rgba(30, 30, 50, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 20px; width: 100%; max-width: 450px; margin-bottom: 20px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); }
+        /* Kartochkalar */
+        .card { background: rgba(30, 30, 50, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 20px; width: 100%; max-width: 500px; margin-bottom: 20px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); }
         .card-header { display: flex; align-items: center; font-size: 15px; font-weight: 600; color: #2ed573; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
         .card-header span { margin-right: 10px; font-size: 18px; }
         
-        .code-box { background: #0f0f1a; border-radius: 10px; padding: 12px; font-family: 'Courier New', Courier, monospace; font-size: 13px; color: #3498db; margin-top: 10px; border-left: 3px solid #2ed573; overflow-x: auto; }
-        ul, ol { padding-left: 20px; font-size: 13px; color: #ccc; line-height: 1.8; }
-        li { margin-bottom: 5px; }
-        p { font-size: 13px; color: #ccc; line-height: 1.5; margin-bottom: 10px; }
-        .link-btn { display: inline-block; background: #2ed573; color: #000; padding: 8px 16px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 13px; margin-top: 10px; }
+        p, ul, ol { font-size: 13.5px; color: #ccc; line-height: 1.6; margin-bottom: 10px; }
+        ul, ol { padding-left: 20px; }
+        li { margin-bottom: 6px; }
+        b { color: #fff; }
+
+        /* Kod bloklari va Copy tugmasi */
+        .code-container { position: relative; margin-top: 10px; }
+        .code-box { background: #0f0f1a; border-radius: 10px; padding: 35px 12px 12px 12px; font-family: 'Courier New', Courier, monospace; font-size: 13px; color: #3498db; border-left: 3px solid #2ed573; overflow-x: auto; white-space: pre; }
+        .copy-btn { position: absolute; top: 8px; right: 8px; background: #2ed573; color: #000; border: none; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 11px; cursor: pointer; transition: 0.2s; }
+        .copy-btn:hover { background: #1e8449; color: #fff; }
+        .copy-btn:active { transform: scale(0.95); }
+        
+        .link-btn { display: inline-block; background: #3498db; color: #fff; padding: 8px 16px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 13px; margin-top: 10px; }
     </style>
 </head>
 <body>
+
+    <!-- Til tanlash paneli -->
+    <div class="top-bar">
+        <button class="lang-btn active" onclick="changeLang('uz', this)">🇺🇿 UZ</button>
+        <button class="lang-btn" onclick="changeLang('ru', this)">🇷🇺 RU</button>
+        <button class="lang-btn" onclick="changeLang('en', this)">🇬🇧 EN</button>
+        <button class="lang-btn" onclick="changeLang('ar', this)">🇸🇦 AR</button>
+    </div>
+
     <div class="bg-glow-1"></div>
     <div class="bg-glow-2"></div>
 
@@ -48,74 +84,101 @@
         <div class="center-icon">💻</div>
     </div>
 
-    <div class="title">TERMUX TO'LIQ QO'LLANMA</div>
-    <div class="subtitle">0 dan 100 gacha — Barcha ma'lumotlar</div>
+    <div class="title" data-uz="TERMUX TO'LIQ QO'LLANMA" data-ru="ПОЛНОЕ РУКОВОДСТВО TERMUX" data-en="TERMUX FULL GUIDE" data-ar="دليل TERMUX الكامل">TERMUX TO'LIQ QO'LLANMA</div>
+    <div class="subtitle" data-uz="0 dan 100 gacha — Barcha ma'lumotlar" data-ru="От 0 до 100 — Вся информация" data-en="From 0 to 100 — All info" data-ar="من 0 إلى 100 - كل المعلومات">0 dan 100 gacha — Barcha ma'lumotlar</div>
 
     <!-- 1. Termux Asoslari -->
     <div class="card">
-        <div class="card-header"><span>📱</span> 1. TERMUX NIMA VA O'RNATISH</div>
-        <p>Termux — bu Android qurilmalarida Linux muhitini taqdim etuvchi dastur. U orqali siz telefoningizda Python, Java, C++ kabi tillarda kod yozishingiz va dasturlar yaratishingiz mumkin.</p>
-        <p><b>O'rnatish:</b> Termux'ni <b>F-Droid</b> yoki <b>GitHub</b> orqali yuklab oling. Google Play'dagi eski versiyasidan foydalanmang.</p>
-        <div class="code-box">
-            # Birinchi marta ochganda yangilash<br>
-            pkg update && pkg upgrade -y<br><br>
-            # Xotiraga ulanish (ruxsat so'raydi)<br>
-            termux-setup-storage
+        <div class="card-header"><span>📱</span> <span data-uz="1. TERMUX NIMA VA SOZLASH" data-ru="1. ЧТО ТАКОЕ TERMUX И НАСТРОЙКА" data-en="1. WHAT IS TERMUX & SETUP" data-ar="1. ما هو Termux والإعداد">1. TERMUX NIMA VA SOZLASH</span></div>
+        <p data-uz="Termux — bu Android uchun Linux muhiti. U orqali dasturlash tillarini o'rganish va botlar yasash mumkin." data-ru="Termux — это среда Linux для Android. С его помощью можно изучать языки программирования и создавать ботов." data-en="Termux is a Linux environment for Android. You can learn programming languages and build bots." data-ar="Termux هو بيئة Linux لنظام Android. يمكنك من خلاله تعلم لغات البرمجة وصنع البوتات.">Termux — bu Android uchun Linux muhiti. U orqali dasturlash tillarini o'rganish va botlar yasash mumkin.</p>
+        <p><b data-uz="O'rnatish:" data-ru="Установка:" data-en="Install:" data-ar="تثبيت:">O'rnatish:</b> <span data-uz="F-Droid yoki GitHub orqali yuklab oling." data-ru="Скачайте через F-Droid или GitHub." data-en="Download via F-Droid or GitHub." data-ar="قم بالتنزيل عبر F-Droid أو GitHub.">F-Droid yoki GitHub orqali yuklab oling.</span></p>
+        <div class="code-container">
+            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+            <div class="code-box">pkg update && pkg upgrade -y
+termux-setup-storage</div>
         </div>
     </div>
 
-    <!-- 2. Java o'rnatish -->
+    <!-- 2. MT Manager va Fayllar -->
     <div class="card">
-        <div class="card-header"><span>☕</span> 2. JAVA O'RNATISH VA NIMA QILADI</div>
-        <p><b>Java nima qiladi?</b> Java — bu dasturlash tili bo'lib, u orqali Android ilovalar, o'yinlar va server dasturlarini yozish mumkin. Termux'da Java o'rnatib, `.java` fayllarini kompilyatsiya qilishingiz va ishga tushirishingiz mumkin.</p>
-        <p><b>O'rnatish buyrug'i:</b></p>
-        <div class="code-box">
-            pkg install openjdk-17 -y<br><br>
-            # Tekshirish<br>
-            java -version
-        </div>
-        <a href="https://openjdk.org/" target="_blank" class="link-btn">Java (OpenJDK) rasmiy sayti</a>
-    </div>
-
-    <!-- 3. MT Manager integratsiyasi -->
-    <div class="card">
-        <div class="card-header"><span>📂</span> 3. MT MANAGER BILAN ULANISH</div>
-        <p>MT Manager — bu Android uchun kuchli fayl boshqaruvchisi. Termux ichidagi fayllarni ko'rish va tahrirlash uchun uni ulash mumkin.</p>
+        <div class="card-header"><span>📂</span> <span data-uz="2. MT MANAGER VA FAYLLAR" data-ru="2. MT MANAGER И ФАЙЛЫ" data-en="2. MT MANAGER & FILES" data-ar="2. MT Manager والملفات">2. MT MANAGER VA FAYLLAR</span></div>
+        <p data-uz="MT Manager — bu Android uchun kuchli fayl boshqaruvchisi. Termux ichidagi fayllarni ko'rish va tahrirlash uchun uni ulaymiz." data-ru="MT Manager — это мощный файловый менеджер для Android. Мы подключим его для просмотра и редактирования файлов внутри Termux." data-en="MT Manager is a powerful file manager for Android. We connect it to view and edit files inside Termux." data-ar="MT Manager هو مدير ملفات قوي لنظام Android. نوصله لعرض وتحرير الملفات داخل Termux.">MT Manager — bu Android uchun kuchli fayl boshqaruvchisi. Termux ichidagi fayllarni ko'rish va tahrirlash uchun uni ulaymiz.</p>
         <ol>
-            <li>Termux'da <b>termux-setup-storage</b> buyrug'ini bering va ruxsat bering.</li>
-            <li>MT Manager'ni oching, chap menyudan <b>"Add local storage"</b> (Lokal xotira qo'shish) ni tanlang.</li>
-            <li>Ochilgan oynadan <b>Termux</b> papkasini topib, <b>"Use this folder"</b> (Bu papkadan foydalanish) tugmasini bosing.</li>
-            <li>Endi MT Manager orqali Termux ichidagi barcha fayllarni ko'rishingiz mumkin.</li>
+            <li data-uz="Termuxda: termux-setup-storage yozing va ruxsat bering." data-ru="В Termux: напишите termux-setup-storage и дайте разрешение." data-en="In Termux: type termux-setup-storage and allow." data-ar="في Termux: اكتب termux-setup-storage واسمح.">Termuxda: <b>termux-setup-storage</b> yozing va ruxsat bering.</li>
+            <li data-uz="MT Managerda: Add local storage ni bosing." data-ru="В MT Manager: нажмите Add local storage." data-en="In MT Manager: click Add local storage." data-ar="في MT Manager: انقر على Add local storage.">MT Managerda: <b>Add local storage</b> ni bosing.</li>
+            <li data-uz="Termux papkasini tanlab, ruxsat bering." data-ru="Выберите папку Termux и разрешите доступ." data-en="Select the Termux folder and allow access." data-ar="حدد مجلد Termux واسمح بالوصول.">Termux papkasini tanlab, ruxsat bering.</li>
         </ol>
     </div>
 
-    <!-- 4. Python bilan ishlash -->
+    <!-- 3. Python va MT Managerda tahrirlash -->
     <div class="card">
-        <div class="card-header"><span>🐍</span> 4. PYTHON O'RNATISH VA ISHLATISH</div>
-        <p>Python — bu eng oson va ommabop dasturlash tili. Termux'da Python o'rnatib, skriptlar yozishingiz mumkin.</p>
-        <div class="code-box">
-            # Python o'rnatish<br>
-            pkg install python -y<br><br>
-            # Kod yozish uchun fayl yaratish<br>
-            nano ism.py<br><br>
-            # Kodni ishga tushirish<br>
-            python ism.py
+        <div class="card-header"><span>🐍</span> <span data-uz="3. PYTHON VA TAHRIRLASH" data-ru="3. PYTHON И РЕДАКТИРОВАНИЕ" data-en="3. PYTHON & EDITING" data-ar="3. Python والتحرير">3. PYTHON VA TAHRIRLASH</span></div>
+        <p data-uz="Python o'rnatib, kod yozamiz. Kodni MT Manager orqali ham oson o'zgartirish mumkin." data-ru="Установим Python и напишем код. Код также легко изменить через MT Manager." data-en="Install Python and write code. Code can also be easily modified via MT Manager." data-ar="قم بتثبيت Python وكتابة الكود. يمكن أيضًا تعديل الكود بسهولة عبر MT Manager.">Python o'rnatib, kod yozamiz. Kodni MT Manager orqali ham oson o'zgartirish mumkin.</p>
+        
+        <div class="code-container">
+            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+            <div class="code-box"># Python o'rnatish
+pkg install python -y
+
+# Fayl yaratish
+nano salom.py</div>
         </div>
-        <p><b>Misol:</b> <code>nano salom.py</code> faylini ochib, ichiga <code>print("Salom, Termux!")</code> deb yozing. Saqlash uchun <b>CTRL + X</b>, keyin <b>Y</b>, keyin <b>Enter</b> bosing. So'ngra <code>python salom.py</code> buyrug'i bilan ishga tushiring.</p>
+        
+        <p style="margin-top: 15px;"><b data-uz="Qanday tahrirlash kerak?" data-ru="Как редактировать?" data-en="How to edit?" data-ar="كيفية التحرير؟">Qanday tahrirlash kerak?</b></p>
+        <ol>
+            <li data-uz="Termuxda kod yozib, saqlang (CTRL+X, Y, Enter)." data-ru="Напишите код в Termux и сохраните (CTRL+X, Y, Enter)." data-en="Write code in Termux and save (CTRL+X, Y, Enter)." data-ar="اكتب الكود في Termux واحفظه (CTRL+X, Y, Enter).">Termuxda kod yozib, saqlang (CTRL+X, Y, Enter).</li>
+            <li data-uz="MT Manager orqali Termux papkasiga kirib, salom.py faylini oching." data-ru="Через MT Manager зайдите в папку Termux и откройте файл salom.py." data-en="Via MT Manager, enter the Termux folder and open salom.py." data-ar="عبر MT Manager ، ادخل إلى مجلد Termux وافتح ملف salom.py.">MT Manager orqali Termux papkasiga kirib, <b>salom.py</b> faylini oching.</li>
+            <li data-uz="Kodni o'zgartirib, saqlang. Termuxda 'python salom.py' deb ishga tushiring." data-ru="Измените код и сохраните. Запустите в Termux командой 'python salom.py'." data-en="Modify the code and save. Run 'python salom.py' in Termux." data-ar="عدل الكود واحفظه. شغله في Termux باستخدام 'python salom.py'.">Kodni o'zgartirib, saqlang. Termuxda <b>python salom.py</b> deb ishga tushiring.</li>
+        </ol>
     </div>
 
-    <!-- 5. Termux bo'yicha qo'shimcha ma'lumotlar -->
+    <!-- 4. Asosiy buyruqlar -->
     <div class="card">
-        <div class="card-header"><span>💡</span> 5. TERMUX BO'YICHA QO'SHIMCHA MA'LUMOTLAR</div>
+        <div class="card-header"><span>💡</span> <span data-uz="4. ASOSIY BUYRUQLAR" data-ru="4. ОСНОВНЫЕ КОМАНДЫ" data-en="4. BASIC COMMANDS" data-ar="4. الأوامر الأساسية">4. ASOSIY BUYRUQLAR</span></div>
         <ul>
-            <li><b>Papkalar orasida harakat:</b> <code>cd papka_nomi</code> (kirish), <code>cd ..</code> (orqaga qaytish).</li>
-            <li><b>Fayllarni ko'rish:</b> <code>ls</code> (joriy papkadagi fayllar).</li>
-            <li><b>Fayl yaratish:</b> <code>touch fayl.txt</code>.</li>
-            <li><b>Faylni o'chirish:</b> <code>rm fayl.txt</code>.</li>
-            <li><b>Paketlarni o'rnatish:</b> <code>pkg install paket_nomi</code>.</li>
-            <li><b>Paketni o'chirish:</b> <code>pkg uninstall paket_nomi</code>.</li>
-            <li><b>Yordam:</b> <code>pkg help</code> yoki <code>buyruq --help</code>.</li>
+            <li><b>cd papka</b> - <span data-uz="papkaga kirish" data-ru="войти в папку" data-en="enter folder" data-ar="الدخول إلى المجلد">papkaga kirish</span></li>
+            <li><b>ls</b> - <span data-uz="fayllarni ko'rish" data-ru="просмотр файлов" data-en="list files" data-ar="عرض الملفات">fayllarni ko'rish</span></li>
+            <li><b>pkg install nom</b> - <span data-uz="dastur o'rnatish" data-ru="установить программу" data-en="install package" data-ar="تثبيت حزمة">dastur o'rnatish</span></li>
+            <li><b>clear</b> - <span data-uz="ekranni tozalash" data-ru="очистить экран" data-en="clear screen" data-ar="مسح الشاشة">ekranni tozalash</span></li>
         </ul>
     </div>
+
+    <script>
+        // Kodlarni nusxalash funksiyasi
+        function copyCode(btn) {
+            const codeText = btn.nextElementSibling.innerText;
+            navigator.clipboard.writeText(codeText).then(() => {
+                const originalText = btn.innerText;
+                btn.innerText = "COPIED! ✅";
+                btn.style.background = "#1e8449";
+                btn.style.color = "#fff";
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.background = "#2ed573";
+                    btn.style.color = "#000";
+                }, 2000);
+            });
+        }
+
+        // Tilni o'zgartirish funksiyasi
+        function changeLang(lang, btn) {
+            // Tugmalarning active holatini o'zgartirish
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Matnlarni almashtirish
+            const elements = document.querySelectorAll('[data-' + lang + ']');
+            elements.forEach(el => {
+                el.innerText = el.getAttribute('data-' + lang);
+            });
+
+            // Arab tili uchun o'ngdan chapga (RTL) yo'nalishini yoqish
+            if (lang === 'ar') {
+                document.body.style.direction = 'rtl';
+            } else {
+                document.body.style.direction = 'ltr';
+            }
+        }
+    </script>
 </body>
 </html>
