@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TOMMY BOT - Termux Tutorial</title>
+    <title>Termux Tutorial</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap');
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             background: radial-gradient(circle at top, #1a1a3a 0%, #0a0a14 100%);
             color: #ffffff;
@@ -19,137 +17,40 @@
             flex-direction: column;
             align-items: center;
         }
-
-        /* Orqa fondagi yorug'lik effektlari */
-        .bg-glow-1, .bg-glow-2 {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(100px);
-            z-index: -1;
-        }
-        .bg-glow-1 { width: 300px; height: 300px; background: rgba(46, 213, 115, 0.2); top: 5%; left: -100px; }
-        .bg-glow-2 { width: 300px; height: 300px; background: rgba(52, 152, 219, 0.2); bottom: 10%; right: -100px; }
-
-        /* Tepa qism (Logo) */
-        .logo-container {
-            position: relative;
-            width: 180px;
-            height: 180px;
-            margin-top: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .ring {
-            position: absolute;
-            border-radius: 50%;
-            border: 4px solid transparent;
-            animation: spin 4s linear infinite;
-        }
+        /* Fon yorug'lik effektlari */
+        .bg-glow-1, .bg-glow-2 { position: fixed; border-radius: 50%; filter: blur(100px); z-index: -1; }
+        .bg-glow-1 { width: 300px; height: 300px; background: rgba(46, 213, 115, 0.15); top: 5%; left: -100px; }
+        .bg-glow-2 { width: 300px; height: 300px; background: rgba(52, 152, 219, 0.15); bottom: 10%; right: -100px; }
+        
+        /* Aylanadigan logotip */
+        .logo-container { position: relative; width: 160px; height: 160px; margin-top: 20px; display: flex; justify-content: center; align-items: center; }
+        .ring { position: absolute; border-radius: 50%; border: 3px solid transparent; animation: spin 4s linear infinite; }
         .ring-1 { width: 100%; height: 100%; border-top-color: #2ed573; border-right-color: #2ed573; box-shadow: 0 0 15px #2ed573; }
         .ring-2 { width: 85%; height: 85%; border-bottom-color: #3498db; border-left-color: #3498db; animation-direction: reverse; box-shadow: 0 0 15px #3498db; }
         .ring-3 { width: 70%; height: 70%; border-top-color: #f1c40f; border-right-color: #f1c40f; box-shadow: 0 0 15px #f1c40f; }
-        
-        .center-icon {
-            width: 50%; height: 50%;
-            background: radial-gradient(circle, #2ed573 0%, #1e8449 100%);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 30px;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 20px #2ed573;
-            z-index: 2;
-        }
-
+        .center-icon { width: 50%; height: 50%; background: radial-gradient(circle, #2ed573 0%, #1e8449 100%); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 20px #2ed573; z-index: 2; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* Sarlavha */
-        .title {
-            font-size: 28px;
-            font-weight: 800;
-            color: #2ed573;
-            margin-top: 20px;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(46, 213, 115, 0.5);
-        }
-        .subtitle {
-            font-size: 14px;
-            color: #a0a0a0;
-            margin-bottom: 30px;
-            text-align: center;
-        }
+        .title { font-size: 26px; font-weight: 800; color: #2ed573; margin-top: 25px; letter-spacing: 1px; text-shadow: 0 0 10px rgba(46, 213, 115, 0.5); text-align: center; }
+        .subtitle { font-size: 13px; color: #a0a0a0; margin-bottom: 30px; text-align: center; }
 
-        /* Kartochkalar (Glassmorphism) */
-        .card {
-            background: rgba(30, 30, 50, 0.6);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 20px;
-            width: 100%;
-            max-width: 450px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            font-size: 16px;
-            font-weight: 600;
-            color: #2ed573;
-            margin-bottom: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 10px;
-        }
-
-        .card-header span { margin-right: 10px; font-size: 20px; }
-
-        /* Ma'lumot qatorlari */
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            font-size: 14px;
-        }
-        .info-label { color: #a0a0a0; }
-        .info-value { font-weight: 600; color: #fff; text-align: right; }
-
+        /* Shisha effektli kartochkalar */
+        .card { background: rgba(30, 30, 50, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 20px; width: 100%; max-width: 450px; margin-bottom: 20px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); }
+        .card-header { display: flex; align-items: center; font-size: 15px; font-weight: 600; color: #2ed573; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .card-header span { margin-right: 10px; font-size: 18px; }
+        
         /* Kod bloklari */
-        .code-box {
-            background: #0f0f1a;
-            border-radius: 10px;
-            padding: 12px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 13px;
-            color: #3498db;
-            margin-top: 10px;
-            border-left: 3px solid #2ed573;
-            overflow-x: auto;
-        }
-
-        .status-badge {
-            background: rgba(46, 213, 115, 0.2);
-            color: #2ed573;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            border: 1px solid #2ed573;
-        }
-
-        ul { padding-left: 20px; font-size: 14px; color: #ccc; line-height: 1.8; }
+        .code-box { background: #0f0f1a; border-radius: 10px; padding: 12px; font-family: 'Courier New', Courier, monospace; font-size: 13px; color: #3498db; margin-top: 10px; border-left: 3px solid #2ed573; overflow-x: auto; }
+        ul, ol { padding-left: 20px; font-size: 13px; color: #ccc; line-height: 1.8; }
         li { margin-bottom: 5px; }
+        p { font-size: 13px; color: #ccc; line-height: 1.5; }
     </style>
 </head>
 <body>
-    <!-- Fon effektlari -->
     <div class="bg-glow-1"></div>
     <div class="bg-glow-2"></div>
 
-    <!-- Logotip -->
     <div class="logo-container">
         <div class="ring ring-1"></div>
         <div class="ring ring-2"></div>
@@ -157,63 +58,53 @@
         <div class="center-icon">💻</div>
     </div>
 
-    <!-- Sarlavha -->
     <div class="title">TERMUX TUTORIAL</div>
     <div class="subtitle">To'liq va 100% Aniq Qo'llanma</div>
 
-    <!-- 1. Termux Asoslari -->
     <div class="card">
-        <div class="card-header"><span>📱</span> TERMUX ASOSLARI</div>
-        <div class="info-row">
-            <span class="info-label">O'rnatish manbasi:</span>
-            <span class="info-value">F-Droid</span>
-        </div>
-        <div class="info-row">
-            <span class="info-label">Holat:</span>
-            <span class="status-badge">✅ FAOL</span>
-        </div>
-        <p style="font-size: 13px; color: #ccc; margin-top: 10px;">Termux — bu Android uchun to'liq Linux muhiti. Kod yozish va dasturlar yaratish uchun eng zo'r vosita.</p>
-        
-        <div style="margin-top: 15px; font-weight: 600; color: #fff; font-size: 14px;">Asosiy buyruqlar:</div>
+        <div class="card-header"><span>📱</span> 1. TERMUX ASOSLARI</div>
+        <p>Termux — Android uchun Linux muhiti. Kod yozish va dasturlar yaratish uchun eng zo'r vosita.</p>
         <div class="code-box">
             pkg update && pkg upgrade<br>
             termux-setup-storage
         </div>
     </div>
 
-    <!-- 2. Python -->
     <div class="card">
-        <div class="card-header"><span>🐍</span> PYTHON O'RNATISH</div>
-        <p style="font-size: 13px; color: #ccc;">Termuxda Python tilida dastur yozishni boshlang.</p>
-        
+        <div class="card-header"><span>🐍</span> 2. PYTHON O'RNATISH</div>
+        <p>Python tilida dastur yozishni boshlang:</p>
         <div class="code-box">
             pkg install python<br>
             pkg install python-pip<br>
-            pip install requests
+            python fayl_nomi.py
         </div>
-        <p style="font-size: 12px; color: #888; margin-top: 10px;">* Kodni ishga tushirish: <b>python fayl_nomi.py</b></p>
     </div>
 
-    <!-- 3. MT Manager -->
     <div class="card">
-        <div class="card-header"><span>📂</span> MT MANAGER ULANISHI</div>
-        <ul>
+        <div class="card-header"><span>📂</span> 3. MT MANAGER ULANISHI</div>
+        <ol>
             <li>Termuxda: <b>termux-setup-storage</b> yozing va ruxsat bering.</li>
             <li>MT Managerda: <b>"Add local storage"</b> ni bosing.</li>
-            <li>Termux papkasini topib, "Use this folder" qiling.</li>
-            <li>Endi Termux fayllarini MT Manager orqali boshqarasiz.</li>
-        </ul>
+            <li>Termux papkasini tanlab, "Use this folder" qiling.</li>
+        </ol>
     </div>
 
-    <!-- 4. Java -->
     <div class="card">
-        <div class="card-header"><span>☕</span> JAVA O'RNATISH</div>
-        <p style="font-size: 13px; color: #ccc;">Java dasturlari va skriptlar uchun kerakli muhit.</p>
+        <div class="card-header"><span>☕</span> 4. JAVA O'RNATISH</div>
+        <p>Java dasturlari uchun kerakli muhit:</p>
         <div class="code-box">
             pkg install openjdk-17<br>
             java -version
         </div>
     </div>
-
+    
+    <div class="card">
+        <div class="card-header"><span>🤖</span> 5. BOT YASASH</div>
+        <p>Python yordamida Telegram bot yaratish:</p>
+        <div class="code-box">
+            pip install python-telegram-bot<br>
+            python bot.py
+        </div>
+    </div>
 </body>
 </html>
