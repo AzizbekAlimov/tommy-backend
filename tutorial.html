@@ -3,26 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Termux Tutorial</title>
+    <title>Termux To'liq Qo'llanma</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: radial-gradient(circle at top, #1a1a3a 0%, #0a0a14 100%);
-            color: #ffffff;
-            font-family: 'Montserrat', sans-serif;
-            min-height: 100vh;
-            padding: 20px 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            color: #ffffff; font-family: 'Montserrat', sans-serif;
+            min-height: 100vh; padding: 20px 15px;
+            display: flex; flex-direction: column; align-items: center;
         }
-        /* Fon yorug'lik effektlari */
         .bg-glow-1, .bg-glow-2 { position: fixed; border-radius: 50%; filter: blur(100px); z-index: -1; }
         .bg-glow-1 { width: 300px; height: 300px; background: rgba(46, 213, 115, 0.15); top: 5%; left: -100px; }
         .bg-glow-2 { width: 300px; height: 300px; background: rgba(52, 152, 219, 0.15); bottom: 10%; right: -100px; }
         
-        /* Aylanadigan logotip */
         .logo-container { position: relative; width: 160px; height: 160px; margin-top: 20px; display: flex; justify-content: center; align-items: center; }
         .ring { position: absolute; border-radius: 50%; border: 3px solid transparent; animation: spin 4s linear infinite; }
         .ring-1 { width: 100%; height: 100%; border-top-color: #2ed573; border-right-color: #2ed573; box-shadow: 0 0 15px #2ed573; }
@@ -31,20 +25,18 @@
         .center-icon { width: 50%; height: 50%; background: radial-gradient(circle, #2ed573 0%, #1e8449 100%); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 20px #2ed573; z-index: 2; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Sarlavha */
         .title { font-size: 26px; font-weight: 800; color: #2ed573; margin-top: 25px; letter-spacing: 1px; text-shadow: 0 0 10px rgba(46, 213, 115, 0.5); text-align: center; }
         .subtitle { font-size: 13px; color: #a0a0a0; margin-bottom: 30px; text-align: center; }
 
-        /* Shisha effektli kartochkalar */
         .card { background: rgba(30, 30, 50, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 20px; width: 100%; max-width: 450px; margin-bottom: 20px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); }
         .card-header { display: flex; align-items: center; font-size: 15px; font-weight: 600; color: #2ed573; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
         .card-header span { margin-right: 10px; font-size: 18px; }
         
-        /* Kod bloklari */
         .code-box { background: #0f0f1a; border-radius: 10px; padding: 12px; font-family: 'Courier New', Courier, monospace; font-size: 13px; color: #3498db; margin-top: 10px; border-left: 3px solid #2ed573; overflow-x: auto; }
         ul, ol { padding-left: 20px; font-size: 13px; color: #ccc; line-height: 1.8; }
         li { margin-bottom: 5px; }
-        p { font-size: 13px; color: #ccc; line-height: 1.5; }
+        p { font-size: 13px; color: #ccc; line-height: 1.5; margin-bottom: 10px; }
+        .link-btn { display: inline-block; background: #2ed573; color: #000; padding: 8px 16px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 13px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -52,59 +44,78 @@
     <div class="bg-glow-2"></div>
 
     <div class="logo-container">
-        <div class="ring ring-1"></div>
-        <div class="ring ring-2"></div>
-        <div class="ring ring-3"></div>
+        <div class="ring ring-1"></div><div class="ring ring-2"></div><div class="ring ring-3"></div>
         <div class="center-icon">💻</div>
     </div>
 
-    <div class="title">TERMUX TUTORIAL</div>
-    <div class="subtitle">To'liq va 100% Aniq Qo'llanma</div>
+    <div class="title">TERMUX TO'LIQ QO'LLANMA</div>
+    <div class="subtitle">0 dan 100 gacha — Barcha ma'lumotlar</div>
 
+    <!-- 1. Termux Asoslari -->
     <div class="card">
-        <div class="card-header"><span>📱</span> 1. TERMUX ASOSLARI</div>
-        <p>Termux — Android uchun Linux muhiti. Kod yozish va dasturlar yaratish uchun eng zo'r vosita.</p>
+        <div class="card-header"><span>📱</span> 1. TERMUX NIMA VA O'RNATISH</div>
+        <p>Termux — bu Android qurilmalarida Linux muhitini taqdim etuvchi dastur. U orqali siz telefoningizda Python, Java, C++ kabi tillarda kod yozishingiz va dasturlar yaratishingiz mumkin.</p>
+        <p><b>O'rnatish:</b> Termux'ni <b>F-Droid</b> yoki <b>GitHub</b> orqali yuklab oling. Google Play'dagi eski versiyasidan foydalanmang.</p>
         <div class="code-box">
-            pkg update && pkg upgrade<br>
+            # Birinchi marta ochganda yangilash<br>
+            pkg update && pkg upgrade -y<br><br>
+            # Xotiraga ulanish (ruxsat so'raydi)<br>
             termux-setup-storage
         </div>
     </div>
 
+    <!-- 2. Java o'rnatish -->
     <div class="card">
-        <div class="card-header"><span>🐍</span> 2. PYTHON O'RNATISH</div>
-        <p>Python tilida dastur yozishni boshlang:</p>
+        <div class="card-header"><span>☕</span> 2. JAVA O'RNATISH VA NIMA QILADI</div>
+        <p><b>Java nima qiladi?</b> Java — bu dasturlash tili bo'lib, u orqali Android ilovalar, o'yinlar va server dasturlarini yozish mumkin. Termux'da Java o'rnatib, `.java` fayllarini kompilyatsiya qilishingiz va ishga tushirishingiz mumkin.</p>
+        <p><b>O'rnatish buyrug'i:</b></p>
         <div class="code-box">
-            pkg install python<br>
-            pkg install python-pip<br>
-            python fayl_nomi.py
+            pkg install openjdk-17 -y<br><br>
+            # Tekshirish<br>
+            java -version
         </div>
+        <a href="https://openjdk.org/" target="_blank" class="link-btn">Java (OpenJDK) rasmiy sayti</a>
     </div>
 
+    <!-- 3. MT Manager integratsiyasi -->
     <div class="card">
-        <div class="card-header"><span>📂</span> 3. MT MANAGER ULANISHI</div>
+        <div class="card-header"><span>📂</span> 3. MT MANAGER BILAN ULANISH</div>
+        <p>MT Manager — bu Android uchun kuchli fayl boshqaruvchisi. Termux ichidagi fayllarni ko'rish va tahrirlash uchun uni ulash mumkin.</p>
         <ol>
-            <li>Termuxda: <b>termux-setup-storage</b> yozing va ruxsat bering.</li>
-            <li>MT Managerda: <b>"Add local storage"</b> ni bosing.</li>
-            <li>Termux papkasini tanlab, "Use this folder" qiling.</li>
+            <li>Termux'da <b>termux-setup-storage</b> buyrug'ini bering va ruxsat bering.</li>
+            <li>MT Manager'ni oching, chap menyudan <b>"Add local storage"</b> (Lokal xotira qo'shish) ni tanlang.</li>
+            <li>Ochilgan oynadan <b>Termux</b> papkasini topib, <b>"Use this folder"</b> (Bu papkadan foydalanish) tugmasini bosing.</li>
+            <li>Endi MT Manager orqali Termux ichidagi barcha fayllarni ko'rishingiz mumkin.</li>
         </ol>
     </div>
 
+    <!-- 4. Python bilan ishlash -->
     <div class="card">
-        <div class="card-header"><span>☕</span> 4. JAVA O'RNATISH</div>
-        <p>Java dasturlari uchun kerakli muhit:</p>
+        <div class="card-header"><span>🐍</span> 4. PYTHON O'RNATISH VA ISHLATISH</div>
+        <p>Python — bu eng oson va ommabop dasturlash tili. Termux'da Python o'rnatib, skriptlar yozishingiz mumkin.</p>
         <div class="code-box">
-            pkg install openjdk-17<br>
-            java -version
+            # Python o'rnatish<br>
+            pkg install python -y<br><br>
+            # Kod yozish uchun fayl yaratish<br>
+            nano ism.py<br><br>
+            # Kodni ishga tushirish<br>
+            python ism.py
         </div>
+        <p><b>Misol:</b> <code>nano salom.py</code> faylini ochib, ichiga <code>print("Salom, Termux!")</code> deb yozing. Saqlash uchun <b>CTRL + X</b>, keyin <b>Y</b>, keyin <b>Enter</b> bosing. So'ngra <code>python salom.py</code> buyrug'i bilan ishga tushiring.</p>
     </div>
-    
+
+    <!-- 5. Termux bo'yicha qo'shimcha ma'lumotlar -->
     <div class="card">
-        <div class="card-header"><span>🤖</span> 5. BOT YASASH</div>
-        <p>Python yordamida Telegram bot yaratish:</p>
-        <div class="code-box">
-            pip install python-telegram-bot<br>
-            python bot.py
-        </div>
+        <div class="card-header"><span>💡</span> 5. TERMUX BO'YICHA QO'SHIMCHA MA'LUMOTLAR</div>
+        <ul>
+            <li><b>Papkalar orasida harakat:</b> <code>cd papka_nomi</code> (kirish), <code>cd ..</code> (orqaga qaytish).</li>
+            <li><b>Fayllarni ko'rish:</b> <code>ls</code> (joriy papkadagi fayllar).</li>
+            <li><b>Fayl yaratish:</b> <code>touch fayl.txt</code>.</li>
+            <li><b>Faylni o'chirish:</b> <code>rm fayl.txt</code>.</li>
+            <li><b>Paketlarni o'rnatish:</b> <code>pkg install paket_nomi</code>.</li>
+            <li><b>Paketni o'chirish:</b> <code>pkg uninstall paket_nomi</code>.</li>
+            <li><b>Yordam:</b> <code>pkg help</code> yoki <code>buyruq --help</code>.</li>
+        </ul>
     </div>
 </body>
 </html>
