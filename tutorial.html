@@ -24,6 +24,7 @@
             backdrop-filter: blur(10px);
             border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: sticky; top: 10px; z-index: 100;
         }
         .lang-group { display: flex; gap: 5px; }
         .lang-btn {
@@ -59,6 +60,7 @@
         ul, ol { padding-left: 20px; }
         li { margin-bottom: 8px; }
         b { color: #fff; }
+        code { color: #f1c40f; background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; font-family: monospace; }
 
         /* Kod bloklari va Copy tugmasi */
         .code-container { position: relative; margin-top: 15px; margin-bottom: 15px; }
@@ -66,8 +68,6 @@
         .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(46, 213, 115, 0.2); color: #2ed573; border: 1px solid #2ed573; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer; transition: 0.3s; letter-spacing: 1px; }
         .copy-btn:hover { background: #2ed573; color: #000; }
         .copy-btn:active { transform: scale(0.95); }
-        
-        .link-btn { display: inline-block; background: linear-gradient(90deg, #3498db, #2980b9); color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; margin-top: 10px; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4); }
     </style>
 </head>
 <body>
@@ -92,7 +92,7 @@
     </div>
 
     <div class="title" data-uz="TERMUX MASTER GUIDE" data-ru="МАСТЕР-РУКОВОДСТВО TERMUX" data-en="TERMUX MASTER GUIDE" data-ar="دليل TERMUX الرئيسي">TERMUX MASTER GUIDE</div>
-    <div class="subtitle" data-uz="Amaliy va To'liq Darslik" data-ru="Практическое и полное руководство" data-en="Practical and Full Guide" data-ar="دليل عملي وكامل">Amaliy va To'liq Darslik</div>
+    <div class="subtitle" data-uz="Hamma narsa bitta joyda" data-ru="Все в одном месте" data-en="Everything in one place" data-ar="كل شيء في مكان واحد">Hamma narsa bitta joyda</div>
 
     <!-- 1. Termuxni sozlash -->
     <div class="card">
@@ -103,71 +103,94 @@
             <div class="code-box">pkg update && pkg upgrade -y
 termux-setup-storage</div>
         </div>
-        <p style="font-size:12px; color:#888;" data-uz="* termux-setup-storage buyrug'i telefoningiz xotirasiga (rasmlar, yuklamalar) kirishga ruxsat beradi." data-ru="* Команда termux-setup-storage разрешает доступ к памяти телефона." data-en="* termux-setup-storage allows access to your phone's storage." data-ar="* يسمح أمر termux-setup-storage بالوصول إلى ذاكرة هاتفك.">* termux-setup-storage buyrug'i telefoningiz xotirasiga (rasmlar, yuklamalar) kirishga ruxsat beradi.</p>
+        <p style="font-size:12px; color:#888;" data-uz="* termux-setup-storage telefoningiz xotirasiga (Rasm, Yuklamalar) kirishga ruxsat beradi." data-ru="* termux-setup-storage разрешает доступ к памяти телефона." data-en="* termux-setup-storage allows access to your phone's storage." data-ar="* يسمح termux-setup-storage بالوصول إلى ذاكرة هاتفك.">* termux-setup-storage telefoningiz xotirasiga kirishga ruxsat beradi.</p>
     </div>
 
-    <!-- 2. MT Manager va Fayllar bilan ishlash -->
+    <!-- 2. MT Manager va Fayllar -->
     <div class="card">
         <div class="card-header"><span>📂</span> <span data-uz="2. MT MANAGER BILAN ISHLASH" data-ru="2. РАБОТА С MT MANAGER" data-en="2. WORKING WITH MT MANAGER" data-ar="2. العمل مع MT Manager">2. MT MANAGER BILAN ISHLASH</span></div>
-        <p data-uz="MT Manager orqali Termux ichidagi fayllarni ko'rish va tahrirlash juda oson. Buning uchun quyidagi qadamlarni bajaring:" data-ru="Просматривать и редактировать файлы внутри Termux через MT Manager очень легко. Для этого выполните следующие шаги:" data-en="Viewing and editing files inside Termux via MT Manager is very easy. To do this, follow these steps:" data-ar="عرض وتحرير الملفات داخل Termux عبر MT Manager أمر سهل للغاية. للقيام بذلك، اتبع الخطوات التالية:">MT Manager orqali Termux ichidagi fayllarni ko'rish va tahrirlash juda oson. Buning uchun quyidagi qadamlarni bajaring:</p>
+        <p data-uz="MT Manager orqali Termux ichidagi fayllarni ko'rish, o'zgartirish va tahrirlash juda oson." data-ru="Просматривать и редактировать файлы внутри Termux через MT Manager очень легко." data-en="Viewing and editing files inside Termux via MT Manager is very easy." data-ar="عرض وتحرير الملفات داخل Termux عبر MT Manager أمر سهل للغاية.">MT Manager orqali Termux ichidagi fayllarni ko'rish, o'zgartirish va tahrirlash juda oson.</p>
         <ol>
-            <li data-uz="Termuxda kod yozib, saqlang (CTRL+X, Y, Enter)." data-ru="Напишите код в Termux и сохраните (CTRL+X, Y, Enter)." data-en="Write code in Termux and save (CTRL+X, Y, Enter)." data-ar="اكتب الكود في Termux واحفظه (CTRL+X, Y, Enter).">Termuxda: <b>termux-setup-storage</b> yozing va ruxsat bering.</li>
-            <li data-uz="MT Managerda: Add local storage ni bosing." data-ru="В MT Manager: нажмите Add local storage." data-en="In MT Manager: click Add local storage." data-ar="في MT Manager: انقر على Add local storage.">MT Manager'ni oching. Chap menyudan <b>Add local storage</b> (Lokal xotira qo'shish) ni bosing.</li>
-            <li data-uz="Termux papkasini tanlab, ruxsat bering." data-ru="Выберите папку Termux и разрешите доступ." data-en="Select the Termux folder and allow access." data-ar="حدد مجلد Termux واسمح بالوصول.">Ochilgan oynadan <b>Termux</b> papkasini topib, <b>Use this folder</b> (Bu papkadan foydalanish) ni bosing.</li>
-            <li data-uz="Termux papkasini tanlab, ruxsat bering." data-ru="Выберите папку Termux и разрешите доступ." data-en="Select the Termux folder and allow access." data-ar="حدد مجلد Termux واسمح بالوصول.">Endi MT Manager orqali Termux ichidagi fayllarni bemalol ochib, tahrirlashingiz mumkin.</li>
+            <li data-uz="MT Manager'ni oching. Chap menyudan 'Add local storage' ni bosing." data-ru="Откройте MT Manager. В левом меню нажмите 'Add local storage'." data-en="Open MT Manager. Click 'Add local storage' from the left menu." data-ar="افتح MT Manager. انقر على 'Add local storage' من القائمة اليسرى.">MT Manager'ni oching. Chap menyudan <b>Add local storage</b> ni bosing.</li>
+            <li data-uz="Ichki xotiradan 'Termux' papkasini topib, 'Use this folder' ni bosing." data-ru="Найдите папку 'Termux' во внутренней памяти и нажмите 'Use this folder'." data-en="Find the 'Termux' folder from internal storage and click 'Use this folder'." data-ar="ابحث عن مجلد 'Termux' من التخزين الداخلي وانقر على 'Use this folder'.">Ichki xotiradan <b>Termux</b> papkasini topib, <b>Use this folder</b> ni bosing.</li>
+            <li data-uz="Endi Termuxdagi barcha kodlarni MT Manager orqali ochib, xuddi kompyuterdagidek tahrirlashingiz mumkin." data-ru="Теперь вы можете открывать все коды в Termux через MT Manager и редактировать их, как на компьютере." data-en="Now you can open all codes in Termux via MT Manager and edit them like on a computer." data-ar="الآن يمكنك فتح جميع الأكواد في Termux عبر MT Manager وتحريرها كما لو كنت على جهاز كمبيوتر.">Endi Termuxdagi barcha kodlarni MT Manager orqali ochib, xuddi kompyuterdagidek tahrirlashingiz mumkin.</li>
         </ol>
-        <p style="font-size:12px; color:#f1c40f;" data-uz="* Maslahat: Python kodlaringizni MT Managerdagi o'rnatilgan matn muharriri orqali o'zgartirsangiz, xatoliklarni tezroq topasiz." data-ru="* Совет: Изменяя код Python через встроенный текстовый редактор MT Manager, вы быстрее найдете ошибки." data-en="* Tip: By modifying your Python code through MT Manager's built-in text editor, you'll find errors faster." data-ar="* نصيحة: من خلال تعديل كود Python عبر محرر النصوص المدمج في MT Manager، ستجد الأخطاء بشكل أسرع.">* Maslahat: Python kodlaringizni MT Managerdagi o'rnatilgan matn muharriri orqali o'zgartirsangiz, xatoliklarni tezroq topasiz.</p>
     </div>
 
-    <!-- 3. Python va Papkalar (Asosiy qism) -->
+    <!-- 3. Python, Papkalar va Kutubxonalar -->
     <div class="card">
-        <div class="card-header"><span>🐍</span> <span data-uz="3. PYTHON VA PAPKALAR" data-ru="3. PYTHON И ПАПКИ" data-en="3. PYTHON & FOLDERS" data-ar="3. Python والمجلدات">3. PYTHON VA PAPKALAR</span></div>
-        <p data-uz="Python o'rnatib, alohida papkalar yaratamiz va kodlarni ishga tushirishni o'rganamiz (masalan: Tommy/tom.py)." data-ru="Установим Python, создадим отдельные папки и научимся запускать код (например: Tommy/tom.py)." data-en="Install Python, create separate folders, and learn to run code (e.g., Tommy/tom.py)." data-ar="قم بتثبيت Python وإنشاء مجلدات منفصلة وتعلم تشغيل الكود (مثل Tommy/tom.py).">Python o'rnatib, alohida papkalar yaratamiz va kodlarni ishga tushirishni o'rganamiz (masalan: Tommy/tom.py).</p>
+        <div class="card-header"><span>🐍</span> <span data-uz="3. PYTHON VA KUTUBXONALAR" data-ru="3. PYTHON И БИБЛИОТЕКИ" data-en="3. PYTHON & LIBRARIES" data-ar="3. Python والمكتبات">3. PYTHON VA KUTUBXONALAR</span></div>
+        <p data-uz="Python o'rnatamiz, papka yaratamiz va kerakli kutubxonalarni o'rnatishni o'rganamiz." data-ru="Установим Python, создадим папку и научимся устанавливать необходимые библиотеки." data-en="Install Python, create a folder, and learn to install necessary libraries." data-ar="قم بتثبيت Python وإنشاء مجلد وتعلم تثبيت المكتبات اللازمة.">Python o'rnatamiz, papka yaratamiz va kerakli kutubxonalarni o'rnatishni o'rganamiz.</p>
         
-        <p><b>1. Python o'rnatish:</b></p>
+        <p><b data-uz="1. Python va Pip o'rnatish:" data-ru="1. Установка Python и Pip:" data-en="1. Install Python & Pip:" data-ar="1. تثبيت Python و Pip:">1. Python va Pip o'rnatish:</b></p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
             <div class="code-box">pkg install python -y</div>
         </div>
 
-        <p><b>2. Papka yaratish va ichiga kirish:</b></p>
+        <p><b data-uz="2. Papka yaratish va fayl ochish (name/name.py):" data-ru="2. Создание папки и файла (name/name.py):" data-en="2. Create folder and file (name/name.py):" data-ar="2. إنشاء مجلد وملف (name/name.py):">2. Papka yaratish va fayl ochish (name/name.py):</b></p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
-            <div class="code-box">mkdir Tommy
-cd Tommy</div>
+            <div class="code-box">mkdir name
+cd name
+nano name.py</div>
+        </div>
+        <p style="font-size:12px; color:#888;" data-uz="* Ichiga print('Salom') deb yozib, CTRL+X, Y, Enter bilan saqlang." data-ru="* Внутри напишите print('Salom') и сохраните с помощью CTRL+X, Y, Enter." data-en="* Inside, write print('Salom') and save with CTRL+X, Y, Enter." data-ar="* بالداخل، اكتب print('Salom') واحفظ باستخدام CTRL+X, Y, Enter.">* Ichiga <code>print('Salom')</code> deb yozib, CTRL+X, Y, Enter bilan saqlang.</p>
+
+        <p><b data-uz="3. Kodni ishga tushirish usullari:" data-ru="3. Способы запуска кода:" data-en="3. Ways to run code:" data-ar="3. طرق تشغيل الكود:">3. Kodni ishga tushirish usullari:</b></p>
+        <div class="code-container">
+            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+            <div class="code-box"># 1. Papka ichida:
+python name.py
+
+# 2. Papkadan tashqarida:
+python name/name.py</div>
         </div>
 
-        <p><b>3. Kod yozish uchun fayl ochish:</b></p>
+        <p><b data-uz="4. Kutubxonalar o'rnatish (Pip):" data-ru="4. Установка библиотек (Pip):" data-en="4. Install Libraries (Pip):" data-ar="4. تثبيت المكتبات (Pip):">4. Kutubxonalar o'rnatish (Pip):</b></p>
         <div class="code-container">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
-            <div class="code-box">nano tom.py</div>
-        </div>
-        <p style="font-size:12px; color:#888;" data-uz="* Ichiga print('Salom Tommy') deb yozib, CTRL+X, Y, Enter bilan saqlang." data-ru="* Внутри напишите print('Salom Tommy') и сохраните с помощью CTRL+X, Y, Enter." data-en="* Inside, write print('Salom Tommy') and save with CTRL+X, Y, Enter." data-ar="* بالداخل، اكتب print('Salom Tommy') واحفظ باستخدام CTRL+X, Y, Enter.">* Ichiga <code>print('Salom Tommy')</code> deb yozib, CTRL+X, Y, Enter bilan saqlang.</p>
-
-        <p><b>4. Kodni ishga tushirish (3 xil usul):</b></p>
-        <div class="code-container">
-            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
-            <div class="code-box"># 1. Papka ichida turganda:
-python tom.py
-
-# 2. Papkadan chiqib (cd ..), tashqaridan ishga tushirish:
-python Tommy/tom.py
-
-# 3. Xotiraga ulangan fayllarni ishga tushirish:
-python /sdcard/Tommy/tom.py</div>
+            <div class="code-box">pip install requests
+pip install beautifulsoup4
+pip install python-telegram-bot</div>
         </div>
     </div>
 
-    <!-- 4. Muhim Buyruqlar -->
+    <!-- 4. Telegram Bot Yasash -->
     <div class="card">
-        <div class="card-header"><span>💡</span> <span data-uz="4. Muhim Buyruqlar" data-ru="4. Важные команды" data-en="4. Important Commands" data-ar="4. أوامر مهمة">4. Muhim Buyruqlar</span></div>
-        <ul>
-            <li><b>cd papka_nomi</b> - <span data-uz="papkaga kirish" data-ru="войти в папку" data-en="enter folder" data-ar="الدخول إلى المجلد">papkaga kirish</span></li>
-            <li><b>cd ..</b> - <span data-uz="bir papka orqaga qaytish" data-ru="вернуться на одну папку назад" data-en="go back one folder" data-ar="الرجوع مجلد واحد للخلف">bir papka orqaga qaytish</span></li>
-            <li><b>ls</b> - <span data-uz="papkadagi fayllarni ko'rish" data-ru="просмотр файлов в папке" data-en="list files in folder" data-ar="عرض الملفات في المجلد">papkadagi fayllarni ko'rish</span></li>
-            <li><b>clear</b> - <span data-uz="ekranni tozalash" data-ru="очистить экран" data-en="clear screen" data-ar="مسح الشاشة">ekranni tozalash</span></li>
-            <li><b>pip install nom</b> - <span data-uz="qo'shimcha kutubxona o'rnatish" data-ru="установить дополнительную библиотеку" data-en="install additional library" data-ar="تثبيت مكتبة إضافية">qo'shimcha kutubxona o'rnatish (masalan: <code>pip install requests</code>)</span></li>
-        </ul>
+        <div class="card-header"><span>🤖</span> <span data-uz="4. TELEGRAM BOT YASASH" data-ru="4. СОЗДАНИЕ TELEGRAM БОТА" data-en="4. CREATING TELEGRAM BOT" data-ar="4. صنع بوت تيليجرام">4. TELEGRAM BOT YASASH</span></div>
+        <p data-uz="Termuxda Telegram bot yasash juda oson. Buning uchun @BotFather'dan token olish kerak." data-ru="Создать Telegram-бота в Termux очень просто. Для этого нужно получить токен у @BotFather." data-en="Creating a Telegram bot in Termux is very easy. You need to get a token from @BotFather." data-ar="إنشاء بوت Telegram في Termux سهل للغاية. تحتاج إلى الحصول على رمز منBotFather@.">Termuxda Telegram bot yasash juda oson. Buning uchun @BotFather'dan token olish kerak.</p>
+        <ol>
+            <li data-uz="Telegramda @BotFather ga kirib, /newbot buyrug'i bilan bot yarating va TOKEN oling." data-ru="Зайдите в @BotFather в Telegram, создайте бота командой /newbot и получите TOKEN." data-en="Go to @BotFather in Telegram, create a bot with /newbot and get the TOKEN." data-ar="انتقل إلىBotFather@ في Telegram، وأنشئ بوتًا باستخدام /newbot واحصل على TOKEN.">Telegramda <b>@BotFather</b> ga kirib, <b>/newbot</b> buyrug'i bilan bot yarating va <b>TOKEN</b> oling.</li>
+            <li data-uz="Kutubxonani o'rnating: pip install python-telegram-bot" data-ru="Установите библиотеку: pip install python-telegram-bot" data-en="Install the library: pip install python-telegram-bot" data-ar="قم بتثبيت المكتبة: pip install python-telegram-bot">Kutubxonani o'rnating: <code>pip install python-telegram-bot</code></li>
+            <li data-uz="Quyidagi kodni bot.py fayliga yozing va ishga tushiring." data-ru="Напишите следующий код в файл bot.py и запустите его." data-en="Write the following code into bot.py file and run it." data-ar="اكتب الكود التالي في ملف bot.py وقم بتشغيله.">Quyidagi kodni <b>bot.py</b> fayliga yozing va ishga tushiring.</li>
+        </ol>
+        <div class="code-container">
+            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+            <div class="code-box">from telegram.ext import Application, CommandHandler
+
+async def start(update, context):
+    await update.message.reply_text("Salom! Men Termuxda ishlayapman.")
+
+app = Application.builder().token("SIZNING_TOKENINGIZ").build()
+app.add_handler(CommandHandler("start", start))
+app.run_polling()</div>
+        </div>
+    </div>
+
+    <!-- 5. Java O'rnatish -->
+    <div class="card">
+        <div class="card-header"><span>☕</span> <span data-uz="5. JAVA O'RNATISH" data-ru="5. УСТАНОВКА JAVA" data-en="5. INSTALL JAVA" data-ar="5. تثبيت Java">5. JAVA O'RNATISH</span></div>
+        <p data-uz="Java dasturlash tili uchun Termuxda maxsus muhit o'rnatamiz." data-ru="Установим специальную среду для языка программирования Java в Termux." data-en="We will install a special environment for the Java programming language in Termux." data-ar="سنقوم بتثبيت بيئة خاصة للغة برمجة Java في Termux.">Java dasturlash tili uchun Termuxda maxsus muhit o'rnatamiz.</p>
+        <div class="code-container">
+            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+            <div class="code-box"># Java (OpenJDK) o'rnatish
+pkg install openjdk-17 -y
+
+# Tekshirish
+java -version
+javac -version</div>
+        </div>
     </div>
 
     <script>
