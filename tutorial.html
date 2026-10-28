@@ -13,49 +13,22 @@
             padding: 20px;
             line-height: 1.6;
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
+        .container { max-width: 800px; margin: 0 auto; }
         h1 { color: #58a6ff; text-align: center; }
         h2 { color: #3fb950; border-bottom: 1px solid #30363d; padding-bottom: 5px; margin-top: 30px; }
-        code {
-            background-color: #161b22;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Courier New', Courier, monospace;
-            color: #ff7b72;
-        }
-        pre {
-            background-color: #161b22;
-            padding: 15px;
-            border-radius: 8px;
-            overflow-x: auto;
-            border: 1px solid #30363d;
-        }
-        pre code { color: #c9d1d9; }
-        .card {
-            background-color: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        a { color: #58a6ff; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        ul { padding-left: 20px; }
+        code { background-color: #161b22; padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #ff7b72; }
+        pre { background-color: #161b22; padding: 15px; border-radius: 8px; overflow-x: auto; border: 1px solid #30363d; }
+        .card { background-color: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>💻 Termux To'liq Qo'llanma</h1>
-        <p style="text-align: center;">Ushbu sahifada Termux va dasturlash bo'yicha barcha asosiy ma'lumotlar keltirilgan.</p>
-
+        
         <div class="card">
             <h2>📱 1. Termux Asoslari</h2>
-            <p>Termux - bu Android qurilmalarida Linux muhitini taqdim etuvchi dastur.</p>
+            <p>Termux — Android uchun Linux muhiti. O'rnatish uchun F-Droid'dan foydalaning.</p>
             <ul>
-                <li><b>O'rnatish:</b> F-Droid yoki GitHub orqali yuklab oling.</li>
                 <li><b>Yangilash:</b> <code>pkg update && pkg upgrade</code></li>
                 <li><b>Xotiraga ulanish:</b> <code>termux-setup-storage</code></li>
             </ul>
@@ -63,37 +36,29 @@
 
         <div class="card">
             <h2>🐍 2. Python va Termux</h2>
-            <p>Termuxda Python tilida dastur yozish juda oson.</p>
-            <pre><code># Pythonni o'rnatish
-pkg install python
-
-# Kod yozish
+            <pre><code>pkg install python
 nano test.py
-
-# Kodni ishga tushirish
 python test.py</code></pre>
         </div>
 
         <div class="card">
             <h2>📂 3. MT Manager Integratsiyasi</h2>
             <p>MT Manager yordamida Termux fayllarini boshqarish:</p>
-            <ul>
+            <ol>
                 <li>Termuxda <code>termux-setup-storage</code> buyrug'ini bering.</li>
                 <li>MT Managerda <b>"Add local storage"</b> tugmasini bosing.</li>
                 <li>Termux papkasini topib, ruxsat bering.</li>
-            </ul>
+            </ol>
         </div>
 
         <div class="card">
             <h2>☕ 4. Java O'rnatish</h2>
-            <p>Java dasturlash tili uchun muhit:</p>
             <pre><code>pkg install openjdk-17
 java -version</code></pre>
         </div>
 
         <div class="card">
             <h2>🌙 5. Lua bilan ishlash</h2>
-            <p>Lua - yengil va tezkor skript tili.</p>
             <pre><code>pkg install lua
 nano test.lua
 lua test.lua</code></pre>
@@ -101,15 +66,10 @@ lua test.lua</code></pre>
 
         <div class="card">
             <h2>🤖 6. Termuxda Bot Yasash</h2>
-            <p>Python yordamida Telegram bot yaratish:</p>
             <pre><code>pkg install python
 pip install python-telegram-bot</code></pre>
             <p>So'ngra BotFather'dan token olib, kod yozishingiz mumkin.</p>
         </div>
-        
-        <p style="text-align: center; margin-top: 40px; color: #8b949e;">
-            © 2024 Termux Tutorial Bot. Barcha huquqlar himoyalangan.
-        </p>
     </div>
 </body>
 </html>
