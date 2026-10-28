@@ -11,5 +11,4 @@ instagrapi
 aiogram
 pydantic>=2.0
 python-multipart
-python-telegram-bot
 aiohttp
