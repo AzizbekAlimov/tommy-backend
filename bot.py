@@ -5,7 +5,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from aiohttp import web
 
-# Tokenni Render'dagi Environment Variables'dan oladi
+# Render'dagi Environment Variables'dan tokenni oladi
 TOKEN = os.environ.get("TOKEN", "SIZNING_TOKENINGIZNI_SHU_YERGA_YOZING")
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -43,13 +43,11 @@ LESSONS = {
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     logger.error(msg="Xatolik yuz berdi:", exc_info=context.error)
 
-# /start buyrug'i
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     info_text = (
         "👋 **Assalomu alaykum!**\n\n"
         "Men **Termux va Dasturlash** bo'yicha yordamchi botman.\n\n"
         "🤖 **Men nima qila olaman?**\n"
-        "Men sizga quyidagi mavzularni 100% o'rgataman:\n"
         "📱 **Termux** - Androidda Linux muhitini sozlash\n"
         "🐍 **Python** - Dasturlash tili va bot yasash\n"
         "📂 **MT Manager** - Termux fayllari bilan ishlash\n"
@@ -65,7 +63,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     await update.message.reply_text(info_text, reply_markup=reply_markup, parse_mode='Markdown')
 
-# Sahifalarni yaratish funksiyasi (10 tadan)
 def get_lessons_keyboard(page=1):
     keyboard = []
     items_per_page = 10
@@ -95,7 +92,6 @@ def get_lessons_keyboard(page=1):
     
     return InlineKeyboardMarkup(keyboard)
 
-# Tugmalar bosilganda ishlaydigan qism
 async def button_tap(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -112,7 +108,6 @@ async def button_tap(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "👋 **Assalomu alaykum!**\n\n"
             "Men **Termux va Dasturlash** bo'yicha yordamchi botman.\n\n"
             "🤖 **Men nima qila olaman?**\n"
-            "Men sizga quyidagi mavzularni 100% o'rgataman:\n"
             "📱 **Termux** - Androidda Linux muhitini sozlash\n"
             "🐍 **Python** - Dasturlash tili va bot yasash\n"
             "📂 **MT Manager** - Termux fayllari bilan ishlash\n"
@@ -125,7 +120,6 @@ async def button_tap(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
         await query.edit_message_text(text=info_text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='Markdown')
 
-# --- VEB SERVER QISMI ---
 async def handle_index(request):
     try:
         with open('index.html', 'r', encoding='utf-8') as f:
@@ -148,7 +142,6 @@ def run_web_server():
     print(f"Veb-server {port}-portda ishga tushdi!")
     web.run_app(app, host='0.0.0.0', port=port)
 
-# --- ASOSIY ISHGA TUSHIRISH ---
 def main():
     threading.Thread(target=run_web_server, daemon=True).start()
     application = Application.builder().token(TOKEN).build()
