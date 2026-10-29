@@ -15,7 +15,6 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
     logger.error(msg="Xatolik yuz berdi:", exc_info=context.error)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Bot faqat nima qila olishi haqida ma'lumot beradi
     info_text = (
         "👋 **Assalomu alaykum!**\n\n"
         "Men **Termux va Dasturlash** bo'yicha yordamchi botman.\n\n"
@@ -25,19 +24,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🐍 **Python** - Dasturlash tili va bot yasash\n"
         "📂 **MT Manager** - Termux fayllari bilan ishlash\n"
         "☕ **Java** - Dasturlash muhitini o'rnatish\n\n"
-        "📚 Barcha darsliklar bitta qulay **Web sahifada** jamlangan. "
-        "Quyidagi tugma orqali to'liq qo'llanmani ochishingiz mumkin:"
+        "📚 Barcha darsliklar bizning **Telegram kanalimizda** jamlangan. "
+        "Quyidagi tugma orqali kanalga o'tishingiz mumkin:"
     )
     
-    # DIQQAT: Bu yerga o'zingizning Render havolangizni qo'ying! Oxirida /tutorial bo'lishi shart.
+    # DIQQAT: Mana bu yerga siz so'ragan kanal havolasi qo'yildi
     keyboard = [
-        [InlineKeyboardButton("📚 Termux Tutorial (Web)", url="https://loyihangiz-nomi.onrender.com/tutorial")]
+        [InlineKeyboardButton("📚 Termux Tutorial (Kanal)", url="https://t.me/termux_tutoril")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text(info_text, reply_markup=reply_markup, parse_mode='Markdown')
 
-# --- VEB SERVER QISMI (HTML faylni ochish uchun) ---
+# --- VEB SERVER QISMI (Render uxlab qolmasligi uchun fonda ishlaydi) ---
 async def handle_index(request):
     try:
         with open('index.html', 'r', encoding='utf-8') as f:
