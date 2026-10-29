@@ -6,59 +6,37 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Cont
 from aiohttp import web
 
 # Tokenni Render'dagi Environment Variables'dan oladi
-TOKEN = os.environ.get("TOKEN", "8872275906:AAEoOfscxqWv1ckizOb2z9P7T6MgPGfY6ng")
+TOKEN = os.environ.get("TOKEN", "SIZNING_TOKENINGIZNI_SHU_YERGA_YOZING")
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # ==========================================
-# 45 TA VIDEOLAR RO'YXATI (Siz yuborgan linklar)
+# 45 TA VIDEOLAR RO'YXATI
 # ==========================================
 LESSONS = {
-    1: "https://t.me/termux_tutoril/3",
-    2: "https://t.me/termux_tutoril/4",
-    3: "https://t.me/termux_tutoril/5",
-    4: "https://t.me/termux_tutoril/6",
-    5: "https://t.me/termux_tutoril/7",
-    6: "https://t.me/termux_tutoril/8",
-    7: "https://t.me/termux_tutoril/9",
-    8: "https://t.me/termux_tutoril/10",
-    9: "https://t.me/termux_tutoril/11",
-    10: "https://t.me/termux_tutoril/12",
-    11: "https://t.me/termux_tutoril/13",
-    12: "https://t.me/termux_tutoril/14",
-    13: "https://t.me/termux_tutoril/15",
-    14: "https://t.me/termux_tutoril/16",
-    15: "https://t.me/termux_tutoril/17",
-    16: "https://t.me/termux_tutoril/18",
-    17: "https://t.me/termux_tutoril/19",
-    18: "https://t.me/termux_tutoril/20",
-    19: "https://t.me/termux_tutoril/21",
-    20: "https://t.me/termux_tutoril/22",
-    21: "https://t.me/termux_tutoril/23",
-    22: "https://t.me/termux_tutoril/24",
-    23: "https://t.me/termux_tutoril/25",
-    24: "https://t.me/termux_tutoril/26",
-    25: "https://t.me/termux_tutoril/27",
-    26: "https://t.me/termux_tutoril/28",
-    27: "https://t.me/termux_tutoril/29",
-    28: "https://t.me/termux_tutoril/30",
-    29: "https://t.me/termux_tutoril/31",
-    30: "https://t.me/termux_tutoril/32",
-    31: "https://t.me/termux_tutoril/33",
-    32: "https://t.me/termux_tutoril/34",
-    33: "https://t.me/termux_tutoril/35",
-    34: "https://t.me/termux_tutoril/36",
-    35: "https://t.me/termux_tutoril/37",
-    36: "https://t.me/termux_tutoril/38",
-    37: "https://t.me/termux_tutoril/39",
-    38: "https://t.me/termux_tutoril/40",
-    39: "https://t.me/termux_tutoril/41",
-    40: "https://t.me/termux_tutoril/42",
-    41: "https://t.me/termux_tutoril/43",
-    42: "https://t.me/termux_tutoril/44",
-    43: "https://t.me/termux_tutoril/45",
-    44: "https://t.me/termux_tutoril/46",
+    1: "https://t.me/termux_tutoril/3", 2: "https://t.me/termux_tutoril/4",
+    3: "https://t.me/termux_tutoril/5", 4: "https://t.me/termux_tutoril/6",
+    5: "https://t.me/termux_tutoril/7", 6: "https://t.me/termux_tutoril/8",
+    7: "https://t.me/termux_tutoril/9", 8: "https://t.me/termux_tutoril/10",
+    9: "https://t.me/termux_tutoril/11", 10: "https://t.me/termux_tutoril/12",
+    11: "https://t.me/termux_tutoril/13", 12: "https://t.me/termux_tutoril/14",
+    13: "https://t.me/termux_tutoril/15", 14: "https://t.me/termux_tutoril/16",
+    15: "https://t.me/termux_tutoril/17", 16: "https://t.me/termux_tutoril/18",
+    17: "https://t.me/termux_tutoril/19", 18: "https://t.me/termux_tutoril/20",
+    19: "https://t.me/termux_tutoril/21", 20: "https://t.me/termux_tutoril/22",
+    21: "https://t.me/termux_tutoril/23", 22: "https://t.me/termux_tutoril/24",
+    23: "https://t.me/termux_tutoril/25", 24: "https://t.me/termux_tutoril/26",
+    25: "https://t.me/termux_tutoril/27", 26: "https://t.me/termux_tutoril/28",
+    27: "https://t.me/termux_tutoril/29", 28: "https://t.me/termux_tutoril/30",
+    29: "https://t.me/termux_tutoril/31", 30: "https://t.me/termux_tutoril/32",
+    31: "https://t.me/termux_tutoril/33", 32: "https://t.me/termux_tutoril/34",
+    33: "https://t.me/termux_tutoril/35", 34: "https://t.me/termux_tutoril/36",
+    35: "https://t.me/termux_tutoril/37", 36: "https://t.me/termux_tutoril/38",
+    37: "https://t.me/termux_tutoril/39", 38: "https://t.me/termux_tutoril/40",
+    39: "https://t.me/termux_tutoril/41", 40: "https://t.me/termux_tutoril/42",
+    41: "https://t.me/termux_tutoril/43", 42: "https://t.me/termux_tutoril/44",
+    43: "https://t.me/termux_tutoril/45", 44: "https://t.me/termux_tutoril/46",
     45: "https://t.me/termux_tutoril/47",
 }
 
@@ -81,7 +59,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     keyboard = [
         [InlineKeyboardButton("🎥 Videodarsliklarni ko'rish", callback_data="page_1")],
-        [InlineKeyboardButton("📢 Kanalga o'tish", url="https://t.me/termux_tutoril")]
+        [InlineKeyboardButton("📢 Bizning kanal", url="https://t.me/termux_tutoril")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -95,7 +73,6 @@ def get_lessons_keyboard(page=1):
     start_idx = (page - 1) * items_per_page + 1
     end_idx = min(page * items_per_page, 45)
     
-    # 2 tadan qilib tugma yasaymiz
     row = []
     for i in range(start_idx, end_idx + 1):
         row.append(InlineKeyboardButton(f"🎬 {i}-darslik", url=LESSONS[i]))
@@ -105,7 +82,6 @@ def get_lessons_keyboard(page=1):
     if row:
         keyboard.append(row)
         
-    # Sahifalash tugmalari
     nav_row = []
     if page > 1:
         nav_row.append(InlineKeyboardButton("⬅️ Oldingi", callback_data=f"page_{page-1}"))
@@ -115,7 +91,6 @@ def get_lessons_keyboard(page=1):
     if nav_row:
         keyboard.append(nav_row)
         
-    # Orqaga qaytish
     keyboard.append([InlineKeyboardButton("🔙 Bosh menyu", callback_data="back_to_start")])
     
     return InlineKeyboardMarkup(keyboard)
@@ -146,7 +121,7 @@ async def button_tap(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         keyboard = [
             [InlineKeyboardButton("🎥 Videodarsliklarni ko'rish", callback_data="page_1")],
-            [InlineKeyboardButton("📢 Kanalga o'tish", url="https://t.me/termux_tutoril")]
+            [InlineKeyboardButton("📢 Bizning kanal", url="https://t.me/termux_tutoril")]
         ]
         await query.edit_message_text(text=info_text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='Markdown')
 
