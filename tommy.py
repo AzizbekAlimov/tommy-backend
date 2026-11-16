@@ -1130,14 +1130,12 @@ async def warns_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     name = f"@{target.username}" if target.username else target.full_name
     await update.message.reply_text(f"⚠️ <b>{html_lib.escape(name)}</b> — ogohlantirishlar: <b>{count}/{MAX_WARNINGS}</b>", parse_mode='HTML')
 
-# YANGILANGAN: STICKER PACK LINK ORQALI HAM QO'SHISH
+# STICKER PACK LINK ORQALI QO'SHISH
 async def add_bad_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_group_admin(update, context): return
     
-    # 1) Agar argument (link yoki nom) berilgan bo'lsa
     if context.args:
         text = " ".join(context.args)
-        # Linkdan to'plam nomini ajratib olish (masalan: t.me/addstickers/artsla -> artsla)
         match = re.search(r'(?:t\.me/addstickers/|t\.me/addemoji/)([a-zA-Z0-9_]+)', text)
         pack_name = match.group(1) if match else text.strip().split('/')[-1]
         
@@ -1147,7 +1145,6 @@ async def add_bad_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE
             
         msg = await update.message.reply_text(f"⏳ <b>{pack_name}</b> to'plami tekshirilmoqda...", parse_mode='HTML')
         try:
-            # Telegram API orqali to'plamni olish
             sticker_set = await context.bot.get_sticker_set(name=pack_name)
             count = 0
             for sticker in sticker_set.stickers:
@@ -1164,7 +1161,6 @@ async def add_bad_sticker_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE
             await msg.edit_text(f"❌ Xatolik: To'plam topilmadi yoki bot unga a'zo emas.\n<code>{e}</code>", parse_mode='HTML')
         return
 
-    # 2) Agar reply qilingan bo'lsa (bitta sticker/gif)
     if not update.message.reply_to_message:
         await update.message.reply_text(
             "🎭 Ishlatish usullari:\n\n"
@@ -1228,10 +1224,9 @@ async def on_bot_added_to_group(update: Update, context: ContextTypes.DEFAULT_TY
 # ============================================================
 # USERNAME / NAME CHECK
 # ============================================================
-_name_warn_cooldown = {}  # (chat_id, user_id) -> datetime
+_name_warn_cooldown = {}
 
 def check_user_name(update: Update):
-    """(bad_word, label) yoki None. Cooldown bilan."""
     u = update.effective_user
     if not u:
         return None
@@ -1266,7 +1261,6 @@ async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat_id = update.effective_chat.id
 
-    # --- 0) USERNAME / ISM ---
     name_check = check_user_name(update)
     if name_check:
         bad_word, label = name_check
@@ -1281,12 +1275,10 @@ async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         except Exception as e:
             logger.error(f"Name warn error: {e}")
-        # Xabarni o'chirmaymiz — ism uchun faqat ogohlantiramiz
         return
 
     violation_reason = None
 
-    # --- 1) TEXT / CAPTION ---
     text_to_check = msg.text or msg.caption
     if text_to_check:
         bad_word = contains_bad_word(text_to_check)
@@ -1297,7 +1289,6 @@ async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if bad_emoji:
                 violation_reason = f"yomon emoji: {bad_emoji}"
 
-    # --- 2) MEDIA ---
     if not violation_reason and (msg.photo or msg.sticker or msg.animation or msg.video_note or msg.video):
         file_id = None
         file_unique_id = None
@@ -1331,10 +1322,8 @@ async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
             mime_hint = "video/mp4"
 
         if file_unique_id:
-            # A) Qo'lda qora ro'yxat (Endi to'plam linki orqali qo'shilganlar ham shu yerda ushlanadi)
             if file_unique_id in get_bad_stickers():
                 violation_reason = "taqiqlangan sticker/GIF (qora ro'yxatda bor)"
-            # B) AI tekshiruvi
             elif AI_MEDIA_CHECK and GEMINI_API_KEY and mime_hint:
                 cached = get_media_verdict(file_unique_id)
                 if cached is not None:
@@ -1360,8 +1349,6 @@ async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                     is_bad, ai_reason = await analyze_media_content_with_ai(
                                         frames, ["image/png"] * len(frames)
                                     )
-                                else:
-                                    logger.warning(f"TGS render bo'lmadi: {file_unique_id}")
                             else:
                                 is_bad, ai_reason = await analyze_media_content_with_ai(fb, mime_hint)
 
@@ -1375,13 +1362,11 @@ async def auto_moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not violation_reason:
         return
 
-    # --- 3) O'chirish ---
     try:
         await msg.delete()
     except Exception:
         pass
 
-    # --- 4) Ogohlantirish ---
     count = get_warn_count(chat_id, user.id) + 1
     set_warn_count(chat_id, user.id, count)
     name = f"@{user.username}" if user.username else user.full_name
@@ -1491,7 +1476,6 @@ def run_bot_in_thread():
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & filters.User(ADMIN_ID) & filters.ChatType.PRIVATE, handle_broadcast_message))
         app.add_handler(ChatMemberHandler(on_bot_added_to_group, ChatMemberHandler.MY_CHAT_MEMBER))
 
-        # AUTO-MODERATION — barcha media turlari + text
         app.add_handler(
             MessageHandler(
                 (filters.TEXT | filters.CAPTION | filters.Sticker.ALL
@@ -1504,6 +1488,8 @@ def run_bot_in_thread():
         )
 
         await app.initialize()
+        # MUAMMONI HAL QILUVCHI QATOR: Eskicha webhookni tozalash
+        await app.bot.delete_webhook(drop_pending_updates=True)
         await app.start()
         await app.updater.start_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
         logger.info("✅ Bot polling started")
@@ -1548,4 +1534,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
